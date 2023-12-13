@@ -1,3 +1,5 @@
+[![paypal](https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate?hosted_button_id=GJYEF698N24XN)
+
 KeyValium
 
 KeyValium is a key-value store that stores data in a recursive B+-tree. Data is stored as byte arrays. Conceptually based on Lmdb.
