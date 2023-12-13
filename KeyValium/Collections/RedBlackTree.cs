@@ -1,4 +1,14 @@
-﻿
+﻿/*
+ 
+    This RedBlackTree implementation is based on System.Collections.Generic.SortedSet
+
+    https://github.com/dotnet/runtime/blob/main/src/libraries/System.Collections/src/System/Collections/Generic/SortedSet.cs
+        Licensed to the .NET Foundation under one or more agreements.
+        The .NET Foundation licenses this file to you under the MIT license.
+    
+    Copyright (c) .NET Foundation and Contributors
+*/
+
 using System.Numerics;
 using System.Text;
 

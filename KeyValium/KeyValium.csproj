@@ -9,33 +9,42 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <ErrorReport>prompt</ErrorReport>
-    <AssemblyVersion></AssemblyVersion>
     <FileVersion></FileVersion>
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>KeyValium</Title>
+    <Version>0.1.0</Version>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Description>KeyValium is a key-value store for DotNet.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
     <DebugType>portable</DebugType>
     <FileAlignment>512</FileAlignment>
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Performance|AnyCPU'">
     <Optimize>True</Optimize>
     <DebugType>portable</DebugType>
     <FileAlignment>512</FileAlignment>
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CallCounts|AnyCPU'">
     <Optimize>False</Optimize>
     <DebugType>portable</DebugType>
     <FileAlignment>512</FileAlignment>
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>False</Optimize>
     <DebugType>portable</DebugType>
     <FileAlignment>512</FileAlignment>
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
