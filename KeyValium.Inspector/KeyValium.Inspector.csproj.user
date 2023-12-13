@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_LastSelectedProfileId>D:\Daten\Development\Projects\DotNet\KeyValium\KeyValium.Inspector\Properties\PublishProfiles\ClickOnceProfile.pubxml</_LastSelectedProfileId>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="Controls\BenchmarkView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\BlockView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\BlockViewLegend.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\DataGridViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Controls\EntryListView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\FileMapView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\InspectorTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Controls\MultiView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\PageMapFooter.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\PageMapView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\PropertyView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="frmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="frmPassword.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>

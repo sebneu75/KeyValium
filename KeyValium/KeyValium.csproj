@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <SignAssembly>False</SignAssembly>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <ErrorReport>prompt</ErrorReport>
+    <AssemblyVersion></AssemblyVersion>
+    <FileVersion></FileVersion>
+    <Configurations>Debug;Release;Performance;CallCounts</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+    <DebugType>portable</DebugType>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Performance|AnyCPU'">
+    <Optimize>True</Optimize>
+    <DebugType>portable</DebugType>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CallCounts|AnyCPU'">
+    <Optimize>False</Optimize>
+    <DebugType>portable</DebugType>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+    <DebugType>portable</DebugType>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="BytePointer.cs" />
+    <Compile Remove="Cache\ExclusiveCache.cs" />
+    <Compile Remove="Cache\ExclusiveMMPageProvider.cs" />
+    <Compile Remove="Cache\ICache.cs" />
+    <Compile Remove="Collections\SortedSet7.cs" />
+    <Compile Remove="Cursors\CursorBag.cs" />
+    <Compile Remove="Cursors\CursorHolder.cs" />
+    <Compile Remove="Cursors\CursorPList.cs" />
+    <Compile Remove="Cursors\KeyPathChainPList.cs" />
+    <Compile Remove="Cursors\KeyPathPList.cs" />
+    <Compile Remove="Cursors\KeyPointerPList.cs" />
+    <Compile Remove="Iterators\KeyIteratorOld.cs" />
+    <Compile Remove="Memory\ChunkHandle.cs" />
+    <Compile Remove="Memory\ObjectPool.cs" />
+    <Compile Remove="Memory\PageAllocator2.cs" />
+    <Compile Remove="Memory\PageHandle.cs" />
+    <Compile Remove="Memory\PageHandle1.cs" />
+    <Compile Remove="Memory\PageHandle2.cs" />
+    <Compile Remove="Pager.cs" />
+    <Compile Remove="Pages\Entries\EntryExtern2.cs" />
+    <Compile Remove="Pages\Entries\EntryExternOld.cs" />
+    <Compile Remove="Pages\Entries\EntryExternWrapper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Cache\ExclusiveMMPageProvider.cs" />
+    <None Include="Iterators\KeyIteratorOld.cs" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy $(TargetDir)$(AssemblyName).* $(ProjectDir)..\..\!Libs\$(AssemblyName)\$(Configuration)  /c /i /y /f " />
+  </Target>
+
+</Project>

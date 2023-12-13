@@ -1,0 +1,121 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BPlusTree", "BPlusTree\BPlusTree.csproj", "{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.Inspector", "KeyValium.Inspector\KeyValium.Inspector.csproj", "{3DE53381-6034-406F-B351-2BCADC751720}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium", "KeyValium\KeyValium.csproj", "{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.Benchmarks", "KeyValium.Benchmarks\KeyValium.Benchmarks.csproj", "{2CE68087-59BE-440F-9F3E-981E99F8303B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.Tests", "KeyValium.Tests\KeyValium.Tests.csproj", "{9AAC8BB8-EDA2-468D-845A-A49404370C30}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.TestBench", "KeyValium.TestBench\KeyValium.TestBench.csproj", "{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.UnendingTest", "KeyValium.UnendingTest\KeyValium.UnendingTest.csproj", "{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Playground", "Playground\Playground.csproj", "{F653802A-D1B5-4387-811D-43EC0A9DEC6F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.Playground", "KeyValium.Playground\KeyValium.Playground.csproj", "{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.Performance", "KeyValium.Performance\KeyValium.Performance.csproj", "{61FD20A0-BECA-4C34-BDAF-388DC73E5895}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		CallCounts|Any CPU = CallCounts|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Performance|Any CPU = Performance|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE1A60BD-B799-41DC-A5C6-EDED74B4241D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DE53381-6034-406F-B351-2BCADC751720}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAF4ED9A-5033-4BE3-BF76-A17AE74702AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE68087-59BE-440F-9F3E-981E99F8303B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AAC8BB8-EDA2-468D-845A-A49404370C30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D78FFCB5-C75D-4B4F-8E38-4B38D3349FC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34941E02-33CB-4F49-A7C1-A4F2BB02E5A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F653802A-D1B5-4387-811D-43EC0A9DEC6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD85594-CDB0-45F2-9C07-1D6D13431FEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.CallCounts|Any CPU.ActiveCfg = CallCounts|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.CallCounts|Any CPU.Build.0 = CallCounts|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.Performance|Any CPU.ActiveCfg = Performance|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.Performance|Any CPU.Build.0 = Performance|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61FD20A0-BECA-4C34-BDAF-388DC73E5895}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {114543D2-8358-445C-AE69-17A573AE0ECC}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Configurations>Debug;Release;Performance;CallCounts</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KeyValium.TestBench\KeyValium.TestBench.csproj" />
+    <ProjectReference Include="..\KeyValium\KeyValium.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="LightningDB">
+      <HintPath>..\libs\LightningDB.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

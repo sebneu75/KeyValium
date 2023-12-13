@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;Performance;CallCounts</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Helpers\LogFileGroup.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\libs\lmdb.dll" Link="lmdb.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Helpers\LogFileGroup.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KeyValium\KeyValium.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="LightningDB">
+      <HintPath>..\libs\LightningDB.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;Performance;CallCounts</Configurations>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\KeyValium.TestBench\KeyValium.TestBench.csproj" />
+    <ProjectReference Include="..\KeyValium\KeyValium.csproj" />
+  </ItemGroup>
+
+</Project>
