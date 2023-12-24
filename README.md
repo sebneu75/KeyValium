@@ -1,45 +1,42 @@
-KeyValium
+# KeyValium
 
-KeyValium is a key-value store that stores data in a recursive B+-tree. Data is stored as byte arrays.
+KeyValium is a very fast key-value store for DotNet (currently DotNet 7 and 8 is supported). All data is stored in a recursive B+-tree as byte arrays.
+A frontend is included that implements the IDictionary interface and allows multiple dictionaries in a single database file.
 
-Features
+## Features
 
-Recursive B+-Tree 
-    every key can be the root of another B+-tree
+### Recursive B+-Tree 
+Every key can be the root of another B+-tree.
 
-Exclusive or shared access
-    multiple processes on multiple computers
-    works on networkdrive 
+### Multiple sharing modes
+* Exclusive: The database is opened exclusively. Subsequent attempts to open the database will fail.
+* SharedLocal: The database is opened in shared mode. Access is managed using a lockfile and a mutex. Subsequent attempts to open the database from a different machine will fail.
+* Shared: The database is opened in shared mode. Access is managed using two lockfiles. The database can be used from multiple computers on a network share.
 
-Transactions
-    One writer
-    Multiple readers
-    Unlimited Nesting
+### Transactions
+* One writer
+* Multiple readers
+* Support for nested transactions
 
-Stream Support
-    Values greater then Array.MaxLength are supported via Stream interface
+### Stream Support
+Values greater then 2 GB are supported via stream interface.
     
-Limits
-    Maximum key size depends on page size (usually pagesize/4)
+### Limits
+Maximum key size depends on page size (usually 1/4 if the page size).
 
-Count support
-    Every tree and subtree keeps a local and a total count of keys
+### Count support
+Every tree and subtree keeps a local and a total count of keys.
 
-Indexed access
-    Optional indexed access to the keys (not implemented yet)
+### Indexed access
+Optional indexed access to the keys (not implemented yet).
 
-Frontends
-    MultiDictionary which manages multiple persistent dictionaries in one database file
-    more frontends possible
+### Frontends
+A MultiDictionary which manages multiple persistent dictionaries in one database file.
     
-Encryption
-    Database can be encrypted via password and/or a keyfile
+### Encryption
+The database can be encrypted via password and/or a keyfile.
 
-Inspector
-    Filemap
-    Page statistics
-    annotated Hexview
+### Tools
+coming soon...
 
-Tools
-    coming soon
     
