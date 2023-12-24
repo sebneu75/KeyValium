@@ -9,9 +9,9 @@ A frontend is included that implements the IDictionary interface and allows mult
 Every key can be the root of another B+-tree.
 
 ### Multiple sharing modes
-* Exclusive: The database is opened exclusively. Subsequent attempts to open the database will fail.
-* SharedLocal: The database is opened in shared mode. Access is managed using a lockfile and a mutex. Subsequent attempts to open the database from a different machine will fail.
-* Shared: The database is opened in shared mode. Access is managed using two lockfiles. The database can be used from multiple computers on a network share.
+* **Exclusive**: The database is opened exclusively. Subsequent attempts to open the database will fail.
+* **SharedLocal**: The database is opened in shared mode. Access is managed using a lockfile and a mutex. Subsequent attempts to open the database from a different machine will fail.
+* **Shared**: The database is opened in shared mode. Access is managed using two lockfiles. The database can be used from multiple computers on a network share.
 
 ### Transactions
 * One writer
