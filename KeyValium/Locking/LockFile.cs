@@ -37,7 +37,7 @@ namespace KeyValium.Locking
 
             FileLock = new FileLock(db, this);
 
-            if (db.Options.SharingMode == SharingModes.Shared)
+            if (db.Options.SharingMode == SharingModes.SharedNetwork)
             {
                 SelectedLock = FileLock;
             }

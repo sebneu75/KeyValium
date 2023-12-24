@@ -23,6 +23,6 @@
         /// An additional lockfile is used to synchronize access among multiple database instances.
         /// The database can be used from multiple computers on a network share.
         /// </summary>
-        Shared = 2
+        SharedNetwork = 2
     }
 }
