@@ -1,8 +1,6 @@
-[![paypal](https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate?hosted_button_id=GJYEF698N24XN)
-
 KeyValium
 
-KeyValium is a key-value store that stores data in a recursive B+-tree. Data is stored as byte arrays. Conceptually based on Lmdb.
+KeyValium is a key-value store that stores data in a recursive B+-tree. Data is stored as byte arrays.
 
 Features
 
@@ -25,17 +23,17 @@ Limits
     Maximum key size depends on page size (usually pagesize/4)
 
 Count support
-    Every tree and subtree keeps a local and a global count of keys
+    Every tree and subtree keeps a local and a total count of keys
 
 Indexed access
     Optional indexed access to the keys (not implemented yet)
 
 Frontends
-    Persistent Dictionary
-    more possible
+    MultiDictionary which manages multiple persistent dictionaries in one database file
+    more frontends possible
     
 Encryption
-    Database can be encrypted
+    Database can be encrypted via password and/or a keyfile
 
 Inspector
     Filemap

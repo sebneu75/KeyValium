@@ -4,15 +4,23 @@ using KeyValium.Memory;
 using KeyValium.Options;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace KeyValium.Cache
 {
+    /// <summary>
+    /// A PageProvider manages access to individual pages.
+    /// </summary>
     internal abstract class PageProvider : IDisposable
     {
-        public PageProvider(Database db)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="db">The Database for which to create the PageProvider</param>
+        internal PageProvider(Database db)
         {
             Perf.CallCount();
 
@@ -20,28 +28,59 @@ namespace KeyValium.Cache
             DbFile = db.DbFile;
             PageSize = db.Options.PageSize;
             Allocator = db.Allocator;
-
+            
             Encryptor = db.Encryptor;
+
+            Validator = db.Validator;
 
             MaxPagenumber = ((ulong)long.MaxValue - PageSize) / PageSize;
         }
 
-        protected readonly Database Database;
+        /// <summary>
+        /// The Database instance
+        /// </summary>
+        protected internal readonly Database Database;
 
-        protected readonly PageAllocator Allocator;
+        /// <summary>
+        /// The PageAllocator
+        /// </summary>
+        protected internal readonly PageAllocator Allocator;
 
-        protected readonly FileStream DbFile;
+        /// <summary>
+        /// The FileStream of the Database file
+        /// </summary>
+        protected internal readonly FileStream DbFile;
 
-        protected readonly uint PageSize;
+        /// <summary>
+        /// The Encryptor
+        /// </summary>
+        protected internal readonly IEncryption Encryptor;
 
-        protected readonly IEncryption Encryptor;
+        /// <summary>
+        /// The PageAllocator
+        /// </summary>
+        internal readonly PageValidator Validator;
 
+        /// <summary>
+        /// Maximum page number
+        /// </summary>
         internal readonly KvPagenumber MaxPagenumber;
+
+        /// <summary>
+        /// The page size
+        /// </summary>
+        protected internal readonly uint PageSize;
 
         #region Accessing the filestream
 
         private readonly object _seeklock = new();
 
+        /// <summary>
+        /// Reads one page from the database file and decrypts the data into the given AnyPage
+        /// </summary>
+        /// <param name="page">the page to be read</param>
+        /// <param name="createheader">if true header and content structures are created on the AnyPage</param>
+        /// <exception cref="NotSupportedException"></exception>
         protected void ReadLocked(AnyPage page, bool createheader)
         {
             Perf.CallCount();
@@ -59,11 +98,13 @@ namespace KeyValium.Cache
             KvDebug.Assert(read == page.Bytes.Length, string.Format("Read length mismatch! ({0} != {1})", read, page.Bytes.Length));
 
             Encryptor.Decrypt(page);
-
+            
             if (createheader)
             {
                 page.CreateHeaderAndContent(null, 0);
             }
+
+            Validator.ValidatePage(page, page.PageNumber, false);
         }
 
         protected void WriteLocked(AnyPage page)
@@ -71,6 +112,8 @@ namespace KeyValium.Cache
             Perf.CallCount();
 
             KvDebug.Assert(page.Bytes.Length == PageSize, "Pagesize mismatch!");
+
+            Validator.ValidatePage(page, page.PageNumber, true);
 
             DbFile.Seek((long)(page.PageNumber * PageSize), SeekOrigin.Begin);
             DbFile.Write(Encryptor.Encrypt(page));

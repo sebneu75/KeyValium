@@ -1,6 +1,6 @@
 ﻿namespace KeyValium.Pages
 {
-    public static unsafe class UniversalComparer
+    internal static unsafe class UniversalComparer
     {
         /// <summary>
         /// Same as CompareBytes(BytePointer, byte[])
@@ -8,7 +8,7 @@
         /// <param name="key1"></param>
         /// <param name="key2"></param>
         /// <returns></returns>
-        public static int CompareBytes(byte[] key1, byte[] key2)
+        internal static int CompareBytes(byte[] key1, byte[] key2)
         {
             Perf.CallCount();
 

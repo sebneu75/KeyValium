@@ -38,7 +38,7 @@ namespace KeyValium.Pages.Entries
             OverflowLength = default;
             SubTree = default;
             LocalCount = default;
-            GlobalCount = default;
+            TotalCount = default;
 
             //
             // Calculate Flags
@@ -57,12 +57,12 @@ namespace KeyValium.Pages.Entries
         /// <param name="key"></param>
         /// <param name="val"></param>
         /// <param name="subtree"></param>
-        /// <param name="globalcount"></param>
+        /// <param name="totalcount"></param>
         /// <param name="localcount"></param>
         /// <param name="ovpageno"></param>
         /// <param name="ovlength"></param>
         /// <returns></returns>
-        internal EntryExtern(ReadOnlySpan<byte> key, ValInfo val, KvPagenumber? subtree, ulong globalcount, ulong localcount, KvPagenumber ovpageno, ulong ovlength)
+        internal EntryExtern(ReadOnlySpan<byte> key, ValInfo val, KvPagenumber? subtree, ulong totalcount, ulong localcount, KvPagenumber ovpageno, ulong ovlength)
         {
             Perf.CallCount();
 
@@ -73,7 +73,7 @@ namespace KeyValium.Pages.Entries
 
             Value = val;
             SubTree = subtree;
-            GlobalCount = globalcount;
+            TotalCount = totalcount;
             LocalCount = localcount;
             OverflowPageNumber = ovpageno;
             OverflowLength = ovlength;
@@ -101,7 +101,7 @@ namespace KeyValium.Pages.Entries
             EntrySize = (ushort)(sizeof(ushort) + sizeof(ushort) + Key.Length);   // Flags + [KeyLength] + KeyLength
             if ((Flags & EntryFlags.HasSubtree) != 0)
             {
-                EntrySize += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, GlobalCount, LocalCount
+                EntrySize += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, TotalCount, LocalCount
             }
             if ((Flags & EntryFlags.IsOverflow) != 0)
             {
@@ -180,7 +180,7 @@ namespace KeyValium.Pages.Entries
         #region Variables
 
         internal readonly ulong OverflowLength;
-        internal readonly ulong GlobalCount;
+        internal readonly ulong TotalCount;
         internal readonly ulong LocalCount;
         internal readonly KvPagenumber LastPage;
         internal readonly KvTid Tid;
@@ -314,7 +314,7 @@ namespace KeyValium.Pages.Entries
                 {
                     target.WriteULong(offset, SubTree.Value);
                     offset += sizeof(KvPagenumber);
-                    target.WriteULong(offset, GlobalCount);
+                    target.WriteULong(offset, TotalCount);
                     offset += sizeof(ulong);
                     target.WriteULong(offset, LocalCount);
                     offset += sizeof(ulong);
@@ -380,7 +380,7 @@ namespace KeyValium.Pages.Entries
                 {
                     BinaryPrimitives.WriteUInt64LittleEndian(target, SubTree.Value);
                     target = target.Slice(sizeof(KvPagenumber));
-                    BinaryPrimitives.WriteUInt64LittleEndian(target, GlobalCount);
+                    BinaryPrimitives.WriteUInt64LittleEndian(target, TotalCount);
                     target = target.Slice(sizeof(ulong));
                     BinaryPrimitives.WriteUInt64LittleEndian(target, LocalCount);
                     target = target.Slice(sizeof(ulong));

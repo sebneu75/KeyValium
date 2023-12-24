@@ -12,9 +12,9 @@
             DataRootPage = dataroot;
             FsRootPage = fsroot;
             LastPage = lastpage;
-            DataGlobalCount = datagc;
+            DataTotalCount = datagc;
             DataLocalCount = datalc;
-            FsGlobalCount = fsgc;
+            FsTotalCount = fsgc;
             FsLocalCount = fslc;
         }
 
@@ -28,11 +28,11 @@
 
         internal readonly KvPagenumber LastPage;
 
-        internal readonly ulong DataGlobalCount;
+        internal readonly ulong DataTotalCount;
 
         internal readonly ulong DataLocalCount;
 
-        internal readonly ulong FsGlobalCount;
+        internal readonly ulong FsTotalCount;
 
         internal readonly ulong FsLocalCount;
     }

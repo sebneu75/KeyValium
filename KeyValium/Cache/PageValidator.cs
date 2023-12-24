@@ -6,17 +6,47 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Cache
 {
-    internal class Validator
+    /// <summary>
+    /// Contains all Validations for pages. Validation happens when a page is read from or written to disk.
+    /// </summary>
+    internal class PageValidator
     {
-        [Conditional("DEBUG")]
-        public static unsafe void ValidatePage(AnyPage page, KvPagenumber pagenumber)
+        internal PageValidator(Database db, PageValidationMode mode)
+        {
+            Database = db;
+            Mode = mode;
+        }
+
+        internal readonly Database Database;
+
+        internal readonly PageValidationMode Mode;
+
+        /// <summary>
+        /// Validates a page. Throws an exception if validation fails.
+        /// </summary>
+        /// <param name="page">The page to validate</param>
+        /// <param name="pagenumber">The expected page number</param>
+        /// <param name="iswrite">true, if called before a write access</param>
+        /// <exception cref="NotSupportedException"></exception>
+        internal unsafe void ValidatePage(AnyPage page, KvPagenumber pagenumber, bool iswrite)
         {
             if (page.PageType == PageTypes.Raw)
             {
                 // do nothing with raw pages
                 return;
             }
-            else if (page.PageType == PageTypes.FileHeader)
+
+            if (iswrite && !Mode.HasFlag(PageValidationMode.BeforeWriteToDisk))
+            {
+                return;
+            }
+            else if (!iswrite && !Mode.HasFlag(PageValidationMode.AfterReadFromDisk))
+            {
+                return;
+            }
+
+
+            if (page.PageType == PageTypes.FileHeader)
             {
                 KvDebug.Assert(page.Header.Magic == Limits.Magic, "Wrong Magic!"); // || page.Header.Magic == Limits.ReverseMagic
                 KvDebug.Assert(page.Header.PageNumber == pagenumber, "Wrong page number!");
@@ -64,6 +94,11 @@ namespace KeyValium.Cache
             }
         }
 
+        internal static void ValidateFileHeader(AnyPage page)
+        {
+            // TODO
+        }
+
         public static byte GetFillByte(ushort pagetype)
         {
             Perf.CallCount();
@@ -88,5 +123,6 @@ namespace KeyValium.Cache
 
             return 0;
         }
+
     }
 }

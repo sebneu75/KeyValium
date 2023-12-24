@@ -5,7 +5,7 @@ namespace KeyValium.Pages.Headers
     /// <summary>
     /// common base of headers
     /// </summary>
-    public unsafe struct UniversalHeader
+    internal unsafe struct UniversalHeader
     {
         internal const ushort HeaderSize = 32;
 
@@ -18,6 +18,7 @@ namespace KeyValium.Pages.Headers
         }
 
         internal ByteSpan Header;
+
         internal uint PageSize;
 
         #region Common Header

@@ -15,7 +15,7 @@ namespace KeyValium.Tests.KV
     {
         public TestSuspendedKeyRef()
         {
-            var td = new TestDescription(nameof(TestKeyRefs))
+            var td = new TestDescription(nameof(TestSuspendedKeyRef))
             {
                 PageSize = 256,
                 MinKeySize = 16,
@@ -35,11 +35,20 @@ namespace KeyValium.Tests.KV
 
         readonly PreparedKeyValium pdb;
 
+        [Fact]
+        public void Test_KeyRefs()
+        {
+            Test_KeyRef1();
+            Test_KeyRef2();
+            Test_KeyRef3();
+            Test_KeyRef4();
+            Test_KeyRef5();
+        }
+
         /// <summary>
         /// checks that the keyref is available after suspension and resurrection
         /// </summary>
         /// <exception cref="Exception"></exception>
-        [Fact]
         public void Test_KeyRef1()
         {
             pdb.CreateNewDatabase(false, false);
@@ -77,7 +86,6 @@ namespace KeyValium.Tests.KV
         /// checks that the keyref is gone after rollback
         /// </summary>
         /// <exception cref="Exception"></exception>
-        [Fact]
         public void Test_KeyRef2()
         {
             pdb.CreateNewDatabase(false, false);
@@ -115,7 +123,6 @@ namespace KeyValium.Tests.KV
         /// checks that the keyref is promoted upwards the transaction chain
         /// </summary>
         /// <exception cref="Exception"></exception>
-        [Fact]
         public void Test_KeyRef3()
         {
             pdb.CreateNewDatabase(false, false);
@@ -160,7 +167,6 @@ namespace KeyValium.Tests.KV
         /// checks that the keyref is restored after rollback of child transaction
         /// </summary>
         /// <exception cref="Exception"></exception>
-        [Fact]
         public void Test_KeyRef4()
         {
             pdb.CreateNewDatabase(false, false);
@@ -210,7 +216,6 @@ namespace KeyValium.Tests.KV
         /// checks that the keyref is restored after rollback of root transaction
         /// </summary>
         /// <exception cref="Exception"></exception>
-        [Fact]
         public void Test_KeyRef5()
         {
             pdb.CreateNewDatabase(false, false);

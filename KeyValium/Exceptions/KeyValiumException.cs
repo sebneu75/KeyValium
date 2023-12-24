@@ -2,12 +2,12 @@
 {
     public class KeyValiumException : Exception
     {
-        public KeyValiumException(ErrorCodes code, string msg) : this(code, msg, null)
+        internal KeyValiumException(ErrorCodes code, string msg) : this(code, msg, null)
         {
             Perf.CallCount();
         }
 
-        public KeyValiumException(ErrorCodes code, string msg, Exception inner) : base(msg, inner)
+        internal KeyValiumException(ErrorCodes code, string msg, Exception inner) : base(msg, inner)
         {
             Perf.CallCount();
 

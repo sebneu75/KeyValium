@@ -35,7 +35,7 @@
                 {
                     if ((Flags & EntryFlags.HasSubtree) != 0)
                     {
-                        ret += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong);  // Subtree, GlobalCount, LocalCount
+                        ret += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong);  // Subtree, TotalCount, LocalCount
                     }
 
                     if ((Flags & EntryFlags.IsOverflow) != 0)
@@ -110,7 +110,7 @@
                     ushort offset = (ushort)(sizeof(ushort) + sizeof(ushort) + KeyLength);
                     if ((Flags & EntryFlags.HasSubtree) != 0)
                     {
-                        offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree + GlobalCount + LocalCount
+                        offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree + TotalCount + LocalCount
                     }
 
                     return Entry.ReadUShort(0 + offset);
@@ -141,7 +141,7 @@
                 ushort offset = (ushort)(sizeof(ushort) + sizeof(ushort) + KeyLength);
                 if ((Flags & EntryFlags.HasSubtree) != 0)
                 {
-                    offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, GlobalCount, LocalCount
+                    offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, TotalCount, LocalCount
                 }
                 offset += sizeof(ushort); // [ValueLength]
 
@@ -190,7 +190,7 @@
             }
         }
 
-        public ulong GlobalCount
+        public ulong TotalCount
         {
             get
             {
@@ -219,7 +219,7 @@
                 }
                 else
                 {
-                    throw new NotSupportedException("Subtree flag not set. Cannot write GlobalCount.");
+                    throw new NotSupportedException("Subtree flag not set. Cannot write TotalCount.");
                 }
             }
         }
@@ -271,7 +271,7 @@
                     ushort offset = (ushort)(sizeof(ushort) + sizeof(ushort) + KeyLength);
                     if ((Flags & EntryFlags.HasSubtree) != 0)
                     {
-                        offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, GlobalCount, LocalCount
+                        offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, TotalCount, LocalCount
                     }
 
                     return Entry.ReadULong(0 + offset);
@@ -294,7 +294,7 @@
                     ushort offset = (ushort)(sizeof(ushort) + sizeof(ushort) + KeyLength);
                     if ((Flags & EntryFlags.HasSubtree) != 0)
                     {
-                        offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, GlobalCount, LocalCount
+                        offset += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, TotalCount, LocalCount
                     }
                     offset += sizeof(ulong);
 
@@ -359,7 +359,7 @@
 
                 case PageTypes.DataLeaf:
                     var valinfo = new ValInfo(InlineValueBytes.ToArray());
-                    return new EntryExtern(KeyBytes.ToArray(), valinfo, SubTree, GlobalCount, LocalCount, OverflowPageNumber, OverflowLength);
+                    return new EntryExtern(KeyBytes.ToArray(), valinfo, SubTree, TotalCount, LocalCount, OverflowPageNumber, OverflowLength);
 
                 case PageTypes.FsIndex:
                     return new EntryExtern(FirstPage);

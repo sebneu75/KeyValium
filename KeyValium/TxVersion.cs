@@ -10,6 +10,8 @@ namespace KeyValium
     {
         internal TxVersion(Transaction tx)
         {
+            Perf.CallCount();
+
             Tx = tx;
             Version = tx.Version;
         }
@@ -22,6 +24,8 @@ namespace KeyValium
         {
             get
             {
+                Perf.CallCount();
+
                 return Tx != null && Tx.State == TransactionStates.Active && Tx.Version == Version;
             }
 

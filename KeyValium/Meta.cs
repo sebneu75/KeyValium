@@ -28,9 +28,9 @@ namespace KeyValium
             LastPage = meta.LastPage;
             SourceLastPage = meta.LastPage;
             SourceTid = meta.Tid;
-            DataGlobalCount = meta.DataGlobalCount;
+            DataTotalCount = meta.DataTotalCount;
             DataLocalCount = meta.DataLocalCount;
-            FsGlobalCount = meta.FsGlobalCount;
+            FsTotalCount = meta.FsTotalCount;
             FsLocalCount = meta.FsLocalCount;
         }
 
@@ -53,9 +53,9 @@ namespace KeyValium
             LastPage = source.LastPage;
             SourceLastPage = source.SourceLastPage;
             SourceTid = source.SourceTid;
-            DataGlobalCount = source.DataGlobalCount;
+            DataTotalCount = source.DataTotalCount;
             DataLocalCount = source.DataLocalCount;
-            FsGlobalCount = source.FsGlobalCount;
+            FsTotalCount = source.FsTotalCount;
             FsLocalCount = source.FsLocalCount;
         }
 
@@ -72,9 +72,9 @@ namespace KeyValium
 
         internal KvPagenumber FsRootPage;
 
-        internal ulong DataGlobalCount;
+        internal ulong DataTotalCount;
         internal ulong DataLocalCount;
-        internal ulong FsGlobalCount;
+        internal ulong FsTotalCount;
         internal ulong FsLocalCount;
 
         internal readonly KvPagenumber PageNumber;

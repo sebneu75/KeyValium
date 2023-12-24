@@ -1,7 +1,4 @@
-﻿
-using KeyValium.Encryption;
-
-namespace KeyValium.Options
+﻿namespace KeyValium.Options
 {
     public class ReadonlyDatabaseOptions
     {
@@ -87,23 +84,62 @@ namespace KeyValium.Options
             }
         }
 
-        public ByteOrder ByteOrder
+        /// <summary>
+        /// The sharing mode for the database.
+        /// Default is SharingModes.None.
+        /// </summary>
+        public SharingModes SharingMode
         {
             get
             {
                 Perf.CallCount();
 
-                return _options.ByteOrder;
+                return _options.SharingMode;
             }
         }
 
-        public bool Shared
+        /// <summary>
+        /// The timeout in milliseconds for acquiring a lock.
+        /// Only used when SharingMode is not None.
+        /// Default is 60000.
+        /// </summary>
+        public int LockTimeout
         {
             get
             {
                 Perf.CallCount();
 
-                return _options.Shared;
+                return _options.LockTimeout;
+            }
+        }
+
+        /// <summary>
+        /// The interval in milliseconds between attempts to acquire the lock.
+        /// Only used when SharingMode is Shared.
+        /// Default is 40.
+        /// </summary>
+        public int LockInterval
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return _options.LockInterval;
+            }
+        }
+
+        /// <summary>
+        /// The variance in milliseconds of the LockInterval. A random value in the range from 0 to LockIntervalVariance will be added to LockInterval.
+        /// Only used when SharingMode is Shared.
+        /// Default is 20.
+        /// </summary>
+        public int LockIntervalVariance
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return _options.LockIntervalVariance;
             }
         }
 
@@ -126,6 +162,18 @@ namespace KeyValium.Options
                 return _options.PreviousSnapshot;
             }
         }
+
+        #region Validation
+
+        public PageValidationMode ValidationMode
+        {
+            get
+            {
+                return _options.ValidationMode;
+            }
+        }
+
+        #endregion
 
         #region Security
 
@@ -236,7 +284,7 @@ namespace KeyValium.Options
             {
                 Perf.CallCount();
 
-                return _options.CacheSizeDatabaseMB;
+                return _options.CacheSizeMB;
             }
         }
 

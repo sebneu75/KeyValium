@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -13,10 +13,16 @@
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>KeyValium</Title>
-    <Version>0.1.0</Version>
+    <Version>0.5.0</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <Description>KeyValium is a key-value store for DotNet.</Description>
+    <Description>KeyValium is a key value store for DotNet.</Description>
+    <Authors>sebneu75</Authors>
+    <PackageTags>database;nosql;embedded;persistence;key value store;</PackageTags>
+    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <Copyright>(C) 2023</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -48,28 +54,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="BytePointer.cs" />
-    <Compile Remove="Cache\ExclusiveCache.cs" />
     <Compile Remove="Cache\ExclusiveMMPageProvider.cs" />
-    <Compile Remove="Cache\ICache.cs" />
-    <Compile Remove="Collections\SortedSet7.cs" />
-    <Compile Remove="Cursors\CursorBag.cs" />
-    <Compile Remove="Cursors\CursorHolder.cs" />
-    <Compile Remove="Cursors\CursorPList.cs" />
-    <Compile Remove="Cursors\KeyPathChainPList.cs" />
-    <Compile Remove="Cursors\KeyPathPList.cs" />
-    <Compile Remove="Cursors\KeyPointerPList.cs" />
     <Compile Remove="Iterators\KeyIteratorOld.cs" />
-    <Compile Remove="Memory\ChunkHandle.cs" />
-    <Compile Remove="Memory\ObjectPool.cs" />
-    <Compile Remove="Memory\PageAllocator2.cs" />
-    <Compile Remove="Memory\PageHandle.cs" />
-    <Compile Remove="Memory\PageHandle1.cs" />
-    <Compile Remove="Memory\PageHandle2.cs" />
-    <Compile Remove="Pager.cs" />
-    <Compile Remove="Pages\Entries\EntryExtern2.cs" />
-    <Compile Remove="Pages\Entries\EntryExternOld.cs" />
-    <Compile Remove="Pages\Entries\EntryExternWrapper.cs" />
   </ItemGroup>
 
   <ItemGroup>

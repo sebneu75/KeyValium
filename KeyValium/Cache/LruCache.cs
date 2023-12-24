@@ -141,8 +141,12 @@ namespace KeyValium.Cache
             {
                 _list.MoveToFirst(val.Slot);
 
+                // save slot
+                pageref.Slot = val.Slot;
+
                 // clear Page because of refcounting
                 val.Page = null;
+
                 val = pageref;
             }
             else

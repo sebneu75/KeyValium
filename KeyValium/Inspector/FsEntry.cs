@@ -8,6 +8,10 @@ namespace KeyValium.Inspector
 {
     public class FsEntry
     {
+        internal FsEntry()
+        {
+        }
+
         public KvPagenumber Pagenumber;
 
         public ushort Index;

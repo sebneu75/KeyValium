@@ -2,7 +2,7 @@
 {
     public class ByteRange
     {
-        public ByteRange(string name, int offset, int length, int index, Type type, object value, string displayvalue)
+        internal ByteRange(string name, int offset, int length, int index, Type type, object value, string displayvalue)
         {
             Children = new List<ByteRange>();
 

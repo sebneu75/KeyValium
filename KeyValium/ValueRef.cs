@@ -37,7 +37,7 @@ namespace KeyValium
             }
         }
 
-        public readonly bool IsInlineValue;
+        public readonly bool IsInlineValue = false;
 
         public readonly bool IsStreamRequired;
 

@@ -19,55 +19,37 @@ namespace KeyValium.Encryption
                 throw new ArgumentNullException("Password and/or Keyfile must be set!");
             }
 
-            _password = password;
-            _keyfile = keyfile;
+            //
+            // Initialization
+            //
+            var pw = Encoding.UTF8.GetBytes(password ?? "");
+            var salt = GetSalt(keyfile);
 
-            // Init
-            {
-                var pw = GetPassword();
-                var salt = GetSalt();
+            _bytegen = new Rfc2898DeriveBytes(pw, salt, 16384, HashAlgorithmName.SHA256);
 
-                _bytegen = new Rfc2898DeriveBytes(pw, salt, 16384, HashAlgorithmName.SHA256);
+            // clear password
+            Array.Clear(pw, 0, pw.Length);
 
-                _key = _bytegen.GetBytes(32);
-                var iv = _bytegen.GetBytes(16);
+            // clear salt
+            Array.Clear(salt, 0, salt.Length);
 
-                _crypt = Aes.Create();
-                _crypt.BlockSize = 128;
-                _crypt.KeySize = 256;
-                _crypt.Padding = PaddingMode.None;
-                _crypt.Key = _key;
-                _crypt.IV = iv;
-            }
+            _crypt = Aes.Create();
+            _crypt.BlockSize = 128;
+            _crypt.KeySize = 256;
+            _crypt.Padding = PaddingMode.None;
+            _crypt.Key = _bytegen.GetBytes(32);
+            _crypt.IV = _bytegen.GetBytes(16);
         }
 
         #region Encryption
 
-        private readonly Aes _crypt;
-
         private readonly Rfc2898DeriveBytes _bytegen;
 
-        private readonly string _password;
-
-        private readonly string _keyfile;
-
-        private readonly byte[] _key;
-
-        private readonly uint PageSize;
+        private readonly Aes _crypt;
 
         private readonly byte[] _cipherbuffer;
 
-        /// <summary>
-        /// the password is converted to a byte array.
-        /// if password is null, the empty string is used.
-        /// </summary>
-        /// <returns></returns>
-        private byte[] GetPassword()
-        {
-            Perf.CallCount();
-
-            return Encoding.UTF8.GetBytes(_password ?? "");
-        }
+        private readonly uint PageSize;        
 
         /// <summary>
         /// The salt is derived from the Keyfile. 
@@ -76,22 +58,25 @@ namespace KeyValium.Encryption
         /// If _keyfile is null. A zeroed array of 8 bytes length is returned.
         /// </summary>
         /// <returns></returns>
-        private byte[] GetSalt()
+        private byte[] GetSalt(string keyfile)
         {
             Perf.CallCount();
 
-            if (_keyfile == null)
+            if (keyfile == null)
             {
                 // initialized with zeros
                 return new byte[8];
             }
 
-            using (var reader = new FileStream(_keyfile, FileMode.Open, FileAccess.Read))
+            using (var reader = new FileStream(keyfile, FileMode.Open, FileAccess.Read))
             {
                 var saltlen = Math.Min(Math.Max(reader.Length, 8), 1024 * 1024);
 
                 var bytes = new byte[saltlen];
                 reader.Read(bytes, 0, (int)Math.Min(reader.Length, saltlen));
+
+                // clear buffers
+                reader.Flush();
 
                 return bytes;
             }
@@ -124,19 +109,30 @@ namespace KeyValium.Encryption
 
         private readonly MD5 _md5 = MD5.Create();
 
+        /// <summary>
+        /// generates an IV from the page number and the key
+        /// </summary>
+        /// <param name="pageno">the page number</param>
+        /// <returns>IV</returns>
         private byte[] GetIV(KvPagenumber pageno)
         {
             Perf.CallCount();
 
-            KvDebug.Assert(_key.Length == 32, "KeyLength missmatch!");
+            KvDebug.Assert(_crypt.Key.Length == 32, "KeyLength missmatch!");
             KvDebug.Assert(sizeof(KvPagenumber) == 8, "Size mismatch!");
 
-            var bytes = new byte[_key.Length + 16];
+            var bytes = new byte[_crypt.Key.Length + sizeof(KvPagenumber) + sizeof(KvPagenumber)];
 
-            BinaryPrimitives.WriteUInt64BigEndian(bytes.AsSpan(0, 8), pageno);
-            Buffer.BlockCopy(_key, 0, bytes, 8, _key.Length);
-            BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(_key.Length + 8, 8), pageno);
+            // write page number big endian
+            BinaryPrimitives.WriteUInt64BigEndian(bytes.AsSpan(0, sizeof(KvPagenumber)), pageno);
 
+            // copy key
+            Buffer.BlockCopy(_crypt.Key, 0, bytes, sizeof(KvPagenumber), _crypt.Key.Length);
+
+            // write page number little endian
+            BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(_crypt.Key.Length + sizeof(KvPagenumber), sizeof(KvPagenumber)), pageno);
+
+            // take MD5 checksum
             var hash = _md5.ComputeHash(bytes);
 
             Array.Clear(bytes, 0, bytes.Length);
@@ -158,8 +154,10 @@ namespace KeyValium.Encryption
             {
                 if (disposing)
                 {
+                    Array.Clear(_cipherbuffer);
+
                     _crypt.Clear();
-                    _crypt.Dispose();
+                    _crypt.Dispose();                    
                     _bytegen.Dispose();
                 }
 

@@ -223,7 +223,7 @@ namespace KeyValium
 
         internal TxVersion GetVersion()
         {
-            KvDebug.Assert(Monitor.IsEntered(TxLock), "Write lock not held!");
+            KvDebug.Assert(Monitor.IsEntered(TxLock), "TxLock not held!");
 
             return new TxVersion(this);
         }
@@ -374,13 +374,67 @@ namespace KeyValium
         #region external API
 
         /// <summary>
+        /// Returns the local number of keys (not including subtrees) in the subtree pointed to by treeref.
+        /// If treeref is null the root tree is used.
+        /// </summary>
+        /// <param name="treeref">Reference to tree</param>
+        /// <returns>Number of keys in tree</returns>
+        public ulong GetLocalCount(TreeRef treeref)
+        {
+            Perf.CallCount();
+
+            lock (TxLock)
+            {
+                try
+                {
+                    Validate(false);
+                    treeref?.Validate(this);
+
+                    return treeref == null ? Meta.DataLocalCount : treeref.LocalCount;
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(LogTopics.DataAccess, Tid, ex);
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the total number of keys (including subtrees) in the subtree pointed to by treeref.
+        /// If treeref is null the root tree is used.
+        /// </summary>
+        /// <param name="treeref">Reference to tree</param>
+        /// <returns>Number of keys in tree and its subtrees.</returns>
+        public ulong GetTotalCount(TreeRef treeref)
+        {
+            Perf.CallCount();
+
+            lock (TxLock)
+            {
+                try
+                {
+                    Validate(false);
+                    treeref?.Validate(this);
+
+                    return treeref == null ? Meta.DataTotalCount : treeref.TotalCount;
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(LogTopics.DataAccess, Tid, ex);
+                    throw;
+                }
+            }            
+        }
+
+        /// <summary>
         /// returns the value associated with key
         /// </summary>
         /// <param name="key">the key</param>
         /// <returns>
         /// The value or null if key does not exist
         /// </returns>
-        internal ValueRef Get(TreeRef treeref, ReadOnlySpan<byte> key)
+        public ValueRef Get(TreeRef treeref, ReadOnlySpan<byte> key)
         {
             Perf.CallCount();
 
@@ -479,7 +533,7 @@ namespace KeyValium
                             if (cursor.SetPosition(key))
                             {
                                 // save subtree info
-                                cursor.GetCurrentEntryInfo(out var subtree, out var gc, out var lc, out var ovpageno);
+                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno);
                                 if (ovpageno != 0)
                                 {
                                     // mark overflow pages as free
@@ -494,7 +548,7 @@ namespace KeyValium
                                     CreateOverflowPages(ref val, out ovpageno, out ovlength);
                                 }
 
-                                var entry = new EntryExtern(key, val, subtree, gc, lc, ovpageno, ovlength);
+                                var entry = new EntryExtern(key, val, subtree, tc, lc, ovpageno, ovlength);
                                 cursor.UpdateKey(ref entry);
 
                                 Version++;
@@ -597,7 +651,7 @@ namespace KeyValium
                             if (cursor.SetPosition(key))
                             {
                                 // save subtree info
-                                cursor.GetCurrentEntryInfo(out var subtree, out var gc, out var lc, out var ovpageno);
+                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno);
                                 if (ovpageno != 0)
                                 {
                                     // mark overflow pages as free
@@ -612,7 +666,7 @@ namespace KeyValium
                                     CreateOverflowPages(ref val, out ovpageno, out ovlength);
                                 }
 
-                                var entry = new EntryExtern(key, val, subtree, gc, lc, ovpageno, ovlength);
+                                var entry = new EntryExtern(key, val, subtree, tc, lc, ovpageno, ovlength);
                                 cursor.UpdateKey(ref entry);
 
 
@@ -825,7 +879,7 @@ namespace KeyValium
                             if (cursor.SetPosition(key))
                             {
                                 // save subtree info
-                                cursor.GetCurrentEntryInfo(out var subtree, out var gc, out var lc, out var ovpageno);
+                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno);
                                 if (ovpageno != 0)
                                 {
                                     // mark overflow pages as free
@@ -838,7 +892,7 @@ namespace KeyValium
                                     var valinfo = new ValInfo();
 
                                     // update with empty value
-                                    var entry = new EntryExtern(key, valinfo, subtree, gc, lc, 0, 0);  // +4ns
+                                    var entry = new EntryExtern(key, valinfo, subtree, tc, lc, 0, 0);  // +4ns
                                     cursor.UpdateKey(ref entry);
                                 }
                                 else
@@ -1870,9 +1924,9 @@ namespace KeyValium
                 Parent.Meta.DataRootPage = Meta.DataRootPage;
                 Parent.Meta.FsRootPage = Meta.FsRootPage;
                 Parent.Meta.LastPage = Meta.LastPage;
-                Parent.Meta.DataGlobalCount = Meta.DataGlobalCount;
+                Parent.Meta.DataTotalCount = Meta.DataTotalCount;
                 Parent.Meta.DataLocalCount = Meta.DataLocalCount;
-                Parent.Meta.FsGlobalCount = Meta.FsGlobalCount;
+                Parent.Meta.FsTotalCount = Meta.FsTotalCount;
                 Parent.Meta.FsLocalCount = Meta.FsLocalCount;
 
                 Parent.Pages.UpdateWith(Pages);

@@ -2,7 +2,7 @@
 
 namespace KeyValium.Pages
 {
-    public unsafe sealed class MetaPage
+    internal unsafe sealed class MetaPage
     {
         #region Constructor
 
@@ -39,9 +39,9 @@ namespace KeyValium.Pages
             FsRootPage = 0;
             DataRootPage = 0;
             LastPage = 0;
-            DataGlobalCount = 0;
+            DataTotalCount = 0;
             DataLocalCount = 0;
-            FsGlobalCount = 0;
+            FsTotalCount = 0;
             FsLocalCount = 0;
         }
 
@@ -170,9 +170,9 @@ namespace KeyValium.Pages
         }
 
         /// <summary>
-        /// 0x20 : 8 Bytes DataGlobalCount
+        /// 0x20 : 8 Bytes DataTotalCount
         /// </summary>
-        internal ulong DataGlobalCount
+        internal ulong DataTotalCount
         {
             get
             {
@@ -208,9 +208,9 @@ namespace KeyValium.Pages
         }
 
         /// <summary>
-        /// 0x30 : 8 Bytes FsGlobalCount
+        /// 0x30 : 8 Bytes FsTotalCount
         /// </summary>
-        internal ulong FsGlobalCount
+        internal ulong FsTotalCount
         {
             get
             {

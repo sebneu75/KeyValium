@@ -56,7 +56,7 @@
             colValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             colOverflowPage = new System.Windows.Forms.DataGridViewLinkColumn();
             colSubTree = new System.Windows.Forms.DataGridViewLinkColumn();
-            colGlobalCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            colTotalCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             colLocalCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             colLeftBranch = new System.Windows.Forms.DataGridViewLinkColumn();
             colRightBranch = new System.Windows.Forms.DataGridViewLinkColumn();
@@ -86,7 +86,7 @@
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             grid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            grid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { colIndex, colOffset, colFlags, colKeyLength, colKey, colValueLength, colValue, colOverflowPage, colSubTree, colGlobalCount, colLocalCount, colLeftBranch, colRightBranch, colFirstPage, colLastPage, colTid, colPageCount });
+            grid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { colIndex, colOffset, colFlags, colKeyLength, colKey, colValueLength, colValue, colOverflowPage, colSubTree, colTotalCount, colLocalCount, colLeftBranch, colRightBranch, colFirstPage, colLastPage, colTid, colPageCount });
             grid.Dock = System.Windows.Forms.DockStyle.Fill;
             grid.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             grid.EnableHeadersVisualStyles = false;
@@ -210,15 +210,15 @@
             colSubTree.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             colSubTree.Width = 73;
             // 
-            // colGlobalCount
+            // colTotalCount
             // 
             dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
             dataGridViewCellStyle11.Format = "N0";
-            colGlobalCount.DefaultCellStyle = dataGridViewCellStyle11;
-            colGlobalCount.HeaderText = "GlobalCount";
-            colGlobalCount.Name = "colGlobalCount";
-            colGlobalCount.ReadOnly = true;
-            colGlobalCount.Width = 99;
+            colTotalCount.DefaultCellStyle = dataGridViewCellStyle11;
+            colTotalCount.HeaderText = "TotalCount";
+            colTotalCount.Name = "colTotalCount";
+            colTotalCount.ReadOnly = true;
+            colTotalCount.Width = 99;
             // 
             // colLocalCount
             // 
@@ -327,7 +327,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colValue;
         private System.Windows.Forms.DataGridViewLinkColumn colOverflowPage;
         private System.Windows.Forms.DataGridViewLinkColumn colSubTree;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colGlobalCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTotalCount;
         private System.Windows.Forms.DataGridViewTextBoxColumn colLocalCount;
         private System.Windows.Forms.DataGridViewLinkColumn colLeftBranch;
         private System.Windows.Forms.DataGridViewLinkColumn colRightBranch;

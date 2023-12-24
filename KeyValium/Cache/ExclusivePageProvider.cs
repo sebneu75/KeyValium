@@ -8,8 +8,15 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Cache
 {
+    /// <summary>
+    /// Provides pages in exclusive mode
+    /// </summary>
     internal sealed class ExclusivePageProvider : PageProvider
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="db">The Database</param>
         public ExclusivePageProvider(Database db) : base(db)
         {
             Perf.CallCount();
@@ -17,9 +24,19 @@ namespace KeyValium.Cache
             _cache = new LruCache(Database.Options.CachedItems);
         }
 
+        /// <summary>
+        /// The Cache
+        /// </summary>
         internal readonly LruCache _cache;
 
-        public AnyPage GetPage(KvPagenumber pagenumber, Meta meta, bool usewritecache)
+        /// <summary>
+        /// Gets a page from the Cache
+        /// </summary>
+        /// <param name="pagenumber">the pagenumber of the requested page</param>
+        /// <param name="meta">Meta information (Not used in exclusive mode.)</param>
+        /// <param name="usewritecache">true if the writecache is to be used. (Not used in exclusive mode.)</param>
+        /// <returns>The requested page or null if the cache dors not contain the page.</returns>
+        internal AnyPage GetPage(KvPagenumber pagenumber, Meta meta, bool usewritecache)
         {
             Perf.CallCount();
 
@@ -29,7 +46,13 @@ namespace KeyValium.Cache
             return pageref.Page;
         }
 
-        public void UpsertPage(AnyPage page, Meta meta, bool usewritecache)
+        /// <summary>
+        /// Inserts or updates a page.
+        /// </summary>
+        /// <param name="page">The page to be inserted or updated</param>
+        /// <param name="meta">Meta information (Not used in exclusive mode.)</param>
+        /// <param name="usewritecache">true if the writecache is to be used. (Not used in exclusive mode.)</param>
+        internal void UpsertPage(AnyPage page, Meta meta, bool usewritecache)
         {
             Perf.CallCount();
 
@@ -39,13 +62,13 @@ namespace KeyValium.Cache
         }
 
         /// <summary>
-        /// 
+        /// Reads a page from the cache or if not found from disk.
         /// </summary>
-        /// <param name="tx"></param>
-        /// <param name="pagenumber"></param>
-        /// <param name="createheader"></param>
-        /// <param name="spilled"></param>
-        /// <returns>page with incremented refcount</returns>
+        /// <param name="tx">The transaction</param>
+        /// <param name="pagenumber">The page number.</param>
+        /// <param name="createheader">true if header and content structures should be created on the page.</param>
+        /// <param name="spilled">true if the page is a spilled page</param>
+        /// <returns>the requested page with incremented refcount</returns>
         override protected AnyPage ReadPageInternal(Transaction tx, KvPagenumber pagenumber, bool createheader, bool spilled = false)
         {
             Perf.CallCount();
@@ -55,7 +78,6 @@ namespace KeyValium.Cache
             var cachedpage = GetPage(pagenumber, tx?.Meta, spilled);
             if (cachedpage != null)
             {
-                Validator.ValidatePage(cachedpage, pagenumber);
                 //KvDebug.Assert(cachedpage.State == PageStates.Clean, "Unclean page read from cache!");
 
                 return cachedpage.AddRef();
@@ -63,8 +85,6 @@ namespace KeyValium.Cache
 
             var page = Allocator.GetPage(pagenumber, false, null, 0);
             ReadLocked(page, createheader);
-
-            Validator.ValidatePage(page, pagenumber);
 
             UpsertPage(page, tx?.Meta, spilled);
 
@@ -75,6 +95,11 @@ namespace KeyValium.Cache
             return page;
         }
 
+        /// <summary>
+        /// writes a page to disk and upserts it in the cache.
+        /// </summary>
+        /// <param name="tx">The transaction</param>
+        /// <param name="page">The page</param>
         override protected void WritePageInternal(Transaction tx, AnyPage page)
         {
             Perf.CallCount();
@@ -83,8 +108,6 @@ namespace KeyValium.Cache
             KvDebug.Assert(page.PageType == PageTypes.Meta && page.PageNumber >= Limits.FirstMetaPage && page.PageNumber <= Limits.MetaPages ||
                          page.PageType != PageTypes.Meta && page.PageNumber >= Limits.MinDataPageNumber,
                          "Pagetype and Pagenumber mismatch!");
-
-            Validator.ValidatePage(page, page.PageNumber);
 
             //KvDebug.Assert(page.State == PageStates.Dirty, "Only dirty pages can be written to disk!");
 

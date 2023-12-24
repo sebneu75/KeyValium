@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Frontends
 {
-    public sealed class InternalTypes
+    internal interface IUpdateCount
     {
-        public const uint Raw = 0x0000;
-        public const uint MultiDictionary = 0x0001;
+        ulong SetCount(ulong count);
     }
 }

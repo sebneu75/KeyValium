@@ -10,17 +10,17 @@ using System.Xml.Linq;
 
 namespace KeyValium.Tests.KV
 {
-    public sealed class TestMultiDb : IDisposable
+    public sealed class TestShared : IDisposable
     {
-        public TestMultiDb()
+        public TestShared()
         {
-            var td = new TestDescription(nameof(TestMultiDb))
+            var td = new TestDescription(nameof(TestShared))
             {
                 MinKeySize = 16,
                 MaxKeySize = 16,
                 MinValueSize = 128,
                 MaxValueSize = 128,
-                KeyCount = 10000,
+                KeyCount = 100000,
                 CommitSize = 100,
                 GenStrategy = KeyGenStrategy.Random,
                 OrderInsert = KeyOrder.Random,
@@ -36,7 +36,7 @@ namespace KeyValium.Tests.KV
         readonly PreparedKeyValium pdb;
 
         [Fact]
-        public void Test_MultiDb()
+        public void Test_Shared()
         {
             // create empty database
             pdb.CreateNewDatabase(false, false);
@@ -48,11 +48,15 @@ namespace KeyValium.Tests.KV
             var items = pdb.Description.GenerateKeys(0, pdb.Description.KeyCount);
             items = KeyValueGenerator.Order(items, pdb.Description.OrderInsert);
 
+            var threads = 100;
+
+            Assert.True(pdb.Description.KeyCount % threads == 0, "Not evenly divisible!");
+
             var tasks = new List<Task>();
 
-            for (int i = 0; i < pdb.Description.KeyCount; i += pdb.Description.CommitSize)
+            for (int i = 0; i < pdb.Description.KeyCount; i += (int)pdb.Description.KeyCount / threads)
             {
-                var list = items.Skip(i).Take(pdb.Description.CommitSize).ToList();
+                var list = items.Skip(i).Take((int)pdb.Description.KeyCount / threads).ToList();
 
                 var task = Task.Run(() => Insert(pdb.Description, list));
                 tasks.Add(task);
@@ -95,28 +99,25 @@ namespace KeyValium.Tests.KV
         {
             var dbfile = td.DbFilename;
 
+            var rnd = new Random();
+
             using (var db = Database.Open(dbfile, td.Options))
             {
-                var tx = db.BeginWriteTransaction();
-
-                Write("Start", tx);
-
-                foreach (var pair in list)
+                for (int i = 0; i < list.Count; i += pdb.Description.CommitSize)
                 {
-                    tx.Insert(null, pair.Key, pair.Value);
+                    var items = list.Skip(i).Take(pdb.Description.CommitSize).ToList();
+
+                    using (var tx = db.BeginWriteTransaction())
+                    {
+                        foreach (var pair in items)
+                        {
+                            tx.Insert(null, pair.Key, pair.Value);
+                        }
+
+                        tx.Commit();
+                    }
                 }
-
-                tx.Commit();
-
-                Write("End", tx);
             }
-
-
-            //foreach (var pair in list)
-            //{
-            //    Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
-            //    tx.DeleteKey(pair.Key);
-            //}
         }
 
         private void Write(string msg, Transaction tx)

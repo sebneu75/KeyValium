@@ -1,4 +1,4 @@
-﻿namespace KeyValium.Encryption
+﻿namespace KeyValium
 {
     public enum EncryptionAlgorithms
     {

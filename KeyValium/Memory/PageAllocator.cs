@@ -12,17 +12,17 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Memory
 {
-    public unsafe sealed class PageAllocator : IDisposable
+    internal unsafe sealed class PageAllocator : IDisposable
     {
         /// <summary>
         /// minimum number of pages to allocate at once
         /// </summary>
-        public const int MinPageCount = 16;
+        internal const int MinPageCount = 16;
 
         /// <summary>
         /// maximum size of chunk to allocate
         /// </summary>
-        public const int MaxChunkSize = 4 * 1024 * 1024;
+        internal const int MaxChunkSize = 4 * 1024 * 1024;
 
         internal PageAllocator(uint pagesize, bool zeropages)
         {

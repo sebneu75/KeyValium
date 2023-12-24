@@ -149,7 +149,6 @@ namespace KeyValium.Cache
             var cachedpage = GetPage(pagenumber, tx?.Meta, spilled);
             if (cachedpage != null)
             {
-                Validator.ValidatePage(cachedpage, pagenumber);
                 //KvDebug.Assert(cachedpage.State == PageStates.Clean, "Unclean page read from cache!");
 
                 return cachedpage.AddRef();
@@ -157,8 +156,6 @@ namespace KeyValium.Cache
 
             var page = Allocator.GetPage(pagenumber, false, null, 0);
             ReadLocked(page, createheader);
-
-            Validator.ValidatePage(page, pagenumber);
 
             UpsertPage(page, tx?.Meta, spilled);
 
@@ -177,8 +174,6 @@ namespace KeyValium.Cache
             KvDebug.Assert(page.PageType == PageTypes.Meta && page.PageNumber >= Limits.FirstMetaPage && page.PageNumber <= Limits.MetaPages ||
                          page.PageType != PageTypes.Meta && page.PageNumber >= Limits.MinDataPageNumber,
                          "Pagetype and Pagenumber mismatch!");
-
-            Validator.ValidatePage(page, page.PageNumber);
 
             //KvDebug.Assert(page.State == PageStates.Dirty, "Only dirty pages can be written to disk!");
 

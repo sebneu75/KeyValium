@@ -3,7 +3,7 @@
 
 namespace KeyValium.Pages
 {
-    public unsafe sealed class FileHeaderPage
+    internal unsafe sealed class FileHeaderPage
     {
         #region Constructor
 

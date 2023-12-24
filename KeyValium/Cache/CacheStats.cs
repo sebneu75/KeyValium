@@ -8,9 +8,12 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Cache
 {
+    /// <summary>
+    /// Holds usage statistics for the cache
+    /// </summary>
     internal class CacheStats
     {
-        public CacheStats(int pagecount, int maxitems, ulong hits, ulong misses,
+        internal CacheStats(int pagecount, int maxitems, ulong hits, ulong misses,
                           SortedDictionary<int, int> bucketcounts, PageRangeList ranges)
         {
             PageCount = pagecount;
@@ -23,11 +26,17 @@ namespace KeyValium.Cache
         }
 
         public readonly int PageCount;
+
         public readonly int MaxItems;
+
         public readonly ulong Reads;
+
         public readonly ulong Hits;
+
         public readonly ulong Misses;
+
         public readonly SortedDictionary<int, int> BucketCounts;
+
         public readonly PageRangeList Ranges;
 
         public override string ToString()

@@ -60,7 +60,7 @@ namespace KeyValium.Inspector
             internal set;
         }
 
-        public ulong? GlobalCount
+        public ulong? TotalCount
         {
             get;
             internal set;

@@ -1,4 +1,4 @@
-﻿namespace KeyValium.Cursors
+﻿namespace KeyValium
 {
     public enum DeleteHandling
     {

@@ -110,7 +110,7 @@ namespace KeyValium
         internal const int MetaDataSizePerEntry = sizeof(ushort) +           // Flags
                                                   sizeof(ushort) +           // KeyLength
                                                   sizeof(KvPagenumber) +     // Subtree
-                                                  sizeof(ulong) +            // GlobalCount
+                                                  sizeof(ulong) +            // TotalCount
                                                   sizeof(ulong) +            // LocalCount
                                                   sizeof(ushort) +           // ValueLength
                                                   sizeof(ushort);            // OffsetTableEntry

@@ -48,7 +48,7 @@ namespace KeyValium.Inspector.Controls
                     grid.Rows[index].Cells[colSubTree.Name].Value = item.SubTree;
                     grid.Rows[index].Cells[colTid.Name].Value = item.Tid;
                     grid.Rows[index].Cells[colValueLength.Name].Value = item.InlineValueLength ?? item.OverflowLength;
-                    grid.Rows[index].Cells[colGlobalCount.Name].Value = item.GlobalCount;
+                    grid.Rows[index].Cells[colTotalCount.Name].Value = item.TotalCount;
                     grid.Rows[index].Cells[colLocalCount.Name].Value = item.LocalCount;
 
                     grid.Rows[index].Tag = item;
@@ -74,7 +74,7 @@ namespace KeyValium.Inspector.Controls
             colLeftBranch.Visible = false;
 
             colOverflowPage.Visible = false;
-            colGlobalCount.Visible = false;
+            colTotalCount.Visible = false;
             colLocalCount.Visible = false;
             colPageCount.Visible = false;
             colRightBranch.Visible = false;
@@ -126,7 +126,7 @@ namespace KeyValium.Inspector.Controls
                         colValueLength.Visible = true;
                         colSubTree.Visible = true;
                         colOverflowPage.Visible = true;
-                        colGlobalCount.Visible = true;
+                        colTotalCount.Visible = true;
                         colLocalCount.Visible = true;
                         break;
                 }

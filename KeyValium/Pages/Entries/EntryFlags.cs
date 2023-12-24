@@ -1,6 +1,6 @@
 ﻿namespace KeyValium.Pages.Entries
 {
-    public static class EntryFlags
+    internal static class EntryFlags
     {
         public const ushort None = 0x0000;
 

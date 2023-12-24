@@ -139,7 +139,7 @@ namespace KeyValium.Cursors
             }
         }
 
-        private ulong GlobalCount
+        private ulong TotalCount
         {
             get
             {
@@ -151,15 +151,15 @@ namespace KeyValium.Cursors
 
                 if (IsFreeSpaceCursor)
                 {
-                    return CurrentTransaction.Meta.FsGlobalCount;
+                    return CurrentTransaction.Meta.FsTotalCount;
                 }
                 else if (TreeRef == null)
                 {
-                    return CurrentTransaction.Meta.DataGlobalCount;
+                    return CurrentTransaction.Meta.DataTotalCount;
                 }
                 else
                 {
-                    return TreeRef.GlobalCount;
+                    return TreeRef.TotalCount;
                 }
             }
             set
@@ -173,17 +173,17 @@ namespace KeyValium.Cursors
                 if (IsFreeSpaceCursor)
                 {
                     //Logger.LogInfo(LogTopics.Cursor, CurrentTransaction.Tid, "Updating FsRootPage {0} -> {1}", CurrentTransaction.Meta.FsRootPage, value);
-                    CurrentTransaction.Meta.FsGlobalCount = value;
+                    CurrentTransaction.Meta.FsTotalCount = value;
                 }
                 else if (TreeRef == null)
                 {
                     //Logger.LogInfo(LogTopics.Cursor, CurrentTransaction.Tid, "Updating DataRootPage {0} -> {1}", CurrentTransaction.Meta.DataRootPage, value);
-                    CurrentTransaction.Meta.DataGlobalCount = value;
+                    CurrentTransaction.Meta.DataTotalCount = value;
                 }
                 else
                 {
                     //Logger.LogInfo(LogTopics.Cursor, CurrentTransaction.Tid, "Updated KeyRef-RootPage {0} -> {1}", KeyRef.PageNumber, value);
-                    TreeRef.GlobalCount = value;
+                    TreeRef.TotalCount = value;
                 }
             }
         }
@@ -1339,7 +1339,7 @@ namespace KeyValium.Cursors
             entry.SubTree = pageno;
         }
 
-        internal void SetCurrentGlobalCount(ulong count)
+        internal void SetCurrentTotalCount(ulong count)
         {
             Perf.CallCount();
 
@@ -1356,7 +1356,7 @@ namespace KeyValium.Cursors
 
             // TODO refactor
             var entry = leaf.GetEntryAt(node.KeyIndex);
-            entry.GlobalCount = count;
+            entry.TotalCount = count;
         }
 
         internal void SetCurrentLocalCount(ulong count)
@@ -1399,7 +1399,7 @@ namespace KeyValium.Cursors
             return entry.SubTree;
         }
 
-        internal ulong GetCurrentGlobalCount()
+        internal ulong GetCurrentTotalCount()
         {
             Perf.CallCount();
 
@@ -1416,7 +1416,7 @@ namespace KeyValium.Cursors
 
             // TODO refactor
             var entry = leaf.GetEntryAt(node.KeyIndex);
-            return entry.GlobalCount;
+            return entry.TotalCount;
         }
 
         internal ulong GetCurrentLocalCount()
@@ -1439,7 +1439,7 @@ namespace KeyValium.Cursors
             return entry.LocalCount;
         }
 
-        internal void GetCurrentEntryInfo(out KvPagenumber? pageno, out ulong globalcount, out ulong localcount, out KvPagenumber ovpageno)
+        internal void GetCurrentEntryInfo(out KvPagenumber? pageno, out ulong totalcount, out ulong localcount, out KvPagenumber ovpageno)
         {
             Perf.CallCount();
 
@@ -1458,7 +1458,7 @@ namespace KeyValium.Cursors
             var entry = leaf.GetEntryAt(node.KeyIndex);
 
             pageno = entry.SubTree;
-            globalcount = entry.GlobalCount;
+            totalcount = entry.TotalCount;
             localcount = entry.LocalCount;
             ovpageno = entry.OverflowPageNumber;
         }
@@ -1505,13 +1505,13 @@ namespace KeyValium.Cursors
             return new ValueRef(CurrentTransaction, node.Page, node.KeyIndex);
         }
 
-        private void UpdateCount(long globaldelta, long localdelta)
+        private void UpdateCount(long totaldelta, long localdelta)
         {
             Perf.CallCount();
 
             if (IsFreeSpaceCursor)
             {
-                CurrentTransaction.Meta.FsGlobalCount += (ulong)globaldelta;
+                CurrentTransaction.Meta.FsTotalCount += (ulong)totaldelta;
                 CurrentTransaction.Meta.FsLocalCount += (ulong)localdelta;
 
                 return;
@@ -1528,7 +1528,7 @@ namespace KeyValium.Cursors
                     {
                         ref var cp = ref node.Page.AsContentPage;
                         var le = cp.GetEntryAt(node.KeyIndex);
-                        le.GlobalCount += (ulong)globaldelta;
+                        le.TotalCount += (ulong)totaldelta;
                         le.LocalCount += (ulong)localdelta;
 
                         // TODO check performance
@@ -1539,7 +1539,7 @@ namespace KeyValium.Cursors
             }
 
             // update Meta in any case
-            CurrentTransaction.Meta.DataGlobalCount += (ulong)globaldelta;
+            CurrentTransaction.Meta.DataTotalCount += (ulong)totaldelta;
             CurrentTransaction.Meta.DataLocalCount += (ulong)localdelta;
         }
 
@@ -1711,7 +1711,7 @@ namespace KeyValium.Cursors
 
                 // TODO test, remove cast
                 // update counts
-                UpdateCount(-(long)GlobalCount, -(long)LocalCount);
+                UpdateCount(-(long)TotalCount, -(long)LocalCount);
 
                 // add freepages
                 foreach (var range in ranges.ToList())  // TODO optimize

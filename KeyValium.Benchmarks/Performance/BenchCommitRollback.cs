@@ -43,7 +43,7 @@ namespace KeyValium.Benchmarks.Performance
                 OrderUpdate = KeyOrder.Ascending,
             };
 
-            td.Options.CacheSizeDatabaseMB = 256;
+            td.Options.CacheSizeMB = 256;
             td.Token = Token;
 
             _pdb = new PreparedKeyValium(td);

@@ -32,7 +32,6 @@ namespace KeyValium.Inspector.Controls
 
             if (props != null)
             {
-                lblDbByteorder.Text = string.Format("{0}", props.DbByteOrder);
                 //lblHostByteorder.Text = string.Format("{0}", props.HostByteOrder);
                 lblFilename.Text = props.Filename;
                 lblFilesize.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0} Bytes", props.FileSize);
@@ -43,7 +42,6 @@ namespace KeyValium.Inspector.Controls
                 lblMetapages.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.MetaPages);
                 lblPagecount.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.PageCount);
                 lblPagesize.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0} Bytes", props.PageSize);
-                lblSwapendianess.Text = string.Format(CultureInfo.InvariantCulture, "{0}", props.SwapEndianess);
                 lblVersion.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.Version);
                 lblInternalTypecode.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.InternalTypecode);
                 lblUserTypecode.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.UserTypecode);
@@ -54,7 +52,7 @@ namespace KeyValium.Inspector.Controls
                 {
                     "Page Number", "Transaction ID",
                     "Data Root Page", "Free Space Root Page", "Last Page Written",
-                    "Data Global Count", "Data Local Count", "Free Space Global Count", "Free Space Local Count"
+                    "Data Total Count", "Data Local Count", "Free Space Total Count", "Free Space Local Count"
                 };
 
                 var rowvalues0 = new List<object>()
@@ -64,9 +62,9 @@ namespace KeyValium.Inspector.Controls
                     props.MetaInfos[0].DataRootPage,
                     props.MetaInfos[0].FsRootPage,
                     props.MetaInfos[0].LastPage,
-                    props.MetaInfos[0].DataGlobalCount,
+                    props.MetaInfos[0].DataTotalCount,
                     props.MetaInfos[0].DataLocalCount,
-                    props.MetaInfos[0].FsGlobalCount,
+                    props.MetaInfos[0].FsTotalCount,
                     props.MetaInfos[0].FsLocalCount,
                 };
 
@@ -77,9 +75,9 @@ namespace KeyValium.Inspector.Controls
                     props.MetaInfos[1].DataRootPage,
                     props.MetaInfos[1].FsRootPage,
                     props.MetaInfos[1].LastPage,
-                    props.MetaInfos[1].DataGlobalCount,
+                    props.MetaInfos[1].DataTotalCount,
                     props.MetaInfos[1].DataLocalCount,
-                    props.MetaInfos[1].FsGlobalCount,
+                    props.MetaInfos[1].FsTotalCount,
                     props.MetaInfos[1].FsLocalCount,
                 };
 
@@ -126,7 +124,6 @@ namespace KeyValium.Inspector.Controls
             }
             else
             {
-                lblDbByteorder.Text = "";
                 lblFilename.Text = "";
                 lblFilesize.Text = "";
                 lblFirstDatapage.Text = "";
@@ -136,7 +133,6 @@ namespace KeyValium.Inspector.Controls
                 lblMetapages.Text = "";
                 lblPagecount.Text = "";
                 lblPagesize.Text = "";
-                lblSwapendianess.Text = "";
                 lblVersion.Text = "";
                 lblInternalTypecode.Text = "";
                 lblUserTypecode.Text = "";

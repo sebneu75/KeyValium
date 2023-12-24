@@ -1,36 +1,42 @@
 ﻿namespace KeyValium.Locking
 {
-    internal sealed class LockTimeout
+    internal struct LockTimeout
     {
-        public const int LOCK_TIMEOUT = 60000;
-        public const int LOCK_INTERVAL = 50;
+        static readonly Random Random = new Random();
 
-        public LockTimeout()
+        internal LockTimeout(int timeout, int interval, int variance)
         {
             Perf.CallCount();
+
+            _current = 0;
+            _timeout = timeout;
+            _interval = interval + Random.Next(variance);
         }
 
         private int _current;
 
-        //public bool IsTimedOut
-        //{
-        //    get
-        //    {
-        //        return _current >= LOCK_TIMEOUT;
-        //    }
-        //}
+        private readonly int _timeout;
+
+        private readonly int _interval;
 
         public void Wait()
         {
             Perf.CallCount();
 
-            if (_current >= LOCK_TIMEOUT)
+            if (_current >= _timeout)
             {
                 throw new TimeoutException("Could not aquire lock within timeout.");
             }
 
-            Thread.Sleep(LOCK_INTERVAL);
-            _current += LOCK_INTERVAL;
+            Thread.Sleep(_interval);
+            _current += _interval;
+        }
+
+        public void Reset()
+        {
+            Perf.CallCount();
+
+            _current = 0;
         }
     }
 }

@@ -23,56 +23,99 @@ namespace KeyValium.Tests.MultiDictionaryTests
         [Fact]
         public void TestValueRef()
         {
+            if (File.Exists(pdb.Description.DbFilename))
+            {
+                File.Delete(pdb.Description.DbFilename);
+            }
+
             using (var md = KvMultiDictionary.Open(pdb.Description.DbFilename, pdb.Description.Options))
             {
+                ulong count = 1000;
+
+                var d1 = md.EnsureDictionary<string, string>("Dict1");
+                var d2 = md.EnsureDictionary<ulong, string>("Dict2");
+                var d3 = md.EnsureDictionary<ulong, Dummy>("Dict3");
+                var d4 = md.EnsureDictionary<ulong, byte[]>("Dict4");
+
+                var list1 = new Dictionary<string, string>();
+                var list2 = new Dictionary<ulong, string>();
+                var list3 = new Dictionary<ulong, Dummy>();
+
+                for (ulong i = 0; i < count; i++)
                 {
-                    var s1 = new KvSerializer();
-                    var x1 = new byte[1] { 0x80 };
-                    var str1 = s1.Deserialize<string>(x1);
-                }
+                    list1.Add(i.ToString(), string.Format("{0}{0}{0}{0}{0}{0}{0}{0}", i));
+                    list2.Add(i, string.Format("{0}{0}{0}{0}{0}{0}{0}{0}", i));
 
-                var s = new KvJsonSerializer();
-                var x = 0x80;
-                var bytes = s.Serialize(x);
-
-                var str=Encoding.UTF8.GetString(bytes);
-
-                var d1 = md.EnsureDictionary<string, string>("Dict1", false);
-                var d2 = md.EnsureDictionary<ulong, string>("Dict2", false);
-                var d3 = md.EnsureDictionary<ulong, Dummy>("Dict3", false);
-
-                var list = md.GetDictionaries();
-
-                //for (ulong i = 0; i < 1000; i++)
-                //{
-                //    d2.Upsert(i, string.Format("{0}{0}{0}{0}{0}{0}{0}{0}", i));
-                //}
-
-                //for (ulong i = 0; i < 1000; i++)
-                //{
-                //    var x1 = d2.Get(i);
-                //    Console.WriteLine(x1);
-                //}
-
-                //return;
-
-                for (ulong i = 0; i < 100; i++)
-                {
                     var dummy = Dummy.GetRandomDummy();
-                    d3.Upsert(dummy.Id, dummy);
+                    list3.Add(dummy.Id, dummy);
                 }
 
-                for (ulong i = 1; i <= 100; i++)
+                var list = md.GetDictionaryInfos();
+
+                foreach (var item in list1)
                 {
-                    var x1 = d3.Get(i);
-                    Console.WriteLine(x1);
+                    d1[item.Key] = item.Value;
                 }
 
-                //d1.Upsert("Key", "Value");
-                //var val1 = d1.Get("Key");
-                //d1.Upsert("", "Value2");
-                //var val2 = d1.Get("");
-                //var val3 = d1.Get(null);
+                foreach (var item in list2)
+                {
+                    d2[item.Key] = item.Value;
+                }
+
+                d3.DoInTransaction(() =>
+                {
+                    foreach (var item in list3)
+                    {
+                        d3[item.Key] = item.Value;
+                    }
+                });
+
+                d3.DoInTransaction(() =>
+                {
+                    for (ulong i = 1; i <= 1000; i++)
+                    {
+                        var x1 = d3[i];
+                        Console.WriteLine(x1);
+                    }
+                });
+
+                Assert.True(d1.LongCount == count, "Count mismatch!");
+                foreach (var pair in d1)
+                {
+                    Assert.True(list1[pair.Key] == pair.Value);
+                    Assert.True(list1.Remove(pair.Key));
+                }
+                Assert.True(list1.Count == 0);
+
+                foreach (var key in d2.Keys)
+                {
+                    Assert.True(list2.ContainsKey(key));
+                }
+
+                foreach (var val in d2.Values)
+                {
+                    Assert.True(list2.ContainsValue(val));
+                }
+
+                Assert.True(d2.LongCount == count, "Count mismatch!");
+                foreach (var pair in d2)
+                {
+                    Assert.True(list2[pair.Key] == pair.Value);
+                    Assert.True(list2.Remove(pair.Key));
+                }
+                Assert.True(list2.Count == 0);
+
+                d4 = md.EnsureDictionary<ulong, byte[]>("Dict4");
+
+                for (int i = 1; i <= 100; i++)
+                {
+                    var bytes2 = new byte[i + 100];
+                    for (int k = 0; k < bytes2.Length; k++)
+                    {
+                        bytes2[k] = (byte)(i + k);
+                    }
+                    d4[(ulong)i] = bytes2;
+                }
             }
         }
 

@@ -45,18 +45,18 @@ namespace KeyValium.Tests.KV
                 filenames.Add(name);
             }
 
-            //pdb.CreateNewDatabase(false, false);
-            //foreach (var name in filenames)
-            //{
-            //    using (var reader = new FileStream(name, FileMode.Open))
-            //    {
-            //        using (var tx = pdb.Database.BeginWriteTransaction())
-            //        {
-            //            tx.InsertKeyValue(null, Encoding.UTF8.GetBytes(name), reader, reader.Length);
-            //            tx.Commit();
-            //        }
-            //    }
-            //}
+            pdb.CreateNewDatabase(false, false);
+            foreach (var name in filenames)
+            {
+                using (var reader = new FileStream(name, FileMode.Open))
+                {
+                    using (var tx = pdb.Database.BeginWriteTransaction())
+                    {
+                        tx.Insert(null, Encoding.UTF8.GetBytes(name), reader, reader.Length);
+                        tx.Commit();
+                    }
+                }
+            }
 
 
             pdb.OpenDatabase();

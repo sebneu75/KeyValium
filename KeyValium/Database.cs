@@ -1,6 +1,5 @@
 ﻿using KeyValium.Cache;
 using KeyValium.Encryption;
-using KeyValium.Frontends;
 using KeyValium.Locking;
 using KeyValium.Memory;
 using KeyValium.Options;
@@ -27,6 +26,8 @@ namespace KeyValium
 
             Options = new ReadonlyDatabaseOptions(dboptions);
 
+            Validator = new PageValidator(this, Options.ValidationMode);
+
             if (!File.Exists(dbfile))
             {
                 if (Options.CreateIfNotExists)
@@ -40,7 +41,7 @@ namespace KeyValium
             }
 
             var fileaccess = Options.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite;
-            var fileshare = Options.Shared ? FileShare.ReadWrite : FileShare.None;
+            var fileshare = Options.SharingMode == SharingModes.Exclusive ? FileShare.None : FileShare.ReadWrite;
 
             DbFile = new FileStream(dbfile, FileMode.Open, fileaccess, fileshare, 4096, FileOptions.RandomAccess);
 
@@ -56,7 +57,7 @@ namespace KeyValium
 
             MetaEntries = new MetaEntry[Limits.MetaPages];
 
-            IsShared = Options.Shared;
+            IsShared = Options.SharingMode != SharingModes.Exclusive;
 
             Limits = new Limits(this);
 
@@ -93,6 +94,8 @@ namespace KeyValium
         internal readonly IEncryption Encryptor;
 
         internal readonly KeyPool Pool;
+
+        internal readonly PageValidator Validator;
 
         //public readonly uint PageSize;
 
@@ -188,7 +191,6 @@ namespace KeyValium
                     dboptions.EnableIndexedAccess = hpany.Header.Flags.HasFlag(DatabaseFlags.IndexedAccess);
 
                     Logger.LogInfo(LogTopics.Database, "Version = {0}", dboptions.Version);
-                    Logger.LogInfo(LogTopics.Database, "ByteOrder = {0}", dboptions.ByteOrder);
                     Logger.LogInfo(LogTopics.Database, "PageSize = {0}", pagesize);
                     Logger.LogInfo(LogTopics.Database, "MaxKeySize = {0}", Limits.GetMaxKeyLength(pagesize));
                     Logger.LogInfo(LogTopics.Database, "MaxKeyAndValueSize = {0}", Limits.GetMaxKeyValueSize(pagesize));
@@ -223,6 +225,8 @@ namespace KeyValium
             var read = DbFile.Read(page.Bytes.Span);
             encheader.Decrypt(page);
             page.CreateHeaderAndContent(null, 0);
+
+            PageValidator.ValidateFileHeader(page);
 
             return page;
         }
@@ -273,7 +277,7 @@ namespace KeyValium
                     {
                         KvDebug.Assert(page.PageType == PageTypes.FileHeader || page.PageType == PageTypes.Meta, "Unexpected pagetype!");
 
-                        Validator.ValidatePage(page, page.PageNumber);
+                        Validator.ValidatePage(page, page.PageNumber, true);
 
                         var cipher = enc.Encrypt(page);
 
@@ -319,7 +323,7 @@ namespace KeyValium
                 ValidateTids(mp);
 
                 MetaEntries[i] = new MetaEntry(mp.Page.PageNumber, mp.Tid, mp.DataRootPage, mp.FsRootPage, mp.LastPage,
-                                               mp.DataGlobalCount, mp.DataLocalCount, mp.FsGlobalCount, mp.FsLocalCount);
+                                               mp.DataTotalCount, mp.DataLocalCount, mp.FsTotalCount, mp.FsLocalCount);
                 if (returnoldest)
                 {
                     if (mp.Tid < mintid)
@@ -454,9 +458,9 @@ namespace KeyValium
                     mp.Tid = meta.Tid;
                     mp.HeaderTid = meta.Tid;
                     mp.FooterTid = meta.Tid;
-                    mp.DataGlobalCount = meta.DataGlobalCount;
+                    mp.DataTotalCount = meta.DataTotalCount;
                     mp.DataLocalCount = meta.DataLocalCount;
-                    mp.FsGlobalCount = meta.FsGlobalCount;
+                    mp.FsTotalCount = meta.FsTotalCount;
                     mp.FsLocalCount = meta.FsLocalCount;
 
                     Pager.WritePage(tx, mp.Page);
@@ -774,7 +778,7 @@ namespace KeyValium
                         }
 
                         _readtransactions.Clear();
-                        
+
                         _writetransaction?.Dispose();
                         _writetransaction = null;
 

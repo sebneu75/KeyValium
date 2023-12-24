@@ -5,7 +5,7 @@ using System.Text;
 
 namespace KeyValium.Performance
 {
-    public class Counters
+    internal class Counters
     {
         internal static IKvStopwatch Stopwatch;
 

@@ -13,18 +13,6 @@
             internal set;
         }
 
-        public ByteOrder DbByteOrder
-        {
-            get;
-            internal set;
-        }
-
-        public ByteOrder HostByteOrder
-        {
-            get;
-            internal set;
-        }
-
         public ushort MaxKeyAndValueSize
         {
             get;

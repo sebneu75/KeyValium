@@ -2,7 +2,7 @@
 
 namespace KeyValium.Pages
 {
-    public unsafe struct OverflowPage
+    internal unsafe struct OverflowPage
     {
         #region Constructor
 

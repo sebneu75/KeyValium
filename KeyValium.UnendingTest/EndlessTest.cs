@@ -35,8 +35,8 @@ namespace KeyValium.UnendingTest
 
                 var td = new TestDescription("Endless");
                 td.Options.PageSize = 512;
-                td.Options.Shared = false;
-                td.Options.CacheSizeDatabaseMB = 256;
+                td.Options.SharingMode = SharingModes.Exclusive;
+                td.Options.CacheSizeMB = 256;
                 td.Options.FlushToDisk = false;
                 td.MinKeySize = 2;
                 td.MaxKeySize = 48;

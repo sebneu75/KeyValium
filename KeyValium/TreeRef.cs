@@ -76,7 +76,7 @@ namespace KeyValium
         }
 
 
-        public void Validate(Transaction tx)
+        internal void Validate(Transaction tx)
         {
             Perf.CallCount();
 
@@ -105,7 +105,7 @@ namespace KeyValium
             }
         }
 
-        public KvPagenumber PageNumber
+        internal KvPagenumber PageNumber
         {
             get
             {
@@ -123,13 +123,13 @@ namespace KeyValium
             }
         }
 
-        public ulong GlobalCount
+        internal ulong TotalCount
         {
             get
             {
                 Perf.CallCount();
 
-                return Cursor.GetCurrentGlobalCount();
+                return Cursor.GetCurrentTotalCount();
             }
             set
             {
@@ -137,11 +137,11 @@ namespace KeyValium
 
                 //KvDebug.Assert(_istouched, "KeyRef is untouched!");
 
-                Cursor.SetCurrentGlobalCount(value);
+                Cursor.SetCurrentTotalCount(value);
             }
         }
 
-        public ulong LocalCount
+        internal ulong LocalCount
         {
             get
             {

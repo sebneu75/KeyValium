@@ -22,21 +22,63 @@ namespace KeyValium.Frontends
         }
 
         [JsonInclude]
-        public string KeyType
+        public string KeyTypeName
         {
             get;            
             internal set;
         }
 
         [JsonInclude]
-        public string ValueType
+        public string KeyTypeAssemblyName
         {
             get;
             internal set;
         }
 
         [JsonInclude]
-        public bool ZipValues
+        public string ValueTypeName
+        {
+            get;
+            internal set;
+        }
+
+        [JsonInclude]
+        public string ValueTypeAssemblyName
+        {
+            get;
+            internal set;
+        }
+
+        [JsonInclude]
+        public string SerializerTypeName
+        {
+            get;
+            internal set;
+        }
+
+        [JsonInclude]
+        public string SerializerTypeAssemblyName
+        {
+            get;
+            internal set;
+        }
+
+        [JsonInclude]
+        public string SerializerOptionsTypeName
+        {
+            get;
+            internal set;
+        }
+
+        [JsonInclude]
+        public string SerializerOptionsTypeAssemblyName
+        {
+            get;
+            internal set;
+        }
+
+        [JsonInclude]
+        public object SerializerOptions
         {
             get;
             internal set;

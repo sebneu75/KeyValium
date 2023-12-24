@@ -1,6 +1,6 @@
 ﻿namespace KeyValium.Pages
 {
-    public static class PageTypes
+    internal static class PageTypes
     {
         // for overflow pages
         internal const ushort Raw = 0x00;

@@ -39,14 +39,12 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
             label1 = new System.Windows.Forms.Label();
-            label3 = new System.Windows.Forms.Label();
             label4 = new System.Windows.Forms.Label();
             label7 = new System.Windows.Forms.Label();
             label8 = new System.Windows.Forms.Label();
             label9 = new System.Windows.Forms.Label();
             label11 = new System.Windows.Forms.Label();
             label12 = new System.Windows.Forms.Label();
-            label13 = new System.Windows.Forms.Label();
             label15 = new System.Windows.Forms.Label();
             label16 = new System.Windows.Forms.Label();
             lblFilename = new System.Windows.Forms.Label();
@@ -54,8 +52,6 @@
             lblPagesize = new System.Windows.Forms.Label();
             lblFilesize = new System.Windows.Forms.Label();
             lblMetapages = new System.Windows.Forms.Label();
-            lblSwapendianess = new System.Windows.Forms.Label();
-            lblDbByteorder = new System.Windows.Forms.Label();
             lblVersion = new System.Windows.Forms.Label();
             lblFirstMetapage = new System.Windows.Forms.Label();
             lblMaxEntrysize = new System.Windows.Forms.Label();
@@ -91,16 +87,6 @@
             label1.TabIndex = 0;
             label1.Text = "File Size";
             label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label3
-            // 
-            label3.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            label3.Location = new System.Drawing.Point(449, 68);
-            label3.Name = "label3";
-            label3.Size = new System.Drawing.Size(132, 20);
-            label3.TabIndex = 2;
-            label3.Text = "Byte Order";
-            label3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label4
             // 
@@ -161,16 +147,6 @@
             label12.TabIndex = 11;
             label12.Text = "Version";
             label12.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label13
-            // 
-            label13.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            label13.Location = new System.Drawing.Point(449, 88);
-            label13.Name = "label13";
-            label13.Size = new System.Drawing.Size(132, 20);
-            label13.TabIndex = 12;
-            label13.Text = "Swap Endianess";
-            label13.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label15
             // 
@@ -238,24 +214,6 @@
             lblMetapages.TabIndex = 20;
             lblMetapages.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // lblSwapendianess
-            // 
-            lblSwapendianess.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            lblSwapendianess.Location = new System.Drawing.Point(587, 88);
-            lblSwapendianess.Name = "lblSwapendianess";
-            lblSwapendianess.Size = new System.Drawing.Size(303, 20);
-            lblSwapendianess.TabIndex = 21;
-            lblSwapendianess.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // lblDbByteorder
-            // 
-            lblDbByteorder.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            lblDbByteorder.Location = new System.Drawing.Point(587, 68);
-            lblDbByteorder.Name = "lblDbByteorder";
-            lblDbByteorder.Size = new System.Drawing.Size(303, 20);
-            lblDbByteorder.TabIndex = 22;
-            lblDbByteorder.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // lblVersion
             // 
             lblVersion.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -322,7 +280,6 @@
             tableLayoutPanel1.Controls.Add(label16, 0, 1);
             tableLayoutPanel1.Controls.Add(label9, 2, 8);
             tableLayoutPanel1.Controls.Add(label8, 2, 7);
-            tableLayoutPanel1.Controls.Add(label3, 2, 4);
             tableLayoutPanel1.Controls.Add(lblFilename, 1, 1);
             tableLayoutPanel1.Controls.Add(lblFirstMetapage, 1, 8);
             tableLayoutPanel1.Controls.Add(label7, 0, 7);
@@ -333,13 +290,10 @@
             tableLayoutPanel1.Controls.Add(label15, 0, 5);
             tableLayoutPanel1.Controls.Add(label11, 0, 8);
             tableLayoutPanel1.Controls.Add(lblVersion, 3, 3);
-            tableLayoutPanel1.Controls.Add(lblDbByteorder, 3, 4);
-            tableLayoutPanel1.Controls.Add(lblSwapendianess, 3, 5);
             tableLayoutPanel1.Controls.Add(lblFilesize, 1, 3);
             tableLayoutPanel1.Controls.Add(lblPagesize, 1, 4);
             tableLayoutPanel1.Controls.Add(lblPagecount, 1, 5);
             tableLayoutPanel1.Controls.Add(label12, 2, 3);
-            tableLayoutPanel1.Controls.Add(label13, 2, 5);
             tableLayoutPanel1.Controls.Add(lblMaxKeysize, 3, 7);
             tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -597,14 +551,12 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label lblFilename;
@@ -612,8 +564,6 @@
         private System.Windows.Forms.Label lblPagesize;
         private System.Windows.Forms.Label lblFilesize;
         private System.Windows.Forms.Label lblMetapages;
-        private System.Windows.Forms.Label lblSwapendianess;
-        private System.Windows.Forms.Label lblDbByteorder;
         private System.Windows.Forms.Label lblVersion;
         private System.Windows.Forms.Label lblFirstMetapage;
         private System.Windows.Forms.Label lblMaxEntrysize;

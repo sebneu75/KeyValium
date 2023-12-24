@@ -4,6 +4,10 @@ namespace KeyValium.Inspector
 {
     public sealed class MetaInfo
     {
+        internal MetaInfo() 
+        { 
+        } 
+
         public ushort Index
         {
             get;
@@ -52,7 +56,7 @@ namespace KeyValium.Inspector
             internal set;
         }
 
-        public ulong DataGlobalCount
+        public ulong DataTotalCount
         {
             get;
             internal set;
@@ -64,7 +68,7 @@ namespace KeyValium.Inspector
             internal set;
         }
 
-        public ulong FsGlobalCount
+        public ulong FsTotalCount
         {
             get;
             internal set;

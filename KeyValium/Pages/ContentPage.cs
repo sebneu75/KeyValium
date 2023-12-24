@@ -25,12 +25,12 @@ namespace KeyValium.Pages
             PageType = Page.PageType;
 
             // read page properties
-            ref var prop = ref PageProperties.Props[PageType];
-            BranchSize = prop.BranchSize;
-            OffsetEntrySize = prop.OffsetEntrySize;
-            SplitIndexOffset = prop.SplitIndexOffset;
-            IsIndexPage = prop.IsIndexPage;
-            IsFreespacePage = prop.IsFsPage;
+            ref var props = ref PageTypeProperties.Props[PageType];
+            BranchSize = props.BranchSize;
+            OffsetEntrySize = props.OffsetEntrySize;
+            IndexOffset = props.IndexOffset;
+            IsIndexPage = props.IsIndexPage;
+            IsFreespacePage = props.IsFsPage;
 
             EntryOffsetArray = IsFreespacePage ? null : (ushort*)(Content.Pointer + Content.Length - Limits.OffsetEntrySize);
         }
@@ -39,31 +39,31 @@ namespace KeyValium.Pages
 
         #region Properties
 
+        internal readonly AnyPage Page;
+
+        /// <summary>
+        /// pointer to last ushort of entry offset at the end of the page
+        /// </summary>
+        internal readonly ushort* EntryOffsetArray;
+
+        /// <summary>
+        /// pointer to first byte of content (first byte after header)
+        /// </summary>
+        internal ByteSpan Content;
+        
         internal readonly ushort PageType;
 
         internal readonly ushort BranchSize;
 
         internal readonly ushort OffsetEntrySize;
 
-        internal readonly ushort SplitIndexOffset;
+        internal readonly ushort IndexOffset;
+
+        internal UniversalHeader Header;
 
         internal readonly bool IsIndexPage;
 
         internal readonly bool IsFreespacePage;
-
-        internal readonly AnyPage Page;
-
-        internal UniversalHeader Header;
-
-        /// <summary>
-        /// pointer to first byte of content (first byte after header)
-        /// </summary>
-        internal ByteSpan Content;
-
-        /// <summary>
-        /// pointer to last ushort of entry offset at the end of the page
-        /// </summary>
-        internal readonly ushort* EntryOffsetArray;
 
         #endregion
 
@@ -603,7 +603,7 @@ namespace KeyValium.Pages
 
                     // for index pages search the first key that is greater than the given key
                     // so we can always take the left branch
-                    return pivot + SplitIndexOffset;
+                    return pivot + IndexOffset;
                 }
                 else if (result < 0)
                 {
@@ -753,7 +753,7 @@ namespace KeyValium.Pages
                 if (IsFreespacePage)
                 {
                     // freespace entries have fixed size, so we can simply divide entry count by 2
-                    splitindex = (ushort)((EntryCount + SplitIndexOffset) >> 1);
+                    splitindex = (ushort)((EntryCount + IndexOffset) >> 1);
                 }
                 else
                 {
@@ -809,7 +809,7 @@ namespace KeyValium.Pages
                 splitindex--;
             }
 
-            KvDebug.Assert(splitindex > 0 && splitindex < (EntryCount - SplitIndexOffset), "Splitpoint not found!");
+            KvDebug.Assert(splitindex > 0 && splitindex < (EntryCount - IndexOffset), "Splitpoint not found!");
 
             return (splitindex, false);
         }
@@ -873,7 +873,7 @@ namespace KeyValium.Pages
                     splitkey = pool.CopyKey(GetKeyBytesAt(splitindex));
 
                     this.Header.Low -= (ushort)(GetEntrySize(splitindex) + BranchSize);
-                    this.Header.High += (ushort)(OffsetEntrySize * SplitIndexOffset);
+                    this.Header.High += (ushort)(OffsetEntrySize * IndexOffset);
                     this.Header.KeyCount = (ushort)(splitindex);
                 }
 
@@ -894,7 +894,7 @@ namespace KeyValium.Pages
                     splitindex++;
                 }
 
-                insertindex -= (ushort)(splitindex + SplitIndexOffset);
+                insertindex -= (ushort)(splitindex + IndexOffset);
 
                 DumpSplitInfo(ref this, splitindex, insertindex);
             }
@@ -902,13 +902,13 @@ namespace KeyValium.Pages
             if (splitindex < EntryCount)
             {
                 // move keys to rightpage
-                var sourcekeys = GetEntryPointer(splitindex + SplitIndexOffset) - BranchSize;
+                var sourcekeys = GetEntryPointer(splitindex + IndexOffset) - BranchSize;
                 var targetkeys = rightpage.Content.Pointer;
                 ushort keyslen = (ushort)(Content.Pointer + Header.Low - sourcekeys); // ( GetEntryPointer(splitindex + SplitIndexOffset) - BranchSize));
                 rightpage.Content.MoveBytes(targetkeys, sourcekeys, keyslen);
 
                 // adjust rightpage
-                rightpage.Header.KeyCount = (ushort)(EntryCount - splitindex - SplitIndexOffset);
+                rightpage.Header.KeyCount = (ushort)(EntryCount - splitindex - IndexOffset);
                 rightpage.Header.Low = keyslen;
 
                 // move offsets to rightpage
@@ -916,7 +916,7 @@ namespace KeyValium.Pages
                 {
                     // move offsets to right page
                     var osource = Content.Pointer + Header.High + 1;
-                    var olength = (EntryCount - splitindex - SplitIndexOffset) * OffsetEntrySize;
+                    var olength = (EntryCount - splitindex - IndexOffset) * OffsetEntrySize;
                     var otarget = rightpage.Content.Pointer + rightpage.Header.ContentSize - olength;
                     rightpage.Content.MoveBytes(otarget, osource, olength);
 
@@ -930,7 +930,7 @@ namespace KeyValium.Pages
                     rightpage.UpdateEntryOffsets(0, -delta);
 
                     // adjust high
-                    this.Header.High += (ushort)(olength + OffsetEntrySize * SplitIndexOffset);
+                    this.Header.High += (ushort)(olength + OffsetEntrySize * IndexOffset);
                 }
 
                 if (IsIndexPage)
@@ -1184,7 +1184,7 @@ namespace KeyValium.Pages
         {
             if (!KvDebugOptions.FillFreeSpace) return;
 
-            var b = Validator.GetFillByte(Header.PageType);
+            var b = PageValidator.GetFillByte(Header.PageType);
             var p = Content.Pointer + Header.Low;
 
             for (int i = Header.Low; i <= Header.High; i++, p++)

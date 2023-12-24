@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace KeyValium
 {
-    public enum TrackingScope
+    internal sealed class InternalTypes
     {
-        TransactionChain = Limits.TrackingScope_TransactionChain,
-        Database= Limits.TrackingScope_Database,
+        internal const uint Raw = 0x0000;
+        internal const uint MultiDictionary = 0x0001;
     }
 }

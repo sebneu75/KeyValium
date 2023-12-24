@@ -7,10 +7,10 @@ namespace KeyValium.Inspector
 {
     public class DbInspector : IDisposable
     {
-        public DbInspector(string filename, string password, string keyfile)
+        internal DbInspector(string filename, string password, string keyfile)
         {
             var options = new DatabaseOptions();
-            options.Shared = false;
+            options.SharingMode = SharingModes.Exclusive;
             options.ReadOnly = true;
             options.Password = password;
             options.KeyFile = keyfile;
@@ -37,8 +37,6 @@ namespace KeyValium.Inspector
                 {
                     _props = new DatabaseProperties();
 
-                    _props.DbByteOrder = _database.Options.ByteOrder;
-                    _props.HostByteOrder = BitConverter.IsLittleEndian ? ByteOrder.LittleEndian : ByteOrder.BigEndian;
                     _props.Filename = _database.Filename;
                     _props.FileSize = _database.DbFile.Length;
                     _props.FirstMetaPage = Limits.FirstMetaPage;
@@ -84,9 +82,9 @@ namespace KeyValium.Inspector
             ret.HeaderTid=mp.HeaderTid;
             ret.FooterTid=mp.FooterTid;
             ret.LastPage = mp.LastPage;
-            ret.DataGlobalCount = mp.DataGlobalCount;
+            ret.DataTotalCount = mp.DataTotalCount;
             ret.DataLocalCount = mp.DataLocalCount;
-            ret.FsGlobalCount = mp.FsGlobalCount;
+            ret.FsTotalCount = mp.FsTotalCount;
             ret.FsLocalCount = mp.FsLocalCount;
 
             page.Dispose();
@@ -571,7 +569,7 @@ namespace KeyValium.Inspector
                 {
                     child.AddChild(nameof(entry.SubTree), offset, 8, typeof(ulong), entry.SubTree, entry.SubTree.HasValue ? entry.SubTree.Value.ToString("N0") : entry.SubTree.ToString());
                     offset += 8;
-                    child.AddChild(nameof(entry.GlobalCount), offset, 8, typeof(ulong), entry.GlobalCount, entry.GlobalCount.ToString("N0"));
+                    child.AddChild(nameof(entry.TotalCount), offset, 8, typeof(ulong), entry.TotalCount, entry.TotalCount.ToString("N0"));
                     offset += 8;
                     child.AddChild(nameof(entry.LocalCount), offset, 8, typeof(ulong), entry.LocalCount, entry.LocalCount.ToString("N0"));
                     offset += 8;
@@ -605,7 +603,7 @@ namespace KeyValium.Inspector
                 if ((entry.Flags & EntryFlags.HasSubtree) != 0)
                 {
                     ei.SubTree = entry.SubTree;
-                    ei.GlobalCount = entry.GlobalCount;
+                    ei.TotalCount = entry.TotalCount;
                     ei.LocalCount = entry.LocalCount;
                 }
 
@@ -667,9 +665,9 @@ namespace KeyValium.Inspector
             range.AddChild(nameof(mp.FsRootPage), 0x08, 8, typeof(ulong), mp.FsRootPage, mp.FsRootPage.ToString("N0"));
             range.AddChild(nameof(mp.DataRootPage), 0x10, 8, typeof(ulong), mp.DataRootPage, mp.DataRootPage.ToString("N0"));
             range.AddChild(nameof(mp.LastPage), 0x18, 8, typeof(ulong), mp.LastPage, mp.LastPage.ToString("N0"));
-            range.AddChild(nameof(mp.DataGlobalCount), 0x20, 8, typeof(ulong), mp.DataGlobalCount, mp.DataGlobalCount.ToString("N0"));
+            range.AddChild(nameof(mp.DataTotalCount), 0x20, 8, typeof(ulong), mp.DataTotalCount, mp.DataTotalCount.ToString("N0"));
             range.AddChild(nameof(mp.DataLocalCount), 0x28, 8, typeof(ulong), mp.DataLocalCount, mp.DataLocalCount.ToString("N0"));
-            range.AddChild(nameof(mp.FsGlobalCount), 0x30, 8, typeof(ulong), mp.FsGlobalCount, mp.FsGlobalCount.ToString("N0"));
+            range.AddChild(nameof(mp.FsTotalCount), 0x30, 8, typeof(ulong), mp.FsTotalCount, mp.FsTotalCount.ToString("N0"));
             range.AddChild(nameof(mp.FsLocalCount), 0x38, 8, typeof(ulong), mp.FsLocalCount, mp.FsLocalCount.ToString("N0"));
             range.AddChild(nameof(mp.FooterTid), mp.Content.Length-sizeof(KvTid), 8, typeof(ulong), mp.FooterTid, mp.FooterTid.ToString("N0"));
         }

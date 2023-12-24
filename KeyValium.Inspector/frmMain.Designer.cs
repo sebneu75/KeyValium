@@ -134,8 +134,8 @@ namespace KeyValium.Inspector
             tabMain.Controls.Add(tabProperties);
             tabMain.Controls.Add(tabFileMap);
             tabMain.Controls.Add(tabPageMap);
-            tabMain.Controls.Add(tabBenchmark);
             tabMain.Controls.Add(tabFreespace);
+            tabMain.Controls.Add(tabBenchmark);
             tabMain.Dock = System.Windows.Forms.DockStyle.Fill;
             tabMain.Location = new System.Drawing.Point(0, 25);
             tabMain.Name = "tabMain";
@@ -224,6 +224,7 @@ namespace KeyValium.Inspector
             benchmarkView.Presenter = null;
             benchmarkView.Size = new System.Drawing.Size(1114, 498);
             benchmarkView.TabIndex = 0;
+            benchmarkView.Visible = false;
             // 
             // tabFreespace
             // 

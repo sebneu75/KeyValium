@@ -6,27 +6,27 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Pages
 {
-    internal struct PageProperties
+    internal struct PageTypeProperties
     {
         /// <summary>
-        /// An array of page properties. The PageType is used as an index into the array
+        /// An array of page type properties. The PageType is used as an index into the array
         /// </summary>
-        internal static readonly PageProperties[] Props = new PageProperties[PageTypes.MAX_CONTENT_PAGETYPE + 1]
+        internal static readonly PageTypeProperties[] Props = new PageTypeProperties[PageTypes.MAX_CONTENT_PAGETYPE + 1]
             {
-                new PageProperties(0,0,0,false, false),                                     // 0x00 - Unused 
-                new PageProperties(sizeof(KvPagenumber), sizeof(ushort),1, true, false),    // 0x01 - DataIndex
-                new PageProperties(0, sizeof(ushort), 0, false, false),                     // 0x02 - DataLeaf
-                new PageProperties(sizeof(KvPagenumber), 0, 1, true, true),                 // 0x03 - FsIndex
-                new PageProperties(0,0,0,false, true)                                       // 0x04 - FsLeaf
+                new PageTypeProperties(0, 0, 0, false, false),                                      // 0x00 - Unused 
+                new PageTypeProperties(sizeof(KvPagenumber), sizeof(ushort), 1, true, false),       // 0x01 - DataIndex
+                new PageTypeProperties(0, sizeof(ushort), 0, false, false),                         // 0x02 - DataLeaf
+                new PageTypeProperties(sizeof(KvPagenumber), 0, 1, true, true),                     // 0x03 - FsIndex
+                new PageTypeProperties(0, 0, 0, false, true)                                        // 0x04 - FsLeaf
             };
 
-        private PageProperties(ushort bsize, ushort osize, ushort sindex, bool isindex, bool isfs)
+        private PageTypeProperties(ushort bsize, ushort osize, ushort sindex, bool isindex, bool isfs)
         {
             Perf.CallCount();
 
             BranchSize = bsize;
             OffsetEntrySize = osize;
-            SplitIndexOffset = sindex;
+            IndexOffset = sindex;
             IsIndexPage = isindex;
             IsFsPage = isfs;
         }
@@ -44,11 +44,11 @@ namespace KeyValium.Pages
         internal readonly ushort OffsetEntrySize;
 
         /// <summary>
-        /// returns the SplitIndexOffset
+        /// returns the IndexOffset
         /// 1 for Indexpages, otherwise 0 
-        /// the key at SplitIndex will be moved to the parent page when an indexpage split happens)
+        /// used for adjusting the SplitIndex and the KeyIndex in IndexPages 
         /// </summary>
-        internal readonly ushort SplitIndexOffset;
+        internal readonly ushort IndexOffset;
 
         /// <summary>
         /// true if the pagetype is an index page
@@ -56,7 +56,7 @@ namespace KeyValium.Pages
         internal readonly bool IsIndexPage;
 
         /// <summary>
-        /// true if the pagetype is an freespace page
+        /// true if the pagetype is a freespace page
         /// </summary>
         internal readonly bool IsFsPage;
     }
