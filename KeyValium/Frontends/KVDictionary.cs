@@ -17,7 +17,9 @@ using System.Threading.Tasks;
 namespace KeyValium.Frontends
 {
     public class KvDictionary<TKey, TValue> :
+        //IDictionary,
         IDictionary<TKey, TValue>,
+        //ICollection,
         ICollection<KeyValuePair<TKey, TValue>>,
         IReadOnlyDictionary<TKey, TValue>,
         IReadOnlyCollection<KeyValuePair<TKey, TValue>>,
@@ -211,7 +213,15 @@ namespace KeyValium.Frontends
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            throw new NotImplementedException();
+            if (!ContainsKey(item.Key))
+            {
+                return false;
+            }
+
+            var comp = EqualityComparer<TValue>.Default;
+            var val = this[item.Key];           
+
+            return comp.Equals(val, item.Value);
         }
 
         public bool ContainsKey(TKey key)
@@ -256,9 +266,27 @@ namespace KeyValium.Frontends
             return ret;
         }
 
-        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int index)
         {
-            throw new NotImplementedException();
+            if (array == null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
+
+            if ((uint)index > (uint)array.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            if (array.Length - index < Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            foreach (var item in this)
+            {
+                array[index++] = new KeyValuePair<TKey, TValue>(item.Key, item.Value);
+            }
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()

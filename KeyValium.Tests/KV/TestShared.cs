@@ -28,7 +28,7 @@ namespace KeyValium.Tests.KV
                 OrderDelete = KeyOrder.Random
             };
 
-            td.Options.SharingMode = SharingModes.Shared;
+            td.Options.SharingMode = SharingModes.SharedNetwork;
 
             pdb = new PreparedKeyValium(td);
         }
