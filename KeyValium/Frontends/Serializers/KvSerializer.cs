@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace KeyValium.Frontends.Serializers
 {
-    public class KvSerializer
+    internal class KvSerializer
     {
         public KvSerializer()
         {

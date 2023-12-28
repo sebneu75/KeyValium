@@ -2,7 +2,7 @@
 
 namespace KeyValium
 {
-    internal class Limits
+    public class Limits
     {
         static Limits()
         {
@@ -37,7 +37,7 @@ namespace KeyValium
         /// <summary>
         /// Magic value in headers
         /// </summary>
-        public static readonly uint Magic = (uint)(('K' << 8 | 'V') << 8 | '£') << 8 | 'µ'; // KeyVa£iuµ
+        internal static readonly uint Magic = (uint)(('K' << 8 | 'V') << 8 | '£') << 8 | 'µ'; // KeyVa£iuµ
 
         /// <summary>
         /// to detect differences in endianess
@@ -47,12 +47,12 @@ namespace KeyValium
         /// <summary>
         /// maximum size of byte array that can be allocated
         /// </summary>
-        public static readonly int MaxByteArraySize; // = 2147483591
+        internal static readonly int MaxByteArraySize; // = 2147483591
 
         /// <summary>
         /// maximum index of byte array
         /// </summary>
-        public static readonly int MaxByteArrayIndex; // = MaxByteArraySize - 1;
+        internal static readonly int MaxByteArrayIndex; // = MaxByteArraySize - 1;
 
         /// <summary>
         /// minimum page size
@@ -67,29 +67,29 @@ namespace KeyValium
         /// <summary>
         /// minimum number of keys that must fit on a leaf page
         /// </summary>
-        public const ushort MinKeysPerLeafPage = 2;
+        internal const ushort MinKeysPerLeafPage = 2;
 
         /// <summary>
         /// minimum number of keys that must fit on an index page
         /// </summary>
-        public const ushort MinKeysPerIndexPage = 3;
+        internal const ushort MinKeysPerIndexPage = 3;
 
         /// <summary>
         /// Number of MetaPages
         /// </summary>
-        public const ushort MetaPages = 2;
+        internal const ushort MetaPages = 2;
 
         /// <summary>
         /// Pagenumber of the First MetaPage
         /// </summary>
-        public const KvPagenumber FirstMetaPage = 1;
+        internal const KvPagenumber FirstMetaPage = 1;
 
         /// <summary>
         /// Pagenumber of first data page
         /// </summary>
-        public const KvPagenumber MinDataPageNumber = FirstMetaPage + MetaPages;
+        internal const KvPagenumber MinDataPageNumber = FirstMetaPage + MetaPages;
 
-        public static ushort GetMaxKeyLength(uint pagesize)
+        internal static ushort GetMaxKeyLength(uint pagesize)
         {
             Perf.CallCount();
 
@@ -115,7 +115,7 @@ namespace KeyValium
                                                   sizeof(ushort) +           // ValueLength
                                                   sizeof(ushort);            // OffsetTableEntry
 
-        public static ushort GetMaxKeyValueSize(uint pagesize)
+        internal static ushort GetMaxKeyValueSize(uint pagesize)
         {
             Perf.CallCount();
 
@@ -129,7 +129,7 @@ namespace KeyValium
         /// </summary>
         /// <param name="pagesize">pagesize in bytes</param>
         /// <returns>log2 of pagesize</returns>
-        public static ushort ValidatePageSize(uint pagesize)
+        internal static ushort ValidatePageSize(uint pagesize)
         {
             Perf.CallCount();
 
@@ -178,7 +178,7 @@ namespace KeyValium
         //    //return (ushort)((pagesize - UniversalHeader.HeaderSize - (MinKeysPerLeafPage * 16)) / MinKeysPerLeafPage);
         //}
 
-        public static ushort GetMaxInlineValueSize(uint pagesize, ushort keysize)
+        internal static ushort GetMaxInlineValueSize(uint pagesize, ushort keysize)
         {
             Perf.CallCount();
 
@@ -187,13 +187,13 @@ namespace KeyValium
             return (ushort)(GetMaxKeyValueSize(pagesize) - keysize);
         }
 
-        public Limits(Database database)
+        internal Limits(Database database)
         {
             Perf.CallCount();
 
             PageSize = database.Options.PageSize;
-            MaxKeySize = GetMaxKeyLength(PageSize);
-            MaxKeyValueSize = GetMaxKeyValueSize(PageSize);
+            MaximumKeySize = GetMaxKeyLength(PageSize);
+            MaximumInlineKeyValueSize = GetMaxKeyValueSize(PageSize);
         }
 
         #region Limits
@@ -201,26 +201,26 @@ namespace KeyValium
         /// <summary>
         /// maximum Size of a Key
         /// </summary>
-        public readonly ushort MaxKeySize;
+        public readonly ushort MaximumKeySize;
 
         /// <summary>
-        /// Maximum Length of Key + Value
+        /// Maximum inline Length of Key + Value
         /// </summary>
-        public readonly ushort MaxKeyValueSize;
+        public readonly ushort MaximumInlineKeyValueSize;
 
         /// <summary>
         /// page size
         /// </summary>
-        public readonly uint PageSize;
+        internal readonly uint PageSize;
 
         /// <summary>
         /// maximum Length of a value that is stored inline (depends on keysize)
         /// </summary>
-        public ushort MaxInlineValueSize(ushort keysize)
+        internal ushort MaxInlineValueSize(ushort keysize)
         {
             Perf.CallCount();
 
-            return (ushort)(MaxKeyValueSize - keysize);
+            return (ushort)(MaximumInlineKeyValueSize - keysize);
         }
 
         #endregion

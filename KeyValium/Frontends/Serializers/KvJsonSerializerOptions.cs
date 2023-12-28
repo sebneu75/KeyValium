@@ -8,8 +8,14 @@ using System.Text.Json.Serialization;
 
 namespace KeyValium.Frontends.Serializers
 {
+    /// <summary>
+    /// Options class for the KvJsonSerializer
+    /// </summary>
     public class KvJsonSerializerOptions
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public KvJsonSerializerOptions()
         {
             Perf.CallCount();
@@ -19,12 +25,15 @@ namespace KeyValium.Frontends.Serializers
             JsonOptions = new JsonSerializerOptions()
             {
                 ReferenceHandler = ReferenceHandler.Preserve,
-                WriteIndented = true,
+                WriteIndented = false,
             };
         }
 
         internal readonly JsonSerializerOptions JsonOptions;
 
+        /// <summary>
+        /// Should fields be included. The default is false.
+        /// </summary>
         public bool IncludeFields
         {
             get
@@ -37,6 +46,9 @@ namespace KeyValium.Frontends.Serializers
             }
         }
 
+        /// <summary>
+        /// Should references be preserved. The default is true.
+        /// </summary>
         public bool PreserveReferences
         {
             get
@@ -49,6 +61,9 @@ namespace KeyValium.Frontends.Serializers
             }
         }
 
+        /// <summary>
+        /// Should the Json be indented. The default is false.
+        /// </summary>
         public bool WriteIndented
         {
             get
@@ -61,6 +76,9 @@ namespace KeyValium.Frontends.Serializers
             }
         }
 
+        /// <summary>
+        /// Should the values be zipped. The default is false.
+        /// </summary>
         public bool ZipValues
         {
             get;

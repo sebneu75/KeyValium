@@ -1,42 +1,44 @@
-# KeyValium
+﻿# KeyValium - A key-value-store for DotNet
 
 KeyValium is a very fast key-value store for DotNet (currently DotNet 7 and 8 is supported). All data is stored in a recursive B+-tree as byte arrays.
 A frontend is included that implements the IDictionary interface and allows multiple dictionaries in a single database file.
 
+There are no dependencies.
+
 ## Features
 
-### Recursive B+-Tree 
-Every key can be the root of another B+-tree.
+* **Recursive B+-Tree:** Data is stored in a single file. Every key can be the root of another B+-tree.
+* **Supported Pagesizes:** The following pagesizes are supported: 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536. 
+Maximum key size depends on the page size (usually 1/4 of it).
+* **Transactions:** One writer, multiple readers, nested transactions.
+* **Stream Support:** Values greater then 2 GB are supported via stream interface.
+* **Multiple sharing modes:** 
+    + **Exclusive**: Only one instance can be opened.
+    + **SharedLocal**: Multiple instances can be opened on the same machine.
+    + **SharedNetwork**: Multiple instances can be opened on different machines.
+* **Count support:** Every tree keeps a local and a total count of keys.
+* **Frontends:** A MultiDictionary which manages multiple persistent dictionaries in one database file. More frontends are possible.
+* **Encryption:** The database can be encrypted with AES via password and/or a keyfile.
 
-### Multiple sharing modes
-* **Exclusive**: The database is opened exclusively. Subsequent attempts to open the database will fail.
-* **SharedLocal**: The database is opened in shared mode. Access is managed using a lockfile and a mutex. Subsequent attempts to open the database from a different machine will fail.
-* **Shared**: The database is opened in shared mode. Access is managed using two lockfiles. The database can be used from multiple computers on a network share.
 
-### Transactions
-* One writer
-* Multiple readers
-* Support for nested transactions
+# Documentation
 
-### Stream Support
-Values greater then 2 GB are supported via stream interface.
-    
-### Limits
-Maximum key size depends on page size (usually 1/4 if the page size).
+See the Wiki for documentation.
 
-### Count support
-Every tree and subtree keeps a local and a total count of keys.
+# Usage
 
-### Indexed access
-Optional indexed access to the keys (not implemented yet).
+TODO
 
-### Frontends
-A MultiDictionary which manages multiple persistent dictionaries in one database file.
-    
-### Encryption
-The database can be encrypted via password and/or a keyfile.
+# Changelog
 
-### Tools
-coming soon...
+See the release notes.
 
-    
+# License
+
+[Apache 2.0](https://opensource.org/license/apache-2-0)
+
+
+
+
+
+

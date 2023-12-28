@@ -16,6 +16,8 @@ namespace KeyValium.Frontends
 {
     public class KvMultiDictionary : IDisposable
     {
+        #region Constructor
+
         private KvMultiDictionary(string filename, DatabaseOptions options)
         {
             Perf.CallCount();
@@ -26,10 +28,27 @@ namespace KeyValium.Frontends
             DefaultSerializer = new KvJsonSerializer(new KvJsonSerializerOptions());
         }
 
+        #endregion
+
+        #region Variables
+
         private readonly Database _db;
 
         internal readonly IKvSerializer DefaultSerializer;
 
+        internal object MdLock = new object();
+
+        private Transaction _tx;
+
+        #endregion
+
+        #region Public API
+
+        /// <summary>
+        /// Opens a MultiDictionary with default options. If the file does not exist it will be created.
+        /// </summary>
+        /// <param name="filename">The database filename.</param>
+        /// <returns>An instance of KvMultiDictionary.</returns>
         public static KvMultiDictionary Open(string filename)
         {
             Perf.CallCount();
@@ -37,18 +56,29 @@ namespace KeyValium.Frontends
             return new KvMultiDictionary(filename, new DatabaseOptions());
         }
 
+        /// <summary>
+        /// Opens a MultiDictionary with user defined options. If the file does not exist it will be created 
+        /// if options.CreateIfNotExists is true.
+        /// </summary>
+        /// <param name="filename">The database filename.</param>
+        /// <returns>An instance of KvMultiDictionary.</returns>
         public static KvMultiDictionary Open(string filename, DatabaseOptions options)
         {
             Perf.CallCount();
 
             return new KvMultiDictionary(filename, options);
         }
-
-        internal object _mdlock = new object();
-
+               
+        /// <summary>
+        /// Does an action within a transaction.
+        /// Calls can be nested.
+        /// If action throws an exception the transaction is rolled back. Otherwise the transaction is commited.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        /// <param name="appendmode"></param>
         public void DoInTransaction(Action action, bool appendmode = false)
         {
-            lock (_mdlock)
+            lock (MdLock)
             {
                 var created = EnsureTransaction();
 
@@ -64,14 +94,14 @@ namespace KeyValium.Frontends
                     if (created)
                     {
                         //UpdateCounts();
-                        Commit();
+                        CommitTransaction();
                     }
                 }
                 catch (Exception ex)
                 {
                     if (created)
                     {
-                        Rollback();
+                        RollbackTransaction();
                     }
 
                     throw;
@@ -79,53 +109,16 @@ namespace KeyValium.Frontends
             }
         }
 
-        private void UpdateCounts()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Transaction _tx;
-
-        internal Transaction Tx
-        {
-            get
-            {
-                return _tx;
-            }
-        }
-
-        internal bool EnsureTransaction()
-        {
-            if (_tx == null)
-            {
-                _tx = _db.BeginWriteTransaction();
-                return true;
-            }
-
-            return false;
-        }
-
-        internal void Commit()
-        {
-            Perf.CallCount();
-
-            _tx.Commit();
-            _tx.Dispose();
-            _tx = null;
-        }
-
-        internal void Rollback()
-        {
-            Perf.CallCount();
-
-            _tx.Rollback();
-            _tx.Dispose();
-            _tx = null;
-        }
-
+        /// <summary>
+        /// Returns information about the requested dictionary. If the dictionary does not exists null is returned.
+        /// </summary>
+        /// <param name="name">Name of the dictionary.</param>
+        /// <returns></returns>
         public KvDictionaryInfo GetDictionaryInfo(string name)
         {
             Perf.CallCount();
+
+            ValidateName(name);
 
             var namebytes = DefaultSerializer.Serialize(name, false);
 
@@ -144,6 +137,10 @@ namespace KeyValium.Frontends
             return ret;
         }
 
+        /// <summary>
+        /// Returns information about all dictionaries in this instance of KvMultiDictionary.
+        /// </summary>
+        /// <returns>A list of dictionary information.</returns>
         public IList<KvDictionaryInfo> GetDictionaryInfos()
         {
             Perf.CallCount();
@@ -173,9 +170,9 @@ namespace KeyValium.Frontends
         }
 
         /// <summary>
-        /// This method makes sure that the KvDictionary exists.
+        /// Makes sure that the KvDictionary exists.
         /// If the dictionary exists it will be opened. The types of keys, values and serializer will be validated.
-        /// If the dictionary does not exist it will be created with a default serializer of type KvJsonSerializer.
+        /// If the dictionary does not exist it will be created with a default serializer of type KvJsonSerializer and default serializer options.
         /// </summary>
         /// <typeparam name="TKey">type of Key</typeparam>
         /// <typeparam name="TValue">type of Value</typeparam>
@@ -188,6 +185,17 @@ namespace KeyValium.Frontends
             return EnsureDictionary<TKey, TValue>(name, new KvJsonSerializer());
         }
 
+        /// <summary>
+        /// Makes sure that the KvDictionary exists.
+        /// If the dictionary exists it will be opened. The types of keys, values and serializer will be validated.
+        /// If the dictionary does not exist it will be created with a default serializer of type KvJsonSerializer and default serializer options.
+        /// </summary>
+        /// <typeparam name="TKey">type of Key</typeparam>
+        /// <typeparam name="TValue">type of Value</typeparam>
+        /// <param name="name">the name of the dictionary</param>
+        /// <param name="serializer">the serializer to use.</param>
+        /// <param name="force">if true the types of keys, values and serializer are not checked. Use only in case of emergency.</param>
+        /// <returns>the requested KvDictionary</returns>
         public KvDictionary<TKey, TValue> EnsureDictionary<TKey, TValue>(string name, IKvSerializer serializer, bool force = false)
         {
             Perf.CallCount();
@@ -315,7 +323,7 @@ namespace KeyValium.Frontends
         /// Updates the dictionaries serializer information.
         /// </summary>
         /// <param name="name">Required. The name of the dictionary</param>
-        /// <param name="serializertype">Required. The serializer type. If null no changes are made.</param>
+        /// <param name="serializertype">Required. The serializer type.</param>
         /// <param name="optionstype">The serializer options type.</param>
         /// <param name="serializeroptions">The serializer options.</param>
         /// <exception cref="KeyValiumException"></exception>
@@ -343,6 +351,67 @@ namespace KeyValium.Frontends
             dict.SerializerOptions = serializeroptions;
 
             UpdateDictionaryInfo(name, dict, false);
+        }
+
+        /// <summary>
+        /// Checks if the MultiDictionary is valid. Throws an exception if not valid
+        /// </summary>
+        /// <exception cref="ObjectDisposedException"></exception>
+        public void Validate()
+        {
+            Perf.CallCount();
+
+            if (_isdisposed)
+            {
+                throw new ObjectDisposedException("MultiDictionary is already disposed.");
+            }
+
+            _db.Validate();
+        }
+
+        #endregion
+
+        private void UpdateCounts()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal Transaction Tx
+        {
+            get
+            {
+                return _tx;
+            }
+        }
+
+        internal bool EnsureTransaction()
+        {
+            if (_tx == null)
+            {
+                _tx = _db.BeginWriteTransaction();
+                return true;
+            }
+
+            return false;
+        }
+
+        internal void CommitTransaction()
+        {
+            Perf.CallCount();
+
+            _tx.Commit();
+            _tx.Dispose();
+            _tx = null;
+        }
+
+        internal void RollbackTransaction()
+        {
+            Perf.CallCount();
+
+            _tx.Rollback();
+            _tx.Dispose();
+            _tx = null;
         }
 
         private void UpdateDictionaryInfo(string name, KvDictionaryInfo dict, bool create)
@@ -397,21 +466,6 @@ namespace KeyValium.Frontends
             return false;
         }
 
-        #region IValidatable
-
-        public void Validate()
-        {
-            Perf.CallCount();
-
-            if (_isdisposed)
-            {
-                throw new ObjectDisposedException("MultiDictionary is already disposed.");
-            }
-
-            _db.Validate();
-        }
-
-        #endregion
 
         #region IDisposable
 

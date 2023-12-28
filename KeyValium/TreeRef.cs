@@ -27,7 +27,7 @@ namespace KeyValium
             Database.Tracker.Add(this);
         }
 
-        public readonly ulong Oid;
+        internal readonly ulong Oid;
 
         public readonly TrackingScope Scope;
 
@@ -37,7 +37,7 @@ namespace KeyValium
 
         internal Cursor Cursor;
 
-        internal TreeRefState State
+        public TreeRefState State
         {
             get
             {
@@ -74,7 +74,6 @@ namespace KeyValium
                 }
             }
         }
-
 
         internal void Validate(Transaction tx)
         {

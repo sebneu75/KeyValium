@@ -7,13 +7,22 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Frontends
 {
+    /// <summary>
+    /// Represents the metadata for a KvDictionary.
+    /// </summary>
     public class KvDictionaryInfo
     {
-        public KvDictionaryInfo() 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        internal KvDictionaryInfo() 
         {
             Perf.CallCount();
         }
 
+        /// <summary>
+        /// Name of the dictionary.
+        /// </summary>
         [JsonIgnore]
         public string Name
         {
@@ -21,6 +30,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Name of the key type.
+        /// </summary>
         [JsonInclude]
         public string KeyTypeName
         {
@@ -28,6 +40,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Assembly name of the key type.
+        /// </summary>
         [JsonInclude]
         public string KeyTypeAssemblyName
         {
@@ -35,6 +50,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Name of the value type.
+        /// </summary>
         [JsonInclude]
         public string ValueTypeName
         {
@@ -42,6 +60,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Assembly name of the value type.
+        /// </summary>
         [JsonInclude]
         public string ValueTypeAssemblyName
         {
@@ -49,6 +70,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Name of the serializer type.
+        /// </summary>
         [JsonInclude]
         public string SerializerTypeName
         {
@@ -56,6 +80,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Assembly name of the serializer type.
+        /// </summary>
         [JsonInclude]
         public string SerializerTypeAssemblyName
         {
@@ -63,6 +90,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Name of the serializer options type if any.
+        /// </summary>
         [JsonInclude]
         public string SerializerOptionsTypeName
         {
@@ -70,6 +100,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// Assembly name of the serializer type.
+        /// </summary>
         [JsonInclude]
         public string SerializerOptionsTypeAssemblyName
         {
@@ -77,6 +110,9 @@ namespace KeyValium.Frontends
             internal set;
         }
 
+        /// <summary>
+        /// The serializer options.
+        /// </summary>
         [JsonInclude]
         public object SerializerOptions
         {

@@ -13,7 +13,7 @@
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>KeyValium</Title>
-    <Version>0.5.0</Version>
+    <Version>0.5.1-beta</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>KeyValium is a very fast key value store for DotNet.</Description>
@@ -22,9 +22,10 @@
     <PackageReleaseNotes>Initial release</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <Copyright>(C) 2023</Copyright>
-    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <Copyright>Copyright (c) 2023</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/sebneu75/KeyValium</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sebneu75/KeyValium.git</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -61,18 +62,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="docs\readme.md" />
     <None Remove="README.md" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="docs\readme.md">
+    <Content Include="..\README.md" Link="docs\README.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
+    </None>
     <None Include="Cache\ExclusiveMMPageProvider.cs" />
     <None Include="Iterators\KeyIteratorOld.cs" />
   </ItemGroup>

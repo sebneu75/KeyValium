@@ -40,8 +40,8 @@ namespace KeyValium.Inspector
                     _props.Filename = _database.Filename;
                     _props.FileSize = _database.DbFile.Length;
                     _props.FirstMetaPage = Limits.FirstMetaPage;
-                    _props.MaxKeyAndValueSize = _database.Limits.MaxKeyValueSize;
-                    _props.MaxKeySize = _database.Limits.MaxKeySize;
+                    _props.MaxKeyAndValueSize = _database.Limits.MaximumInlineKeyValueSize;
+                    _props.MaxKeySize = _database.Limits.MaximumKeySize;
                     _props.MetaPages = Limits.MetaPages;
                     _props.MinKeysPerIndexPage = Limits.MinKeysPerIndexPage;
                     _props.MinKeysPerLeafPage = Limits.MinKeysPerLeafPage;

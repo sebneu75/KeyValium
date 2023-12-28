@@ -108,13 +108,13 @@ namespace KeyValium
 
         internal Cursor FsCursor2;
 
-        public readonly ulong Oid;
+        internal readonly ulong Oid;
 
         public readonly KvTid Tid;
 
         public readonly bool IsReadOnly;
 
-        public readonly uint PageSize;
+        internal readonly uint PageSize;
 
         public readonly Transaction Root;
 
@@ -213,7 +213,7 @@ namespace KeyValium
         {
             Perf.CallCount();
 
-            if (key.Length > Database.Limits.MaxKeySize)
+            if (key.Length > Database.Limits.MaximumKeySize)
             {
                 throw new NotSupportedException("Key too long.");
             }
@@ -858,7 +858,7 @@ namespace KeyValium
             }
         }
 
-        internal bool Delete(TreeRef treeref, ReadOnlySpan<byte> key)
+        public bool Delete(TreeRef treeref, ReadOnlySpan<byte> key)
         {
             Perf.CallCount();
 
@@ -925,7 +925,7 @@ namespace KeyValium
             }
         }
 
-        internal bool Exists(TreeRef treeref, ReadOnlySpan<byte> key)
+        public bool Exists(TreeRef treeref, ReadOnlySpan<byte> key)
         {
             Perf.CallCount();
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Frontends
 {
-    public struct KvPair<TKey, TValue>
+    internal struct KvPair<TKey, TValue>
     {
         internal KvPair(TKey key, TValue value)
         {

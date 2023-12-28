@@ -576,7 +576,7 @@ namespace KeyValium.Frontends
             {
                 _dict = dict;
 
-                Monitor.Enter(_dict.Parent._mdlock);
+                Monitor.Enter(_dict.Parent.MdLock);
                 _created = _dict.Parent.EnsureTransaction();
                 _iterator = _dict.Parent.Tx.GetIterator(dict.GetDictionaryRef(_dict.Parent.Tx), true);
             }
@@ -675,17 +675,17 @@ namespace KeyValium.Frontends
                     {
                         if (_failed)
                         {
-                            _dict.Parent.Rollback();
+                            _dict.Parent.RollbackTransaction();
                         }
                         else
                         {
-                            _dict.Parent.Commit();
+                            _dict.Parent.CommitTransaction();
                         }
                     }
                 }
                 finally
                 {
-                    Monitor.Exit(_dict.Parent._mdlock);
+                    Monitor.Exit(_dict.Parent.MdLock);
                 }
             }
         }

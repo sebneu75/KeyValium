@@ -18,7 +18,7 @@ namespace KeyValium.Benchmarks.Serialization
     {
         public TestObject TestObject = new TestObject();
 
-        public KvSerializer Serializer = new();
+        internal KvSerializer Serializer = new();
 
         [ParamsAllValues]
         public bool Zip;

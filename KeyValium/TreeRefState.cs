@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace KeyValium
 {
-    internal enum TreeRefState
+    public enum TreeRefState
     {
         Active,
         Inactive,

@@ -68,7 +68,7 @@ namespace KeyValium
             Pager = IsShared ? new SharedPageProvider(this) : new ExclusivePageProvider(this);
             LockFile = IsShared ? new LockFile(this) : null;
 
-            Pool = new KeyPool(Limits.MaxKeySize);
+            Pool = new KeyPool(Limits.MaximumKeySize);
         }
 
         #region Properties
@@ -77,7 +77,7 @@ namespace KeyValium
 
         internal readonly bool IsShared;
 
-        internal readonly Limits Limits;
+        public readonly Limits Limits;
 
         internal readonly LockFile LockFile;
 
