@@ -4,7 +4,15 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            var rs = new Raw.Samples();
+            rs.CreateDatabase();
+            rs.CreateDatabase2();
+            rs.Sample2();
+            rs.Sample3();
+
+            var ms=new MultiDictionary.Samples();
+            ms.Create();
+            ms.Sample1();
         }
     }
 }

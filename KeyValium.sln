@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyValium.Performance", "Ke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValium.Samples", "KeyValium.Samples\KeyValium.Samples.csproj", "{981B939D-A673-4372-BD7A-8B59AB17FD2F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValium.Wiki", "KeyValium.Wiki\KeyValium.Wiki.csproj", "{F0BC568E-AC75-49D3-9C92-7F6F6E701866}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		CallCounts|Any CPU = CallCounts|Any CPU
@@ -121,6 +123,14 @@ Global
 		{981B939D-A673-4372-BD7A-8B59AB17FD2F}.Performance|Any CPU.Build.0 = Debug|Any CPU
 		{981B939D-A673-4372-BD7A-8B59AB17FD2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{981B939D-A673-4372-BD7A-8B59AB17FD2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.CallCounts|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.CallCounts|Any CPU.Build.0 = Debug|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.Performance|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.Performance|Any CPU.Build.0 = Debug|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0BC568E-AC75-49D3-9C92-7F6F6E701866}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

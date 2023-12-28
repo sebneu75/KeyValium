@@ -8,10 +8,10 @@ namespace KeyValium.Samples.Raw
         /// <summary>
         /// Creating a database with default options.
         /// </summary>
-        public static void CreateDatabase()
+        public void CreateDatabase()
         {
             // the database will be created if it does not exist
-            using (var db = Database.Open("sample.kvlm"))
+            using (var db = Database.Open("sample0.kvlm"))
             {
                 // do some stuff
             }
@@ -20,7 +20,7 @@ namespace KeyValium.Samples.Raw
         /// <summary>
         /// Creating a database with options.
         /// </summary>
-        public static void CreateDatabase2()
+        public void CreateDatabase2()
         {
             var options = new DatabaseOptions();
 
@@ -29,7 +29,7 @@ namespace KeyValium.Samples.Raw
             options.UserTypeCode = 0xc0de;
 
             // the database will be created if it does not exist
-            using (var db = Database.Open("sample.kvlm", options))
+            using (var db = Database.Open("sample1.kvlm", options))
             {
                 // do some stuff
             }
@@ -37,10 +37,10 @@ namespace KeyValium.Samples.Raw
 
         static Encoding encoding = Encoding.UTF8;
 
-        public static void Sample2()
+        public void Sample2()
         {
             // open or create a database with default options
-            using (var db = Database.Open("sample.kvlm"))
+            using (var db = Database.Open("sample2.kvlm"))
             {
                 // insert some data
                 using (var tx = db.BeginWriteTransaction())
@@ -70,6 +70,14 @@ namespace KeyValium.Samples.Raw
                     tx.Commit();
                 }
 
+                // read data
+                using (var tx = db.BeginReadTransaction())
+                {
+                    Display(tx.Get(null, encoding.GetBytes("Key1")));
+                    Display(tx.Get(null, encoding.GetBytes("Key2")));
+                    Display(tx.Get(null, encoding.GetBytes("Key3")));
+                }
+
                 // delete data
                 using (var tx = db.BeginWriteTransaction())
                 {
@@ -78,6 +86,14 @@ namespace KeyValium.Samples.Raw
                     tx.Delete(null, encoding.GetBytes("Key3"));
 
                     tx.Commit();
+                }
+
+                // read data
+                using (var tx = db.BeginReadTransaction())
+                {
+                    Display(tx.Get(null, encoding.GetBytes("Key1")));
+                    Display(tx.Get(null, encoding.GetBytes("Key2")));
+                    Display(tx.Get(null, encoding.GetBytes("Key3")));
                 }
             }
         }
@@ -97,12 +113,12 @@ namespace KeyValium.Samples.Raw
         /// <summary>
         /// working with subtrees (TreeRefs)
         /// </summary>
-        public static void Sample3()
+        public void Sample3()
         {
             var encoding = Encoding.UTF8;
 
             // open or create a database with default options
-            using (var db = Database.Open("sample.kvlm"))
+            using (var db = Database.Open("sample3.kvlm"))
             {
                 TreeRef treeref1;
                 TreeRef treeref2;
@@ -119,9 +135,9 @@ namespace KeyValium.Samples.Raw
                     tx.Commit();
                 }
 
-                Console.WriteLine("treeref1: {0})", treeref1.State);
-                Console.WriteLine("treeref2: {0})", treeref2.State);
-                Console.WriteLine("treeref3: {0})", treeref3.State);
+                Console.WriteLine("treeref1: {0}", treeref1.State);
+                Console.WriteLine("treeref2: {0}", treeref2.State);
+                Console.WriteLine("treeref3: {0}", treeref3.State);
 
                 // insert data in subtrees
                 using (var tx = db.BeginWriteTransaction())
@@ -141,9 +157,9 @@ namespace KeyValium.Samples.Raw
                     tx.Commit();
                 }
 
-                Console.WriteLine("treeref1: {0})", treeref1.State);
-                Console.WriteLine("treeref2: {0})", treeref2.State);
-                Console.WriteLine("treeref3: {0})", treeref3.State);
+                Console.WriteLine("treeref1: {0}", treeref1.State);
+                Console.WriteLine("treeref2: {0}", treeref2.State);
+                Console.WriteLine("treeref3: {0}", treeref3.State);
 
                 // reading data from subtrees
                 using (var tx = db.BeginReadTransaction())
@@ -161,9 +177,9 @@ namespace KeyValium.Samples.Raw
                     Display(tx.Get(treeref3, encoding.GetBytes("Root3-Key3")));
                 }
 
-                Console.WriteLine("treeref1: {0})", treeref1.State);
-                Console.WriteLine("treeref2: {0})", treeref2.State);
-                Console.WriteLine("treeref3: {0})", treeref3.State);
+                Console.WriteLine("treeref1: {0}", treeref1.State);
+                Console.WriteLine("treeref2: {0}", treeref2.State);
+                Console.WriteLine("treeref3: {0}", treeref3.State);
 
                 // delete subtrees
                 using (var tx = db.BeginWriteTransaction())
@@ -175,9 +191,9 @@ namespace KeyValium.Samples.Raw
                     tx.Commit();
                 }
 
-                Console.WriteLine("treeref1: {0})", treeref1.State);
-                Console.WriteLine("treeref2: {0})", treeref2.State);
-                Console.WriteLine("treeref3: {0})", treeref3.State);
+                Console.WriteLine("treeref1: {0}", treeref1.State);
+                Console.WriteLine("treeref2: {0}", treeref2.State);
+                Console.WriteLine("treeref3: {0}", treeref3.State);
             }
         }
     }

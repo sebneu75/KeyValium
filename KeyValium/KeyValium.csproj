@@ -19,7 +19,9 @@
     <Description>KeyValium is a very fast key value store for DotNet.</Description>
     <Authors>sebneu75</Authors>
     <PackageTags>database;nosql;embedded;persistence;key value store;</PackageTags>
-    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+    <PackageReleaseNotes>added documentation
+updated access modifiers for classes and methods
+bug fixes</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <Copyright>Copyright (c) 2023</Copyright>

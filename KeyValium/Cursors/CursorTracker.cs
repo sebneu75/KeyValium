@@ -129,7 +129,11 @@ namespace KeyValium.Cursors
             {
                 var tc = _treerefs[oid];
 
-                _cursors.Remove(tc.Cursor.Oid);
+                if (tc.Cursor != null)
+                {
+                    _cursors.Remove(tc.Cursor.Oid);
+                }
+
                 _treerefs.Remove(oid);
                 _suspended.Remove(oid);
             }
@@ -382,9 +386,11 @@ namespace KeyValium.Cursors
                         {
                             // if TreeRef exists in Suspended state it may become valid again
                             // so only dispose the cursor
-
-                            tc.Cursor.Dispose();
+                            
+                            tc.TreeRef.Cursor.Dispose();
+                            tc.TreeRef.Cursor = null;                            
                             tc.Cursor = null;
+
                             //var temp = tc.TreeRef;
                             //tc.TreeRef = null;
                             //tc.Dispose();

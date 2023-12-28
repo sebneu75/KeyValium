@@ -15,6 +15,7 @@ namespace KeyValium.Frontends
         /// <summary>
         /// Constructor
         /// </summary>
+        [JsonConstructor]
         internal KvDictionaryInfo() 
         {
             Perf.CallCount();
