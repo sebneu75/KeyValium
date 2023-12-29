@@ -11,6 +11,9 @@
 
         private readonly DatabaseOptions _options;
 
+        /// <summary>
+        /// Returns true if indexed access is enabled.
+        /// </summary>
         public bool EnableIndexedAccess
         {
             get
@@ -20,7 +23,7 @@
         }
 
         /// <summary>
-        ///  Pagesize, must be a power of two
+        /// Returns the page size.
         /// </summary>
         public uint PageSize
         {
@@ -33,9 +36,9 @@
         }
 
         /// <summary>
-        /// Version (only 1 is allowed)
+        /// Returns the version.
         /// </summary>
-        public ushort Version
+        internal ushort Version
         {
             get
             {
@@ -46,7 +49,7 @@
         }
 
         /// <summary>
-        /// true if the database should be created if itr does not exist
+        /// True if the database should be created if it does not exist.
         /// </summary>
         public bool CreateIfNotExists
         {
@@ -61,7 +64,7 @@
         /// <summary>
         /// internal type code
         /// </summary>
-        public uint InternalTypeCode
+        internal uint InternalTypeCode
         {
             get
             {
@@ -72,8 +75,7 @@
         }
 
         /// <summary>
-        /// user type code
-        /// </summary>
+        /// Returns the user defined type code.
         public uint UserTypeCode
         {
             get
@@ -85,8 +87,7 @@
         }
 
         /// <summary>
-        /// The sharing mode for the database.
-        /// Default is SharingModes.None.
+        /// Returns the sharing mode for the database.
         /// </summary>
         public SharingModes SharingMode
         {
@@ -99,9 +100,7 @@
         }
 
         /// <summary>
-        /// The timeout in milliseconds for acquiring a lock.
-        /// Only used when SharingMode is not None.
-        /// Default is 60000.
+        /// Returns the lock timeout in milliseconds.
         /// </summary>
         public int LockTimeout
         {
@@ -114,9 +113,7 @@
         }
 
         /// <summary>
-        /// The interval in milliseconds between attempts to acquire the lock.
-        /// Only used when SharingMode is Shared.
-        /// Default is 40.
+        /// Returns the lock interval in milliseconds.
         /// </summary>
         public int LockInterval
         {
@@ -129,9 +126,7 @@
         }
 
         /// <summary>
-        /// The variance in milliseconds of the LockInterval. A random value in the range from 0 to LockIntervalVariance will be added to LockInterval.
-        /// Only used when SharingMode is Shared.
-        /// Default is 20.
+        /// Returns the lock interval variance in milliseconds.
         /// </summary>
         public int LockIntervalVariance
         {
@@ -143,6 +138,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns true if the database is readonly.
+        /// </summary>
         public bool ReadOnly
         {
             get
@@ -153,7 +151,7 @@
             }
         }
 
-        public bool PreviousSnapshot
+        internal bool PreviousSnapshot
         {
             get
             {
@@ -165,6 +163,9 @@
 
         #region Validation
 
+        /// <summary>
+        /// Returns validation mode for pages.
+        /// </summary>
         public PageValidationMode ValidationMode
         {
             get
@@ -177,6 +178,9 @@
 
         #region Security
 
+        /// <summary>
+        /// Returns the password.
+        /// </summary>
         public string Password
         {
             get
@@ -187,6 +191,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns the key file.
+        /// </summary>
         public string KeyFile
         {
             get
@@ -197,6 +204,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns the encryption alogorithm.
+        /// </summary>
         public EncryptionAlgorithms Algorithm
         {
             get
@@ -207,6 +217,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns true if the database is encrypted.
+        /// </summary>
         public bool IsEncrypted
         {
             get
@@ -221,6 +234,9 @@
 
         #region Safety
 
+        /// <summary>
+        /// Returns true if data is flushed to disk after write.
+        /// </summary>
         public bool FlushToDisk
         {
             get
@@ -235,7 +251,7 @@
         /// <summary>
         /// if true the memory of the page will be zeroed out before it is evicted from the cache
         /// </summary>
-        public bool ZeroPagesOnEvict
+        internal bool ZeroPagesOnEvict
         {
             get
             {
@@ -248,7 +264,7 @@
         /// <summary>
         /// if true the freespace within a page will be zeroed out before writing to disk
         /// </summary>
-        public bool ZeroFreespace
+        internal bool ZeroFreespace
         {
             get
             {
@@ -264,7 +280,7 @@
         /// TODO mark freepages that are cleared (new flag)
         /// TODO do it in post commit phase
         /// </summary>
-        public bool ZeroFreePages
+        internal bool ZeroFreePages
         {
             get
             {
@@ -278,6 +294,9 @@
 
         #region Memory
 
+        /// <summary>
+        /// Returns the cache size in megabytes.
+        /// </summary>
         public int CacheSizeDatabaseMB
         {
             get
@@ -298,6 +317,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns the spill size in megabytes.
+        /// </summary>
         public int SpillSizeMB
         {
             get
@@ -308,7 +330,7 @@
             }
         }
 
-        public long SpillSize
+        internal long SpillSize
         {
             get
             {
@@ -318,6 +340,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns the value spill size in megabytes.
+        /// </summary>
         public int ValueSpillSizeMB
         {
             get
@@ -328,7 +353,7 @@
             }
         }
 
-        public long ValueSpillSize
+        internal long ValueSpillSize
         {
             get
             {

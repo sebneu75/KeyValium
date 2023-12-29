@@ -1,5 +1,6 @@
 ﻿using KeyValium.Memory;
 using System.Buffers.Binary;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 

@@ -3,7 +3,7 @@
 namespace KeyValium.Options
 {
     /// <summary>
-    /// Options for creating and opnening a database
+    /// Options for creating and opening a database.
     /// </summary>
     public class DatabaseOptions
     {
@@ -53,13 +53,16 @@ namespace KeyValium.Options
             ValueSpillSizeMB = 4;
         }
 
+        #region Options for Creating a Database
+
+        /// <summary>
+        /// Enables or disables indexed access.
+        /// </summary>
         internal bool EnableIndexedAccess
         {
             get;
             set;
         }
-
-        #region Options for Creating a Database
 
         /// <summary>
         ///  The page size in bytes. It must be a power of two in the range from 256 to 65536. Valid values are 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536.

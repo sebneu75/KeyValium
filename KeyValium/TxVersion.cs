@@ -28,7 +28,6 @@ namespace KeyValium
 
                 return Tx != null && Tx.State == TransactionStates.Active && Tx.Version == Version;
             }
-
         }
 
         internal void Validate()

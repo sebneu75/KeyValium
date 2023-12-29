@@ -2,7 +2,6 @@
 {
     internal unsafe ref struct EntryInline
     {
-
         internal EntryInline(ByteSpan entry, ushort pagetype)
         {
             Perf.CallCount();

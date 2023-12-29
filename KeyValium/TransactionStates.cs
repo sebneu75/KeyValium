@@ -1,5 +1,8 @@
 ﻿namespace KeyValium
 {
+    /// <summary>
+    /// The states of a transaction.
+    /// </summary>
     public enum TransactionStates
     {
         Active,

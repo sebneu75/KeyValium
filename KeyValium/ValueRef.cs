@@ -3,6 +3,9 @@ using System.Text;
 
 namespace KeyValium
 {
+    /// <summary>
+    /// A "pointer" to a database entry.
+    /// </summary>
     public ref struct ValueRef
     {
         internal ValueRef(Transaction tx, AnyPage page, int index)
@@ -37,10 +40,19 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// True if the value of this entry is stored inline. Otherwise false.
+        /// </summary>
         public readonly bool IsInlineValue = false;
 
+        /// <summary>
+        /// If true if the value is longer than Array.MaxLength. It must be accessed as a stream then.
+        /// </summary>
         public readonly bool IsStreamRequired;
 
+        /// <summary>
+        /// Length of the value.
+        /// </summary>
         public readonly ulong Length = 0;
 
         internal readonly OverflowStream _ovstream;
@@ -51,6 +63,10 @@ namespace KeyValium
 
         internal readonly ReadOnlySpan<byte> _inlinevalue;
 
+        /// <summary>
+        /// True if the ValueRef is valid. Otherwise false.
+        /// A ValueRef becomes invalid when the transaction ends or is modified.
+        /// </summary>
         public bool IsValid
         {
             get
@@ -68,6 +84,9 @@ namespace KeyValium
             Version.Validate();
         }
 
+        /// <summary>
+        /// The key of the entry.
+        /// </summary>
         public ReadOnlySpan<byte> Key
         {
             get
@@ -80,6 +99,10 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// The value of the entry. If the value is stored inline no copy is made.
+        /// Otherwise a copy of the value is returned.
+        /// </summary>
         public ReadOnlySpan<byte> ValueSpan
         {
             get
@@ -92,6 +115,9 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Returns a copy of the value.
+        /// </summary>
         public byte[] Value
         {
             get
@@ -129,6 +155,10 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Returns the value as a stream. If the value is stored inline a MemoryStream containing a copy is returned. 
+        /// Otherwise an OverflowStream is used.
+        /// </summary>
         public Stream ValueStream
         {
             get
@@ -166,7 +196,7 @@ namespace KeyValium
             return ret;
         }
 
-        public string GetDebugInfo()
+        internal string GetDebugInfo()
         {
             return string.Format("Length={0} IsValid={1} IsInlineValue={2} OFS.Length={3} OFS.Position={4} OFS.Page={5}",
                  Length, IsValid, IsInlineValue, _ovstream?.Length, _ovstream?.Position, _ovstream?._pageno);

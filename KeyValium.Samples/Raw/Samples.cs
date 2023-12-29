@@ -175,6 +175,18 @@ namespace KeyValium.Samples.Raw
                     Display(tx.Get(treeref3, encoding.GetBytes("Root3-Key1")));
                     Display(tx.Get(treeref3, encoding.GetBytes("Root3-Key2")));
                     Display(tx.Get(treeref3, encoding.GetBytes("Root3-Key3")));
+
+                    // getting count of keys in the root tree excluding its subtrees
+                    var localcount = tx.GetLocalCount(null);
+
+                    // getting total count of keys in the root tree and its subtrees
+                    var globalcount = tx.GetTotalCount(null);
+
+                    // getting count of keys in a specific subtree excluding its subtrees
+                    localcount = tx.GetLocalCount(treeref1);
+
+                    // getting count of keys in a specific subtree including its subtrees
+                    globalcount = tx.GetTotalCount(treeref1);
                 }
 
                 Console.WriteLine("treeref1: {0}", treeref1.State);

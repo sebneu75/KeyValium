@@ -18,17 +18,17 @@ namespace KeyValium
         None = 0x0000,
 
         /// <summary>
-        /// Validation happens after a page is read from disk
+        /// Validation happens after a page is read from disk.
         /// </summary>
         AfterReadFromDisk = 0x0001,
 
         /// <summary>
-        /// Validation happens before a page is written to disk
+        /// Validation happens before a page is written to disk.
         /// </summary>
         BeforeWriteToDisk = 0x0002,
 
         /// <summary>
-        /// Default ValidationMode
+        /// Default ValidationMode.
         /// </summary>
         Default = AfterReadFromDisk,
 

@@ -6,9 +6,19 @@ using System.Threading.Tasks;
 
 namespace KeyValium
 {
-    public enum TrackingScope
+    /// <summary>
+    /// Tracking scopes. Used by TreeRefs and Cursors.
+    /// </summary>
+    public enum TrackingScope    
     {
+        /// <summary>
+        /// The object is tracked for the lifetime of the transaction instance.
+        /// </summary>
         TransactionChain = Limits.TrackingScope_TransactionChain,
-        Database= Limits.TrackingScope_Database,
+
+        /// <summary>
+        /// The object is tracked for the lifetime of the database instance.
+        /// </summary>
+        Database = Limits.TrackingScope_Database
     }
 }

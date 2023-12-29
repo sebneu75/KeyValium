@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace KeyValium
 {
+    /// <summary>
+    /// The states of a TreeRef.
+    /// </summary>
     public enum TreeRefState
     {
         Active,

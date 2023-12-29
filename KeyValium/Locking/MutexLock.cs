@@ -8,7 +8,7 @@ namespace KeyValium.Locking
 {
     internal class MutexLock : ILockable
     {
-        public MutexLock(Database db, LockFile lockfile)
+        internal MutexLock(Database db, LockFile lockfile)
         {
             _lock = lockfile.LockObject;
 

@@ -3,9 +3,9 @@ using System.Text;
 
 namespace KeyValium.Locking
 {
-    unsafe class LockEntry
+    internal unsafe class LockEntry
     {
-        public LockEntry(Memory<byte> data, int index)
+        internal LockEntry(Memory<byte> data, int index)
         {
             Perf.CallCount();
 

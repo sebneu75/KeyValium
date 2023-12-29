@@ -4,16 +4,19 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace KeyValium
 {
+    /// <summary>
+    /// Represents a "pointer" to a subtree.
+    /// </summary>
     public sealed class TreeRef : IDisposable
     {
         private static ulong OidCounter = 0;
 
         /// <summary>
-        /// 
+        /// Constructor
         /// </summary>
-        /// <param name="tx"></param>
-        /// <param name="scope"></param>
-        public TreeRef(Transaction tx, TrackingScope scope = TrackingScope.TransactionChain)
+        /// <param name="tx">the transaction.</param>
+        /// <param name="scope">the tracking scope</param>
+        internal TreeRef(Transaction tx, TrackingScope scope = TrackingScope.TransactionChain)
         {
             Perf.CallCount();
 
@@ -29,6 +32,9 @@ namespace KeyValium
 
         internal readonly ulong Oid;
 
+        /// <summary>
+        /// The tracking scope of the TreeRef
+        /// </summary>
         public readonly TrackingScope Scope;
 
         internal readonly Database Database;
@@ -37,6 +43,9 @@ namespace KeyValium
 
         internal Cursor Cursor;
 
+        /// <summary>
+        /// Returns the state of the TreeRef.
+        /// </summary>
         public TreeRefState State
         {
             get
@@ -179,7 +188,6 @@ namespace KeyValium
             }
         }
 
-
         internal void AddNodes(NodePath nodes)
         {
             Perf.CallCount();
@@ -235,7 +243,7 @@ namespace KeyValium
 
         public override string ToString()
         {
-            return string.Format("TOid: {0}    COid:{1}", Oid, Cursor?.Oid);
+            return string.Format("T-Oid={0}, C-Oid={1}", Oid, Cursor?.Oid);
         }
 
         #region IDisposable implementation

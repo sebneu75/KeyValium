@@ -6,7 +6,7 @@ namespace KeyValium
 {
     internal sealed class OverflowStream : Stream
     {
-        public OverflowStream(Transaction tx, KvPagenumber pageno, ulong length)
+        internal OverflowStream(Transaction tx, KvPagenumber pageno, ulong length)
         {
             Perf.CallCount();
 
@@ -32,6 +32,9 @@ namespace KeyValium
             Version.Validate();
         }
 
+        /// <summary>
+        /// Always returns true.
+        /// </summary>
         public override bool CanRead
         {
             get
@@ -42,6 +45,9 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Always returns true.
+        /// </summary>
         public override bool CanSeek
         {
             get
@@ -52,6 +58,9 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Always returns false.
+        /// </summary>
         public override bool CanWrite
         {
             get
@@ -62,7 +71,9 @@ namespace KeyValium
             }
         }
 
-
+        /// <summary>
+        /// Returns the length of the stream.
+        /// </summary>
         public override long Length
         {
             get
@@ -73,7 +84,9 @@ namespace KeyValium
             }
         }
 
-
+        /// <summary>
+        /// Returns or sets the current position of the stream.
+        /// </summary>
         public override long Position
         {
             get
@@ -90,7 +103,9 @@ namespace KeyValium
             }
         }
 
-
+        /// <summary>
+        /// Does nothing.
+        /// </summary>
         public override void Flush()
         {
             Perf.CallCount();
@@ -98,7 +113,14 @@ namespace KeyValium
             // do nothing
         }
 
-        public unsafe override int Read(byte[] buffer, int offset, int count)
+        /// <summary>
+        /// Reads data from the stream
+        /// </summary>
+        /// <param name="buffer">a buffer</param>
+        /// <param name="offset">offset in the buffer</param>
+        /// <param name="count">number of bytes to read</param>
+        /// <returns>number of bytes read</returns>
+        public override int Read(byte[] buffer, int offset, int count)
         {
             Perf.CallCount();
 
@@ -170,6 +192,13 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Sets the position of the stream.
+        /// </summary>
+        /// <param name="offset">Offset</param>
+        /// <param name="origin">Origin</param>
+        /// <returns>the position</returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public override long Seek(long offset, SeekOrigin origin)
         {
             Perf.CallCount();
@@ -206,18 +235,28 @@ namespace KeyValium
             return _position;
         }
 
+        /// <summary>
+        /// Unsupported. Throws an exception.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="NotSupportedException"></exception>
         public override void SetLength(long value)
         {
             Perf.CallCount();
 
-            throw new InvalidOperationException();
+            throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Unsupported. Throws an exception.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="NotSupportedException"></exception>
         public override void Write(byte[] buffer, int offset, int count)
         {
             Perf.CallCount();
 
-            throw new InvalidOperationException();
+            throw new NotSupportedException();
         }
     }
 }

@@ -110,7 +110,7 @@ namespace KeyValium
 
         internal readonly ulong Oid;
 
-        public readonly KvTid Tid;
+        internal readonly KvTid Tid;
 
         public readonly bool IsReadOnly;
 
@@ -219,14 +219,14 @@ namespace KeyValium
             }
         }
 
-        #endregion
-
         internal TxVersion GetVersion()
         {
             KvDebug.Assert(Monitor.IsEntered(TxLock), "TxLock not held!");
 
             return new TxVersion(this);
         }
+
+        #endregion
 
         #region Nested Transactions
 
@@ -240,8 +240,6 @@ namespace KeyValium
 
                 var meta = new Meta(Meta);  // make copy
 
-                //meta.LastPage = this.Meta.LastPage;
-
                 var tx = new Transaction(this, meta);
 
                 tx.CopyParentFreeSpace();
@@ -253,12 +251,11 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// copies the freespace and loose page entries from the parent
+        /// Copies the freespace and loose page entries from the parent
         /// </summary>
         /// <param name="transaction"></param>
         /// <exception cref="NotImplementedException"></exception>
-
-        private void CopyParentFreeSpace()
+        internal void CopyParentFreeSpace()
         {
             Perf.CallCount();
 
@@ -288,11 +285,11 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// Moves the freespace bookkeeping to the parent on commit
+        /// Moves the freespace bookkeeping to the parent transaction on commit
         /// </summary>
         /// <param name="transaction"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private void UpdateParentFreeSpace()
+        internal void UpdateParentFreeSpace()
         {
             Perf.CallCount();
 
@@ -377,8 +374,8 @@ namespace KeyValium
         /// Returns the local number of keys (not including subtrees) in the subtree pointed to by treeref.
         /// If treeref is null the root tree is used.
         /// </summary>
-        /// <param name="treeref">Reference to tree</param>
-        /// <returns>Number of keys in tree</returns>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <returns>The number of keys in tree excluding its subtrees.</returns>
         public ulong GetLocalCount(TreeRef treeref)
         {
             Perf.CallCount();
@@ -404,8 +401,8 @@ namespace KeyValium
         /// Returns the total number of keys (including subtrees) in the subtree pointed to by treeref.
         /// If treeref is null the root tree is used.
         /// </summary>
-        /// <param name="treeref">Reference to tree</param>
-        /// <returns>Number of keys in tree and its subtrees.</returns>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <returns>The number of keys in tree including its subtrees.</returns>
         public ulong GetTotalCount(TreeRef treeref)
         {
             Perf.CallCount();
@@ -428,11 +425,13 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// returns the value associated with key
+        /// Gets the value associated with the key.
         /// </summary>
-        /// <param name="key">the key</param>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
         /// <returns>
-        /// The value or null if key does not exist
+        /// A reference to the value. If the key does not exist the returned ValueRef is invalid.
+        /// The returned ValueRef becomes invalid when the transaction ends or gets modified.
         /// </returns>
         public ValueRef Get(TreeRef treeref, ReadOnlySpan<byte> key)
         {
@@ -473,6 +472,12 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Updates the value associated with the key. An exception is thrown when the key does not exist.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The value.</param>
         public void Update(TreeRef treeref, ReadOnlySpan<byte> key, ReadOnlySpan<byte> val)
         {
             Perf.CallCount();
@@ -482,6 +487,13 @@ namespace KeyValium
             Update(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Updates the value associated with the key. The whole stream is taken as value. 
+        /// The stream must be seekable. An exception is thrown when the key does not exist.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
         public void Update(TreeRef treeref, ReadOnlySpan<byte> key, Stream val)
         {
             Perf.CallCount();
@@ -491,6 +503,14 @@ namespace KeyValium
             Update(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Updates the value associated with the key. Takes length bytes from the current position 
+        /// of the stream as the value. An exception is thrown when the key does not exist.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
+        /// <param name="length">The number of bytes to read from the stream.</param>
         public void Update(TreeRef treeref, ReadOnlySpan<byte> key, Stream val, long length)
         {
             Perf.CallCount();
@@ -500,6 +520,15 @@ namespace KeyValium
             Update(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Updates the value associated with the key. Takes length bytes from the given position 
+        /// of the stream as the value. The stream must be seekable. An exception is thrown when the key does not exist.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
+        /// <param name="position">The position in the stream where the value starts.</param>
+        /// <param name="length">The number of bytes to read from the stream.</param>
         public void Update(TreeRef treeref, ReadOnlySpan<byte> key, Stream val, long position, long length)
         {
             Perf.CallCount();
@@ -510,10 +539,11 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// Updates the key. Will fail if key does not exist
+        /// Updates the value associated with the key. An exception is thrown when the key does not exist.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="val"></param>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The value.</param>
         internal void Update(TreeRef treeref, ReadOnlySpan<byte> key, ref ValInfo val)
         {
             Perf.CallCount();
@@ -588,6 +618,12 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Updates or inserts the value associated with the key.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The value.</param>
         public bool Upsert(TreeRef treeref, ReadOnlySpan<byte> key, ReadOnlySpan<byte> val)
         {
             Perf.CallCount();
@@ -597,6 +633,13 @@ namespace KeyValium
             return Upsert(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Updates or inserts the value associated with the key. The whole stream is taken as value. 
+        /// The stream must be seekable.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
         public void Upsert(TreeRef treeref, ReadOnlySpan<byte> key, Stream val)
         {
             Perf.CallCount();
@@ -606,6 +649,14 @@ namespace KeyValium
             Upsert(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Updates or inserts the value associated with the key. Takes length bytes from the current position 
+        /// of the stream as the value. 
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
+        /// <param name="length">The number of bytes to read from the stream.</param>
         public void Upsert(TreeRef treeref, ReadOnlySpan<byte> key, Stream val, long length)
         {
             Perf.CallCount();
@@ -615,6 +666,15 @@ namespace KeyValium
             Upsert(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Updates or inserts the value associated with the key. Takes length bytes from the given position 
+        /// of the stream as the value. The stream must be seekable.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
+        /// <param name="position">The position in the stream where the value starts.</param>
+        /// <param name="length">The number of bytes to read from the stream.</param>
         public void Upsert(TreeRef treeref, ReadOnlySpan<byte> key, Stream val, long position, long length)
         {
             Perf.CallCount();
@@ -625,7 +685,7 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// Updates or inserts the key
+        /// Updates or inserts the key.
         /// </summary>
         /// <param name="key"></param>
         /// <param name="val"></param>
@@ -713,6 +773,12 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Inserts the value associated with the key. An exception is thrown when the key already exists.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The value.</param>
         public void Insert(TreeRef treeref, ReadOnlySpan<byte> key, ReadOnlySpan<byte> val)
         {
             Perf.CallCount();
@@ -722,6 +788,13 @@ namespace KeyValium
             Insert(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Inserts the value associated with the key. The whole stream is taken as value. 
+        /// The stream must be seekable. An exception is thrown when the key already exists.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
         public void Insert(TreeRef treeref, ReadOnlySpan<byte> key, Stream val)
         {
             Perf.CallCount();
@@ -731,6 +804,14 @@ namespace KeyValium
             Insert(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Inserts the value associated with the key. Takes length bytes from the current position 
+        /// of the stream as the value. An exception is thrown when the key already exists.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
+        /// <param name="length">The number of bytes to read from the stream.</param>
         public void Insert(TreeRef treeref, ReadOnlySpan<byte> key, Stream val, long length)
         {
             Perf.CallCount();
@@ -740,6 +821,15 @@ namespace KeyValium
             Insert(treeref, key, ref valinfo);
         }
 
+        /// <summary>
+        /// Inserts the value associated with the key. Takes length bytes from the given position 
+        /// of the stream as the value. The stream must be seekable. An exception is thrown when the key already exists.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="val">The stream that represents the value.</param>
+        /// <param name="position">The position in the stream where the value starts.</param>
+        /// <param name="length">The number of bytes to read from the stream.</param>
         public void Insert(TreeRef treeref, ReadOnlySpan<byte> key, Stream val, long position, long length)
         {
             Perf.CallCount();
@@ -750,11 +840,10 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// Inserts the key. Will fail if key already exists
+        /// Inserts the key. Will fail if the key already exists.
         /// </summary>
         /// <param name="key"></param>
         /// <param name="val"></param>
-        /// <exception cref="NotSupportedException"></exception>
         internal void Insert(TreeRef treeref, ReadOnlySpan<byte> key, ref ValInfo val)
         {
             Perf.CallCount();
@@ -820,6 +909,12 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Deletes the subtree pointed to by treeref. 
+        /// Warning: When called with null the whole database will be deleted.
+        /// This is an expensive operation.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
         public bool DeleteTree(TreeRef treeref)
         {
             Perf.CallCount();
@@ -858,6 +953,15 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Deletes the key and the associated value.
+        /// If the key has a nonempty subtree only the value will be deleted.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <returns>
+        /// True if the key has been deleted. 
+        /// False if the key does not exist or has a nonempty subtree.</returns>
         public bool Delete(TreeRef treeref, ReadOnlySpan<byte> key)
         {
             Perf.CallCount();
@@ -892,7 +996,7 @@ namespace KeyValium
                                     var valinfo = new ValInfo();
 
                                     // update with empty value
-                                    var entry = new EntryExtern(key, valinfo, subtree, tc, lc, 0, 0);  // +4ns
+                                    var entry = new EntryExtern(key, valinfo, subtree, tc, lc, 0, 0);
                                     cursor.UpdateKey(ref entry);
                                 }
                                 else
@@ -925,6 +1029,15 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Checks if a key exists.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <returns>
+        /// True if the key exists.
+        /// False if the key does not exist.
+        /// </returns>
         public bool Exists(TreeRef treeref, ReadOnlySpan<byte> key)
         {
             Perf.CallCount();
@@ -959,6 +1072,15 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Tries to get the first key in a tree.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="first">The first key. Only valid if the method returns true.</param>
+        /// <returns>
+        /// True if there is a first key.
+        /// False if the tree is empty.
+        /// </returns>
         public bool TryGetFirst(TreeRef treeref, out ReadOnlySpan<byte> first)
         {
             Perf.CallCount();
@@ -1002,6 +1124,15 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Tries to get the last key in a tree.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="last">The last key. Only valid if the method returns true.</param>
+        /// <returns>
+        /// True if there is a last key.
+        /// False if the tree is empty.
+        /// </returns>
         public bool TryGetLast(TreeRef treeref, out ReadOnlySpan<byte> last)
         {
             Perf.CallCount();
@@ -1045,6 +1176,16 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Tries to get the next key in a tree.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="next">The next key. Only valid if the method returns true.</param>
+        /// <returns>
+        /// True if there is a next key.
+        /// False if there is no next key.
+        /// </returns>
         public bool TryGetNext(TreeRef treeref, ReadOnlySpan<byte> key, out ReadOnlySpan<byte> next)
         {
             Perf.CallCount();
@@ -1094,6 +1235,16 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Tries to get the previous key in a tree.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="next">The previous key. Only valid if the method returns true.</param>
+        /// <returns>
+        /// True if there is a previous key.
+        /// False if there is no previous key.
+        /// </returns>
         public bool TryGetPrev(TreeRef treeref, ReadOnlySpan<byte> key, out ReadOnlySpan<byte> prev)
         {
             Perf.CallCount();
@@ -1250,7 +1401,7 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// returns the metrics for storing a ValInfo
+        /// returns the metrics for storing data in overflow pages
         /// </summary>
         /// <param name="pagesize">the page size</param>
         /// <param name="firstpage">number of bytes to write in the first overflow page</param>
