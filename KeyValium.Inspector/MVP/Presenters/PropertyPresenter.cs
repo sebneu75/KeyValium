@@ -4,7 +4,6 @@ using Mad.MVP;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-using Microsoft.Identity.Client;
 
 namespace KeyValium.Inspector.MVP.Presenters
 {
