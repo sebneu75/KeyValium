@@ -68,15 +68,15 @@ namespace KeyValium.Frontends
 
             return new KvMultiDictionary(filename, options);
         }
-               
+
         /// <summary>
-        /// Does an action within a transaction.
-        /// Calls can be nested.
-        /// If action throws an exception the transaction is rolled back. Otherwise the transaction is commited.
+        /// Does an action within a transaction. Calls can be nested.
+        /// If no transaction exists one is started. 
+        /// If the call created a transaction it is rolled back if action throws an exception. Otherwise it is committed.
         /// </summary>
         /// <param name="action">The action to execute.</param>
-        /// <param name="appendmode"></param>
-        public void DoInTransaction(Action action, bool appendmode = false)
+        /// <param name="appendmode">Enables append mode if true. This can be used when inserting multiple keys in order to save disk space.</param>
+        internal void Do(Action action, bool appendmode = false)
         {
             lock (MdLock)
             {
@@ -124,7 +124,7 @@ namespace KeyValium.Frontends
 
             KvDictionaryInfo ret = null;
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 var val = _tx.Get(null, namebytes);
                 if (val.IsValid)
@@ -147,7 +147,7 @@ namespace KeyValium.Frontends
 
             var list = new List<KvDictionaryInfo>();
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 using (var iter = _tx.GetIterator(null, true))
                 {
@@ -418,7 +418,7 @@ namespace KeyValium.Frontends
         {
             var key = DefaultSerializer.Serialize(name, false);
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 if (create)
                 {
@@ -450,7 +450,7 @@ namespace KeyValium.Frontends
 
             var key = DefaultSerializer.Serialize(name, false);
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 using (var treeref = _tx.GetTreeRef(TrackingScope.TransactionChain, key))
                 {
@@ -465,7 +465,6 @@ namespace KeyValium.Frontends
 
             return false;
         }
-
 
         #region IDisposable
 
@@ -487,13 +486,6 @@ namespace KeyValium.Frontends
                 _isdisposed = true;
             }
         }
-
-        // // TODO: Finalizer nur überschreiben, wenn "Dispose(bool disposing)" Code für die Freigabe nicht verwalteter Ressourcen enthält
-        // ~MultiDictionary()
-        // {
-        //     // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in der Methode "Dispose(bool disposing)" ein.
-        //     Dispose(disposing: false);
-        // }
 
         public void Dispose()
         {

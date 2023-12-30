@@ -62,7 +62,7 @@ namespace KeyValium.Tests.MultiDictionaryTests
                     d2[item.Key] = item.Value;
                 }
 
-                d3.DoInTransaction(() =>
+                d3.Do(() =>
                 {
                     foreach (var item in list3)
                     {
@@ -70,7 +70,7 @@ namespace KeyValium.Tests.MultiDictionaryTests
                     }
                 });
 
-                d3.DoInTransaction(() =>
+                d3.Do(() =>
                 {
                     for (ulong i = 1; i <= 1000; i++)
                     {

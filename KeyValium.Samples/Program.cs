@@ -11,7 +11,6 @@
             rs.Sample3();
 
             var ms=new MultiDictionary.Samples();
-            ms.Create();
             ms.Sample1();
         }
     }

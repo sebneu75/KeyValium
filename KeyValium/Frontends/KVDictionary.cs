@@ -16,6 +16,11 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Frontends
 {
+    /// <summary>
+    /// A persistent dictionary of TKey and TValue
+    /// </summary>
+    /// <typeparam name="TKey">The key type.</typeparam>
+    /// <typeparam name="TValue">The value type.</typeparam>
     public class KvDictionary<TKey, TValue> :
         //IDictionary,
         IDictionary<TKey, TValue>,
@@ -44,27 +49,40 @@ namespace KeyValium.Frontends
 
         #region Variables
 
-        public readonly bool _isreadonly;
+        private TreeRef _dictref;
+
+        /// <summary>
+        /// Returns the name of the KvDictionary
+        /// </summary>
+        public readonly string Name;
+
+        private readonly byte[] SerializedName;
+
+        /// <summary>
+        /// Returns the meta data of this dictionary.
+        /// </summary>
+        public readonly KvDictionaryInfo Info;
 
         private readonly IKvSerializer Serializer;
 
         private readonly KvMultiDictionary Parent;
 
-        public readonly string Name;
-
-        private readonly byte[] SerializedName;
-
-        public readonly KvDictionaryInfo Info;
-
-        private TreeRef _dictref;
+        internal readonly bool _isreadonly;        
 
         #endregion
 
-        public void DoInTransaction(Action action, bool appendmode = false)
+        /// <summary>
+        /// Does an action within a transaction. Calls can be nested. No nested transactions are used.
+        /// If no transaction exists one is started. 
+        /// If the call created a transaction it is rolled back if action throws an exception. Otherwise it is committed.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        /// <param name="appendmode">Enables append mode if true. This can be used when inserting multiple keys in order to save disk space.</param>
+        public void Do(Action action, bool appendmode = false)
         {
             Validate();
 
-            Parent.DoInTransaction(action, appendmode);
+            Parent.Do(action, appendmode);
         }
 
         internal TreeRef GetDictionaryRef(Transaction tx)
@@ -83,8 +101,16 @@ namespace KeyValium.Frontends
 
         #region IDictionary implementation
 
+        /// <summary>
+        /// Returns or sets the value associated with a key.
+        /// If the getter is called with a key that does not exist in the database an exception is thrown.
+        /// If the setter is called with a nonexisting key it is inserted into the database.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The value associated with the key.</returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public TValue this[TKey key]
-        {
+        {               
             get
             {
                 Perf.CallCount();
@@ -97,14 +123,14 @@ namespace KeyValium.Frontends
                 }
 
                 throw new KeyNotFoundException();
-            }
+            }            
             set
             {
                 Perf.CallCount();
 
                 Validate();
 
-                DoInTransaction(() =>
+                Do(() =>
                 {
                     Parent.Tx.Upsert(GetDictionaryRef(Parent.Tx), Serializer.Serialize(key, false), Serializer.Serialize(value, true));
 
@@ -112,6 +138,9 @@ namespace KeyValium.Frontends
             }
         }
 
+        /// <summary>
+        /// Returns the collection of keys.
+        /// </summary>
         public ICollection<TKey> Keys
         {
             get
@@ -124,7 +153,9 @@ namespace KeyValium.Frontends
             }
         }
 
-
+        /// <summary>
+        /// Returns the collection of values.
+        /// </summary>
         public ICollection<TValue> Values
         {
             get
@@ -137,25 +168,40 @@ namespace KeyValium.Frontends
             }
         }
 
+        /// <summary>
+        /// Returns the collection of keys.
+        /// </summary>
         IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
 
+        /// <summary>
+        /// Returns the collection of values.
+        /// </summary>
         IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
-
+        /// <summary>
+        /// Returns the number of key value pairs in this dictionary.
+        /// If this dictionary contains more than Array.MaxLength pairs an exception is thrown.
+        /// LINQ methods (for example mydict.Keys.ToList()) will no longer work if this is the case.
+        /// Use <see cref="LongCount"/> in this case.
+        /// </summary>
         public int Count
         {
             get
             {
                 var ret = LongCount;
-                if (ret > int.MaxValue)
+                if (ret > (ulong) Array.MaxLength)
                 {
-                    throw new KeyValiumException(ErrorCodes.InternalError, "Key count is greater than int.MaxValue.");
+                    throw new KeyValiumException(ErrorCodes.InternalError, "Key count is greater than Array.MaxLength.");
                 }
 
                 return (int)ret;
             }
         }
 
+        /// <summary>
+        /// Returns the number of key value pairs in this dictionary. Use this if your dictionary contains
+        /// more than Array.MaxLength entries.
+        /// </summary>
         public ulong LongCount
         {
             get
@@ -165,7 +211,7 @@ namespace KeyValium.Frontends
 
                 ulong ret = 0;
 
-                DoInTransaction(() =>
+                Do(() =>
                 {
                     ret = Parent.Tx.GetLocalCount(GetDictionaryRef(Parent.Tx));
                 });
@@ -174,6 +220,9 @@ namespace KeyValium.Frontends
             }
         }
 
+        /// <summary>
+        /// Returns true if the dictionary is read only.
+        /// </summary>
         public bool IsReadOnly
         {
             get
@@ -182,35 +231,52 @@ namespace KeyValium.Frontends
             }
         }
 
+        /// <summary>
+        /// Inserts a key value pair into the dictionary. If the key already exists an exception is thrown.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The associated value.</param>
         public void Add(TKey key, TValue value)
         {
             Perf.CallCount();
 
             Validate();
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 Parent.Tx.Insert(GetDictionaryRef(Parent.Tx), Serializer.Serialize(key, false), Serializer.Serialize(value, true));
             });
         }
 
+        /// <summary>
+        /// Inserts a key value pair into the dictionary. If the key already exists an exception is thrown.
+        /// </summary>
+        /// <param name="item">The key value pair.</param>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
             Add(item.Key, item.Value);
         }
 
+        /// <summary>
+        /// Clears the dictionary.
+        /// </summary>
         public void Clear()
         {
             Perf.CallCount();
 
             Validate();
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 Parent.Tx.DeleteTree(GetDictionaryRef(Parent.Tx));
             });
         }
 
+        /// <summary>
+        /// Checks if the dictionary contains the key value pair.
+        /// </summary>
+        /// <param name="item">The key value pair.</param>
+        /// <returns>True if this dictionary contains item. Otherwise false.</returns>
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             if (!ContainsKey(item.Key))
@@ -224,6 +290,11 @@ namespace KeyValium.Frontends
             return comp.Equals(val, item.Value);
         }
 
+        /// <summary>
+        /// Checks if the dictionary contains the key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>True if this dictionary contains the key. Otherwise false.</returns>
         public bool ContainsKey(TKey key)
         {
             Perf.CallCount();
@@ -232,7 +303,7 @@ namespace KeyValium.Frontends
 
             var ret = false;
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 ret = Parent.Tx.Exists(GetDictionaryRef(Parent.Tx), Serializer.Serialize(key, false));
             });
@@ -240,6 +311,12 @@ namespace KeyValium.Frontends
             return ret;
         }
 
+        /// <summary>
+        /// Checks if the dictionary contains the value. 
+        /// This is an expensive operation. Use only in cases of emergency.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>True if this dictionary contains the value. Otherwise false.</returns>
         public bool ContainsValue(TValue value)
         {
             Perf.CallCount();
@@ -248,7 +325,7 @@ namespace KeyValium.Frontends
 
             var ret = false;
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 var comp = EqualityComparer<TValue>.Default;
 
@@ -266,6 +343,13 @@ namespace KeyValium.Frontends
             return ret;
         }
 
+        /// <summary>
+        /// Copies the key value pairs to an array.
+        /// </summary>
+        /// <param name="array">The array.</param>
+        /// <param name="index">The offset into the array.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int index)
         {
             if (array == null)
@@ -289,6 +373,10 @@ namespace KeyValium.Frontends
             }
         }
 
+        /// <summary>
+        /// Returns an enumerator for this dictionary.
+        /// </summary>
+        /// <returns>the enumerator</returns>
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             Perf.CallCount();
@@ -298,6 +386,20 @@ namespace KeyValium.Frontends
             return new DictionaryEnumerator(this);
         }
 
+        /// <summary>
+        /// Returns an enumerator for this dictionary.
+        /// </summary>
+        /// <returns>the enumerator</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Deletes a key and an associated value from the dictionary.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>True if the key has been removed. Otherwise false.</returns>
         public bool Remove(TKey key)
         {
             Perf.CallCount();
@@ -306,7 +408,7 @@ namespace KeyValium.Frontends
 
             var ret = false;
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 ret = Parent.Tx.Delete(GetDictionaryRef(Parent.Tx), Serializer.Serialize(key, false));
             });
@@ -314,11 +416,22 @@ namespace KeyValium.Frontends
             return ret;
         }
 
+        /// <summary>
+        /// Deletes a key value pair from the dictionary.
+        /// </summary>
+        /// <param name="item">The key value pair.</param>
+        /// <returns>True if the item has been removed. Otherwise false.</returns>
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
             return Remove(item.Key);
         }
 
+        /// <summary>
+        /// Tries to get the value associated with key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The associated value. Only valid if the method returned true.</param>
+        /// <returns>True if the value has been found. Otherwise false.</returns>
         public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
         {
             Perf.CallCount();
@@ -328,7 +441,7 @@ namespace KeyValium.Frontends
             TValue retval = default;
             bool isvalid = false;
 
-            DoInTransaction(() =>
+            Do(() =>
             {
                 var val = Parent.Tx.Get(GetDictionaryRef(Parent.Tx), Serializer.Serialize(key, false));
                 if (val.IsValid)
@@ -340,11 +453,6 @@ namespace KeyValium.Frontends
 
             value = retval;
             return isvalid;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         #endregion
@@ -359,6 +467,9 @@ namespace KeyValium.Frontends
 
         private bool _isdisposed;
 
+        /// <summary>
+        /// Disposes this dictionary.
+        /// </summary>
         public void Dispose()
         {
             //Parent.RemoveDictionary(this);
@@ -372,6 +483,9 @@ namespace KeyValium.Frontends
 
         #region Enumerator support
 
+        /// <summary>
+        /// A collection of keys.
+        /// </summary>
         public sealed class KvKeyCollection : ICollection<TKey>, ICollection, IReadOnlyCollection<TKey>
         {
             public KvKeyCollection(KvDictionary<TKey, TValue> dict)
@@ -471,6 +585,9 @@ namespace KeyValium.Frontends
             }
         }
 
+        /// <summary>
+        /// A collection of values.
+        /// </summary>
         public sealed class KvValueCollection : ICollection<TValue>, ICollection, IReadOnlyCollection<TValue>
         {
             public KvValueCollection(KvDictionary<TKey, TValue> dict)
@@ -570,6 +687,9 @@ namespace KeyValium.Frontends
             }
         }
 
+        /// <summary>
+        /// An enumerator for a KvDictionary.
+        /// </summary>
         public class DictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IEnumerator
         {
             internal DictionaryEnumerator(KvDictionary<TKey, TValue> dict)
@@ -582,8 +702,11 @@ namespace KeyValium.Frontends
             }
 
             private KvDictionary<TKey, TValue> _dict;
+
             private bool _created;
+
             private KeyIterator _iterator;
+
             private bool _failed;
 
             internal TKey GetCurrentKey()

@@ -112,16 +112,35 @@ namespace KeyValium
 
         internal readonly KvTid Tid;
 
+        /// <summary>
+        /// Returns true if the transaction is read only.
+        /// </summary>
         public readonly bool IsReadOnly;
 
         internal readonly uint PageSize;
 
+        /// <summary>
+        /// Returns the root transaction of the transaction chain.
+        /// </summary>
         public readonly Transaction Root;
 
+        /// <summary>
+        /// Returns the UTC-timestamp when the transaction expires.
+        /// </summary>
         public readonly DateTime ExpiresUtc;
 
+        /// <summary>
+        /// Enables or disables append mode. The default is false. 
+        /// This changes how the split algorithm works. When disabled pages are splitted roughly in half.
+        /// If enabled it works as follows: When a page is full and the new entry would have to be appended 
+        /// at the end of the page a new empty page is created and the key is inserted there.
+        /// This should be enabled if many keys are inserted in ascending order to be more space efficient.
+        /// </summary>
         public bool AppendMode;
 
+        /// <summary>
+        /// User defined tag.
+        /// </summary>
         public object Tag;
 
         #endregion
