@@ -37,10 +37,10 @@ namespace KeyValium.Samples.Raw
 
         static Encoding encoding = Encoding.UTF8;
 
-        public void Sample2()
+        public void Sample1()
         {
             // open or create a database with default options
-            using (var db = Database.Open("sample2.kvlm"))
+            using (var db = Database.Open("sample1.kvlm"))
             {
                 // insert some data
                 using (var tx = db.BeginWriteTransaction())
@@ -113,18 +113,16 @@ namespace KeyValium.Samples.Raw
         /// <summary>
         /// working with subtrees (TreeRefs)
         /// </summary>
-        public void Sample3()
+        public void Sample2()
         {
-            var encoding = Encoding.UTF8;
-
             // open or create a database with default options
-            using (var db = Database.Open("sample3.kvlm"))
+            using (var db = Database.Open("sample2.kvlm"))
             {
                 TreeRef treeref1;
                 TreeRef treeref2;
                 TreeRef treeref3;
 
-                // insert some keys with subtree flag
+                // inserting some keys with subtree flag
                 using (var tx = db.BeginWriteTransaction())
                 {
                     // makes sure the key exists and has the subtree flag set
@@ -135,13 +133,11 @@ namespace KeyValium.Samples.Raw
                     tx.Commit();
                 }
 
-                Console.WriteLine("treeref1: {0}", treeref1.State);
-                Console.WriteLine("treeref2: {0}", treeref2.State);
-                Console.WriteLine("treeref3: {0}", treeref3.State);
-
-                // insert data in subtrees
+                // inserting data in subtrees
                 using (var tx = db.BeginWriteTransaction())
                 {
+                    // TreeRefs are tracked beyond transaction boundaries. No need to create them again.
+
                     tx.Insert(treeref1, encoding.GetBytes("Root1-Key1"), encoding.GetBytes("Root1-Value1"));
                     tx.Insert(treeref1, encoding.GetBytes("Root1-Key2"), encoding.GetBytes("Root1-Value2"));
                     tx.Insert(treeref1, encoding.GetBytes("Root1-Key3"), encoding.GetBytes("Root1-Value3"));
@@ -156,10 +152,6 @@ namespace KeyValium.Samples.Raw
 
                     tx.Commit();
                 }
-
-                Console.WriteLine("treeref1: {0}", treeref1.State);
-                Console.WriteLine("treeref2: {0}", treeref2.State);
-                Console.WriteLine("treeref3: {0}", treeref3.State);
 
                 // reading data from subtrees
                 using (var tx = db.BeginReadTransaction())
@@ -177,23 +169,19 @@ namespace KeyValium.Samples.Raw
                     Display(tx.Get(treeref3, encoding.GetBytes("Root3-Key3")));
 
                     // getting count of keys in the root tree excluding its subtrees
-                    var localcount = tx.GetLocalCount(null);
+                    var localcount = tx.GetLocalCount(null);    // 3 keys in  root tree
 
                     // getting total count of keys in the root tree and its subtrees
-                    var globalcount = tx.GetTotalCount(null);
+                    var globalcount = tx.GetTotalCount(null);   // 12 keys total. 3 in root tree and 3 in each subtree.
 
                     // getting count of keys in a specific subtree excluding its subtrees
-                    localcount = tx.GetLocalCount(treeref1);
+                    var localcount1 = tx.GetLocalCount(treeref1);   // 3 keys in subtree.
 
                     // getting count of keys in a specific subtree including its subtrees
-                    globalcount = tx.GetTotalCount(treeref1);
+                    var globalcount1 = tx.GetTotalCount(treeref1);  // 3 keys total. There are no subtrees.
                 }
 
-                Console.WriteLine("treeref1: {0}", treeref1.State);
-                Console.WriteLine("treeref2: {0}", treeref2.State);
-                Console.WriteLine("treeref3: {0}", treeref3.State);
-
-                // delete subtrees
+                // deleting subtrees
                 using (var tx = db.BeginWriteTransaction())
                 {
                     tx.DeleteTree(treeref1);
@@ -202,10 +190,6 @@ namespace KeyValium.Samples.Raw
 
                     tx.Commit();
                 }
-
-                Console.WriteLine("treeref1: {0}", treeref1.State);
-                Console.WriteLine("treeref2: {0}", treeref2.State);
-                Console.WriteLine("treeref3: {0}", treeref3.State);
             }
         }
     }
