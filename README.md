@@ -31,7 +31,7 @@ See the Wiki for documentation.
 
 ### Data storage and retrieval
 
-```
+```C#
 using KeyValium;
 using KeyValium.Options;
 
@@ -116,7 +116,7 @@ static void Display(ValueRef valref)
 
 ### Working with sub trees (TreeRefs)
 
-```
+```C#
 using KeyValium;
 using KeyValium.Options;
 
@@ -219,7 +219,7 @@ static void Display(ValueRef valref)
 
 ## Using the MultiDictionary Frontend
 
-```
+```C#
 using KeyValium.Frontends;
 
 ...
