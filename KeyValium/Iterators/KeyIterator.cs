@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace KeyValium.Iterators
 {
-    public struct KeyIterator : IEnumerator<KVItem>, IEnumerable<KVItem>
+    public struct KeyIterator : IEnumerator<KvItem>, IEnumerable<KvItem>
     {
         internal KeyIterator(Transaction tx, TreeRef keyref, bool forward)
         {
@@ -16,14 +16,14 @@ namespace KeyValium.Iterators
             _cursor = tx.GetCursor(keyref, InternalTrackingScope.TransactionChain);
             _cursor.DeleteHandling = DeleteHandling.Invalidate;
 
-            _item = new KVItem(_cursor);
+            _item = new KvItem(_cursor);
 
             Reset();
         }
 
         internal readonly TxVersion Version;
 
-        private readonly KVItem _item;
+        private readonly KvItem _item;
 
         private readonly bool _forward;
 
@@ -57,7 +57,7 @@ namespace KeyValium.Iterators
             }
         }
 
-        public KVItem Current
+        public KvItem Current
         {
             get
             {
@@ -96,7 +96,7 @@ namespace KeyValium.Iterators
             Version.Validate();
         }
 
-        public IEnumerator<KVItem> GetEnumerator()
+        public IEnumerator<KvItem> GetEnumerator()
         {
             Perf.CallCount();
 

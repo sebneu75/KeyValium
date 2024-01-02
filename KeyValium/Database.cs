@@ -226,7 +226,7 @@ namespace KeyValium
             encheader.Decrypt(page);
             page.CreateHeaderAndContent(null, 0);
 
-            PageValidator.ValidateFileHeader(page);
+            PageValidator.ValidateFileHeader(page, 0, false);
 
             return page;
         }

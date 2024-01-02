@@ -78,15 +78,17 @@ namespace KeyValium.Frontends
         /// <param name="appendmode">Enables append mode if true. This can be used when inserting multiple keys in order to save disk space.</param>
         internal void Do(Action action, bool appendmode = false)
         {
+            Perf.CallCount();
+
             lock (MdLock)
             {
                 var created = EnsureTransaction();
 
-                if (created) 
+                if (created)
                 {
                     Tx.AppendMode = appendmode;
                 }
-                
+
                 try
                 {
                     action.Invoke();
@@ -180,6 +182,8 @@ namespace KeyValium.Frontends
         /// <returns>the requested KvDictionary</returns>
         public KvDictionary<TKey, TValue> EnsureDictionary<TKey, TValue>(string name)
         {
+            Perf.CallCount();
+
             ValidateName(name);
 
             return EnsureDictionary<TKey, TValue>(name, new KvJsonSerializer());
@@ -292,6 +296,8 @@ namespace KeyValium.Frontends
         /// <exception cref="KeyValiumException"></exception>
         public void UpdateKeyValueTypes(string name, Type keytype, Type valuetype)
         {
+            Perf.CallCount();
+
             ValidateName(name);
 
             if (keytype == null)
@@ -329,6 +335,8 @@ namespace KeyValium.Frontends
         /// <exception cref="KeyValiumException"></exception>
         public void UpdateSerializer(string name, Type serializertype, Type optionstype, object serializeroptions)
         {
+            Perf.CallCount();
+
             ValidateName(name);
 
             if (serializertype == null)
@@ -371,22 +379,20 @@ namespace KeyValium.Frontends
 
         #endregion
 
-        private void UpdateCounts()
-        {
-            throw new NotImplementedException();
-        }
-
-
         internal Transaction Tx
         {
             get
             {
+                Perf.CallCount();
+
                 return _tx;
             }
         }
 
         internal bool EnsureTransaction()
         {
+            Perf.CallCount();
+
             if (_tx == null)
             {
                 _tx = _db.BeginWriteTransaction();
@@ -416,6 +422,8 @@ namespace KeyValium.Frontends
 
         private void UpdateDictionaryInfo(string name, KvDictionaryInfo dict, bool create)
         {
+            Perf.CallCount();
+
             var key = DefaultSerializer.Serialize(name, false);
 
             Do(() =>
@@ -436,6 +444,8 @@ namespace KeyValium.Frontends
 
         private void ValidateName(string name)
         {
+            Perf.CallCount();
+
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentNullException(nameof(name), "The dictionary name is invalid.");
@@ -454,10 +464,7 @@ namespace KeyValium.Frontends
             {
                 using (var treeref = _tx.GetTreeRef(TrackingScope.TransactionChain, key))
                 {
-                    if (treeref != null)
-                    {
-                        _tx.DeleteTree(treeref);
-                    }
+                    _tx.DeleteTree(treeref);
                 }
 
                 _tx.Delete(null, key);

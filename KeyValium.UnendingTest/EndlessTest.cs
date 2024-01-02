@@ -38,6 +38,7 @@ namespace KeyValium.UnendingTest
                 td.Options.SharingMode = SharingModes.Exclusive;
                 td.Options.CacheSizeMB = 256;
                 td.Options.FlushToDisk = false;
+                td.Options.ValidationMode = PageValidationMode.All;
                 td.MinKeySize = 2;
                 td.MaxKeySize = 48;
                 td.MinValueSize = 0;

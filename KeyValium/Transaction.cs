@@ -22,7 +22,6 @@ namespace KeyValium
         /// <param name="db"></param>
         /// <param name="meta"></param>
         /// <param name="isreadonly"></param>
-        /// <param name="autocommit"></param>
         internal Transaction(Database db, Meta meta, bool isreadonly)
         {
             Perf.CallCount();
@@ -2259,10 +2258,12 @@ namespace KeyValium
         #region Tree References
 
         /// <summary>
-        /// gets a treeref to the given path of keys
+        /// Returns a reference to a sub tree. 
+        /// Throws an execption if one of the keys does not exist or does not have the subtree-flag.
         /// </summary>
-        /// <param name="keys"></param>
-        /// <returns>returns null if one of the keys does not exist or does not have the subtree-flag</returns>
+        /// <param name="scope">The tracking scope.</param>
+        /// <param name="keys">Path to the sub tree.</param>
+        /// <returns>Reference to the sub tree.</returns>
         public TreeRef GetTreeRef(TrackingScope scope, params ReadOnlyMemory<byte>[] keys)
         {
             Perf.CallCount();
@@ -2322,12 +2323,11 @@ namespace KeyValium
         }
 
         /// <summary>
-        /// Creates a TreeRef 
-        /// Nonexisting keys on the path are created with an empty value
-        /// If the subtree flag is off, the flag is set and Entries are updated
+        /// Returns a reference to a sub tree. Nonexisting keys will be created. Missing subtree flags are set.
         /// </summary>
-        /// <param name="keys"></param>
-        /// <returns></returns>
+        /// <param name="scope">The tracking scope.</param>
+        /// <param name="keys">Path to the sub tree.</param>
+        /// <returns>Reference to the sub tree.</returns>
         public TreeRef EnsureTreeRef(TrackingScope scope, params ReadOnlyMemory<byte>[] keys)
         {
             Perf.CallCount();
@@ -2406,7 +2406,14 @@ namespace KeyValium
 
         #region Iterators
 
-        public void ForEach(TreeRef treeref, Func<KVItem, bool> func)
+        /// <summary>
+        /// Iterates over the tree pointed to by treeref. Calls func for every key value pair.
+        /// If func returns false the iteration is aborted. Otheriwse it continues.
+        /// The function func is always called with the same KvItem instance. Use KvItem.Value to get the current ValueRef.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="func">The function that is called for every item.</param>
+        public void ForEach(TreeRef treeref, Func<KvItem, bool> func)
         {
             Perf.CallCount();
 
@@ -2421,7 +2428,7 @@ namespace KeyValium
                     {
                         cursor.DeleteHandling = DeleteHandling.MoveToPrevious;
 
-                        var item = new KVItem(cursor);
+                        var item = new KvItem(cursor);
 
                         if (cursor.SetPosition(CursorPositions.BeforeFirst))
                         {
@@ -2439,9 +2446,20 @@ namespace KeyValium
             }
         }
 
+        /// <summary>
+        /// Delegate for iteration.
+        /// </summary>
+        /// <param name="val">The reference to the current entry.</param>
+        /// <returns></returns>
         public delegate bool KeyValueIterator(ref ValueRef val);
 
-        public void ForEach(TreeRef treeref, KeyValueIterator iterator)
+        /// <summary>
+        /// Iterates over the tree pointed to by treeref. Calls func for every key value pair.
+        /// If func returns false the iteration is aborted. Otheriwse it continues.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="func">Function that is called for every item.</param>
+        public void ForEach(TreeRef treeref, KeyValueIterator func)
         {
             Perf.CallCount();
 
@@ -2461,7 +2479,7 @@ namespace KeyValium
                             while (cursor.MoveToNextKey())
                             {
                                 var val = cursor.GetCurrentValue();
-                                if (!iterator(ref val))
+                                if (!func(ref val))
                                 {
                                     break;
                                 }
@@ -2477,7 +2495,12 @@ namespace KeyValium
             }
         }
 
-        internal KeyIterator GetIterator(TreeRef treeref, bool forward)
+        /// <summary>
+        /// Returns an iterator that can be used in a foreach loop.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="forward">If true iterates forward. Otherwise backwards.</param>
+        public KeyIterator GetIterator(TreeRef treeref, bool forward)
         {
             Perf.CallCount();
 

@@ -36,6 +36,8 @@
 
         FreeSpaceEntryExists = 80,
 
+        PageValidation = 200,
+
         InternalError = 500,
     }
 }

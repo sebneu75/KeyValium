@@ -7,17 +7,23 @@ using System.Threading.Tasks;
 
 namespace KeyValium.Iterators
 {
-    public sealed class KVItem
+    /// <summary>
+    /// Wrapper for a ValueRef.
+    /// </summary>
+    public sealed class KvItem
     {
-        private readonly Cursor _cursor;
-
-        internal KVItem(Cursor cursor)
+        internal KvItem(Cursor cursor)
         {
             Perf.CallCount();
 
             _cursor = cursor;
         }
 
+        private readonly Cursor _cursor;
+
+        /// <summary>
+        /// Returns the current ValueRef
+        /// </summary>
         public ValueRef Value
         {
             get

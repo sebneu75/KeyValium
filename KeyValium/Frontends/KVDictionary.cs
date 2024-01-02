@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 namespace KeyValium.Frontends
 {
     /// <summary>
-    /// A persistent dictionary of TKey and TValue
+    /// A persistent dictionary of TKey and TValue.
     /// </summary>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <typeparam name="TValue">The value type.</typeparam>
