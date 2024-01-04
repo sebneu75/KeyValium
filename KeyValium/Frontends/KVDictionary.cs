@@ -67,7 +67,7 @@ namespace KeyValium.Frontends
 
         private readonly KvMultiDictionary Parent;
 
-        internal readonly bool _isreadonly;        
+        internal readonly bool _isreadonly;
 
         #endregion
 
@@ -110,7 +110,7 @@ namespace KeyValium.Frontends
         /// <returns>The value associated with the key.</returns>
         /// <exception cref="KeyNotFoundException"></exception>
         public TValue this[TKey key]
-        {               
+        {
             get
             {
                 Perf.CallCount();
@@ -123,7 +123,7 @@ namespace KeyValium.Frontends
                 }
 
                 throw new KeyNotFoundException();
-            }            
+            }
             set
             {
                 Perf.CallCount();
@@ -189,7 +189,7 @@ namespace KeyValium.Frontends
             get
             {
                 var ret = LongCount;
-                if (ret > (ulong) Array.MaxLength)
+                if (ret > (ulong)Array.MaxLength)
                 {
                     throw new KeyValiumException(ErrorCodes.InternalError, "Key count is greater than Array.MaxLength.");
                 }
@@ -285,7 +285,7 @@ namespace KeyValium.Frontends
             }
 
             var comp = EqualityComparer<TValue>.Default;
-            var val = this[item.Key];           
+            var val = this[item.Key];
 
             return comp.Equals(val, item.Value);
         }
@@ -688,7 +688,7 @@ namespace KeyValium.Frontends
         }
 
         /// <summary>
-        /// An enumerator for a KvDictionary.
+        /// An enumerator for a KvDictionary. Must be called within an transaction.
         /// </summary>
         public class DictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IEnumerator
         {
@@ -696,47 +696,25 @@ namespace KeyValium.Frontends
             {
                 _dict = dict;
 
-                Monitor.Enter(_dict.Parent.MdLock);
-                _created = _dict.Parent.EnsureTransaction();
                 _iterator = _dict.Parent.Tx.GetIterator(dict.GetDictionaryRef(_dict.Parent.Tx), true);
             }
 
             private KvDictionary<TKey, TValue> _dict;
 
-            private bool _created;
-
             private KeyIterator _iterator;
-
-            private bool _failed;
 
             internal TKey GetCurrentKey()
             {
-                try
-                {
-                    var valref = _iterator.Current.Value;
+                var valref = _iterator.Current.Value;
 
-                    return _dict.Serializer.Deserialize<TKey>(valref.Key, false);
-                }
-                catch (Exception)
-                {
-                    _failed = true;
-                    throw;
-                }
+                return _dict.Serializer.Deserialize<TKey>(valref.Key, false);
             }
 
             internal TValue GetCurrentValue()
             {
-                try
-                {
-                    var valref = _iterator.Current.Value;
+                var valref = _iterator.Current.Value;
 
-                    return _dict.Serializer.Deserialize<TValue>(valref.ValueSpan, true);
-                }
-                catch (Exception)
-                {
-                    _failed = true;
-                    throw;
-                }
+                return _dict.Serializer.Deserialize<TValue>(valref.ValueSpan, true);
             }
 
             public KeyValuePair<TKey, TValue> Current
@@ -751,65 +729,23 @@ namespace KeyValium.Frontends
             {
                 get
                 {
-                    try
-                    {
-                        return Current;
-                    }
-                    catch (Exception)
-                    {
-                        _failed = true;
-                        throw;
-                    }
+                    return Current;
                 }
             }
 
             public bool MoveNext()
             {
-                try
-                {
-                    return _iterator.MoveNext();
-                }
-                catch (Exception)
-                {
-                    _failed = true;
-                    throw;
-                }
+                return _iterator.MoveNext();
             }
 
             public void Reset()
             {
-                try
-                {
-                    _iterator.Reset();
-                }
-                catch (Exception)
-                {
-                    _failed = true;
-                    throw;
-                }
+                _iterator.Reset();
             }
 
             public void Dispose()
             {
-                try
-                {
-                    _iterator.Dispose();
-                    if (_created)
-                    {
-                        if (_failed)
-                        {
-                            _dict.Parent.RollbackTransaction();
-                        }
-                        else
-                        {
-                            _dict.Parent.CommitTransaction();
-                        }
-                    }
-                }
-                finally
-                {
-                    Monitor.Exit(_dict.Parent.MdLock);
-                }
+                _iterator.Dispose();
             }
         }
 

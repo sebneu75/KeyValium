@@ -80,29 +80,41 @@ namespace KeyValium.Tests.MultiDictionaryTests
                 });
 
                 Assert.True(d1.LongCount == count, "Count mismatch!");
-                foreach (var pair in d1)
+                d1.Do(() =>
                 {
-                    Assert.True(list1[pair.Key] == pair.Value);
-                    Assert.True(list1.Remove(pair.Key));
-                }
+                    foreach (var pair in d1)
+                    {
+                        Assert.True(list1[pair.Key] == pair.Value);
+                        Assert.True(list1.Remove(pair.Key));
+                    }
+                });
                 Assert.True(list1.Count == 0);
 
-                foreach (var key in d2.Keys)
+                d2.Do(() =>
                 {
-                    Assert.True(list2.ContainsKey(key));
-                }
+                    foreach (var key in d2.Keys)
+                    {
+                        Assert.True(list2.ContainsKey(key));
+                    }
+                });
 
-                foreach (var val in d2.Values)
+                d2.Do(() =>
                 {
-                    Assert.True(list2.ContainsValue(val));
-                }
+                    foreach (var val in d2.Values)
+                    {
+                        Assert.True(list2.ContainsValue(val));
+                    }
+                });
 
                 Assert.True(d2.LongCount == count, "Count mismatch!");
-                foreach (var pair in d2)
+                d2.Do(() =>
                 {
-                    Assert.True(list2[pair.Key] == pair.Value);
-                    Assert.True(list2.Remove(pair.Key));
-                }
+                    foreach (var pair in d2)
+                    {
+                        Assert.True(list2[pair.Key] == pair.Value);
+                        Assert.True(list2.Remove(pair.Key));
+                    }
+                });
                 Assert.True(list2.Count == 0);
 
                 d4 = md.EnsureDictionary<ulong, byte[]>("Dict4");

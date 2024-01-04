@@ -17,6 +17,8 @@ namespace KeyValium.Cache
     {
         internal PageValidator(Database db, PageValidationMode mode)
         {
+            Perf.CallCount();
+
             Database = db;
             Mode = mode;
         }
@@ -34,6 +36,8 @@ namespace KeyValium.Cache
         /// <exception cref="NotSupportedException"></exception>
         internal unsafe void ValidatePage(AnyPage page, KvPagenumber pageno, bool iswrite)
         {
+            Perf.CallCount();
+
             if (page == null)
             {
                 throw new ArgumentNullException(nameof(page));
@@ -111,192 +115,56 @@ namespace KeyValium.Cache
 
         private void ValidateContentPage(AnyPage page, ulong pageno, bool iswrite)
         {
+            Perf.CallCount();
+
+            ValidateOffsetTable(page, pageno, iswrite);
+            ValidateBranches(page, pageno, iswrite);
+            ValidateFlags(page, pageno, iswrite);
+            ValidateKeys(page, pageno, iswrite);
+            ValidateValues(page, pageno, iswrite);
+        }
+
+        private void ValidateBranches(AnyPage page, ulong pageno, bool iswrite)
+        {
+            Perf.CallCount();
+
             ref var cp = ref page.AsContentPage;
 
-            if (cp.IsFreespacePage)
+            if (!cp.IsIndexPage) 
             {
-                ValidateFsPage(page, pageno, iswrite);
+                // only index pages have branches
+                return;
             }
-            else
+
+            var keys = cp.Header.KeyCount;
+
+            for (int i = 0; i <= keys; i++)
             {
-                ValidateDataPage(page, pageno, iswrite);
+                var branch = cp.GetLeftBranch(i);
+
+                // branch must be greater than number of metapages
+                if (branch <= Limits.MetaPages)
+                {
+                    Error(page, pageno, iswrite, "Branch contains invalid page number.");
+                }
             }
         }
 
-        private void ValidateFsPage(AnyPage page, ulong pageno, bool iswrite)
+        private void ValidateFlags(AnyPage page, ulong pageno, bool iswrite)
         {
+            Perf.CallCount();
+
             ref var cp = ref page.AsContentPage;
 
-            var csize = cp.Header.ContentSize;
-            var low = cp.Header.Low;
-            var high = cp.Header.High;
             var keys = cp.Header.KeyCount;
 
-            //
-            // check branches
-            //
-            if (cp.IsIndexPage)
-            {
-                for (int i = 0; i <= keys; i++)
-                {
-                    var branch = cp.GetLeftBranch(i);
-
-                    // branch must be greater than number of metapages
-                    if (branch <= Limits.MetaPages)
-                    {
-                        Error(page, pageno, iswrite, "Branch contains invalid page number.");
-                    }
-                }
-            }
-
-            //
-            // check flags
-            //
             for (int i = 0; i < keys; i++)
             {
                 var entry = cp.GetEntryAt(i);
 
                 var flags = entry.Flags;
 
-                // Flags must be zero in free space pages
-                if (flags != 0)
-                {
-                    Error(page, pageno, iswrite, "Flags are nonzero.");
-                }
-            }
-
-            //
-            // check keys
-            //
-            for (int i = 0; i < keys; i++)
-            {
-                var entry = cp.GetEntryAt(i);
-
-                if (entry.KeyLength != Limits.FreespaceKeySize)
-                {
-                    Error(page, pageno, iswrite, "Key has wrong size.");
-                }
-
-                if (entry.FirstPage <= Limits.MetaPages)
-                {
-                    Error(page, pageno, iswrite, "FirstPage is invalid.");
-                }
-
-                // TODO keys must be ordered ascending
-            }
-
-            //
-            // check values
-            //
-            for (int i = 0; i < keys; i++)
-            {
-                var entry = cp.GetEntryAt(i);
-
-                if (!cp.IsIndexPage)
-                {
-                    if (entry.LastPage <= Limits.MetaPages)
-                    {
-                        Error(page, pageno, iswrite, "LastPage is invalid.");
-                    }
-
-                    if (entry.FirstPage > entry.LastPage)
-                    {
-                        Error(page, pageno, iswrite, "FirstPage is greater than LastPage.");
-                    }
-                }
-            }
-
-            // check sort order
-        }
-
-        private void ValidateDataPage(AnyPage page, ulong pageno, bool iswrite)
-        {
-            ref var cp = ref page.AsContentPage;
-
-            var csize = cp.Header.ContentSize;
-            var low = cp.Header.Low;
-            var high = cp.Header.High;
-            var keys = cp.Header.KeyCount;
-
-            // check offset table size
-            var csize2 = high + cp.OffsetEntrySize * keys + 1;
-            if (csize != csize2)
-            {
-                Error(page, pageno, iswrite, "High is not directly before start of offset table.");
-            }
-
-            var lastoffset = ushort.MaxValue;
-
-            //
-            // check offset table
-            //
-            for (int i = 0; i < keys; i++)
-            {
-                var offset = cp.GetEntryOffset(i);
-
-                if (i == 0)
-                {
-                    // first offset must match branchsize
-                    if (offset != cp.BranchSize)
-                    {
-                        Error(page, pageno, iswrite, "First offset does not match branch size.");
-                    }
-                }
-                else
-                {
-                    // offsets must be ascending
-                    if (offset <= lastoffset)
-                    {
-                        Error(page, pageno, iswrite, "Offsets are not ascending.");
-                    }
-                }
-
-                // offsets must be smaller than low
-                if (offset >= low)
-                {
-                    Error(page, pageno, iswrite, "Offset is greater than Low.");
-                }
-
-                // save last offset
-                lastoffset = offset;
-            }
-
-            //
-            // check branches
-            //
-            if (cp.IsIndexPage)
-            {
-                for (int i = 0; i <= keys; i++)
-                {
-                    var branch = cp.GetLeftBranch(i);
-
-                    // branch must be greater than number of metapages
-                    if (branch <= Limits.MetaPages)
-                    {
-                        Error(page, pageno, iswrite, "Branch contains invalid page number.");
-                    }
-
-                }
-            }
-
-            //
-            // check flags
-            //
-            for (int i = 0; i < keys; i++)
-            {
-                var entry = cp.GetEntryAt(i);
-
-                var flags = entry.Flags;
-
-                if (cp.IsIndexPage)
-                {
-                    // Flags must be zero in index pages
-                    if (flags != 0)
-                    {
-                        Error(page, pageno, iswrite, "Flags are nonzero.");
-                    }
-                }
-                else
+                if (cp.PageType == PageTypes.DataLeaf)
                 {
                     if ((flags & EntryFlags.IsOverflow) != 0)
                     {
@@ -339,32 +207,110 @@ namespace KeyValium.Cache
                             Error(page, pageno, iswrite, "SubTree is zero but count is nonzero.");
                         }
                     }
+
+                    var rflags = flags & ~(EntryFlags.HasSubtree | EntryFlags.HasValue | EntryFlags.IsOverflow);
+                    if (rflags != 0)
+                    {
+                        Error(page, pageno, iswrite, "Invalid Flags.");
+                    }
                 }
-            }
-
-            //
-            // check keys
-            //
-            for (int i = 0; i < keys; i++)
-            {
-                var entry = cp.GetEntryAt(i);
-
-                if (entry.KeyLength > Database.Limits.MaximumKeySize)
+                else
                 {
-                    Error(page, pageno, iswrite, "Key too long.");
+                    // Flags must be zero in free space and index pages 
+                    if (flags != 0)
+                    {
+                        Error(page, pageno, iswrite, "Flags are nonzero.");
+                    }
                 }
-
-                // TODO keys must be ordered ascending
             }
+        }
 
-            //
-            // check values
-            //
+        private void ValidateKeys(AnyPage page, ulong pageno, bool iswrite)
+        {
+            Perf.CallCount();
+
+            ref var cp = ref page.AsContentPage;
+
+            var keys = cp.Header.KeyCount;
+
+            ByteSpan lastkey = default;
+
             for (int i = 0; i < keys; i++)
             {
                 var entry = cp.GetEntryAt(i);
 
-                if (!cp.IsIndexPage)
+                if (cp.IsFreespacePage)
+                {
+                    if (entry.KeyLength != Limits.FreespaceKeySize)
+                    {
+                        Error(page, pageno, iswrite, "Key has wrong size.");
+                    }
+
+                    if (entry.FirstPage <= Limits.MetaPages)
+                    {
+                        Error(page, pageno, iswrite, "FirstPage is invalid.");
+                    }
+                }
+                else
+                {
+                    if (entry.KeyLength > Database.Limits.MaximumKeySize)
+                    {
+                        Error(page, pageno, iswrite, "Key too long.");
+                    }
+                }
+
+                if (i > 0)
+                {
+                    // keys must be ordered ascending
+                    var key = entry.KeyBytes;
+                    var result = lastkey.ReadOnlySpan.SequenceCompareTo(key.ReadOnlySpan);
+                    if (result >= 0)
+                    {
+                        Error(page, pageno, iswrite, "Keys not ascending.");
+                    }
+                }
+
+                lastkey = entry.KeyBytes;
+            }
+        }
+
+        /// <summary>
+        /// Pagetype must be FsLeaf or DataLeaf
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="pageno"></param>
+        /// <param name="iswrite"></param>
+        private void ValidateValues(AnyPage page, ulong pageno, bool iswrite)
+        {
+            Perf.CallCount();
+
+            ref var cp = ref page.AsContentPage;
+
+            if (cp.IsIndexPage) 
+            {
+                // index pages do not have values
+                return;
+            }
+
+            var keys = cp.Header.KeyCount;
+
+            for (int i = 0; i < keys; i++)
+            {
+                var entry = cp.GetEntryAt(i);
+
+                if (cp.IsFreespacePage)
+                {
+                    if (entry.LastPage <= Limits.MetaPages)
+                    {
+                        Error(page, pageno, iswrite, "LastPage is invalid.");
+                    }
+
+                    if (entry.FirstPage > entry.LastPage)
+                    {
+                        Error(page, pageno, iswrite, "FirstPage is greater than LastPage.");
+                    }
+                }
+                else
                 {
                     if (entry.InlineValueLength > Database.Limits.MaxInlineValueSize(entry.KeyLength))
                     {
@@ -372,14 +318,84 @@ namespace KeyValium.Cache
                     }
                 }
             }
+        }
 
-            // check max key length
 
-            // check sort order
+        private void ValidateOffsetTable(AnyPage page, ulong pageno, bool iswrite)
+        {
+            Perf.CallCount();
+
+            ref var cp = ref page.AsContentPage;
+
+            if (cp.IsFreespacePage) 
+            {
+                // freespace pages do not have offset tables
+                return;
+            }
+                        
+            var low = cp.Header.Low;
+            var high = cp.Header.High;
+            var keys = cp.Header.KeyCount;
+
+            // check offset table size
+            var csize1 = cp.Header.ContentSize;
+            var csize2 = high + cp.OffsetEntrySize * keys + 1;
+            if (csize1 != csize2)
+            {
+                Error(page, pageno, iswrite, "Gap between High and offset table.");
+            }
+
+            var lastoffset = ushort.MaxValue;
+
+            //
+            // check offset table
+            //
+            for (int i = 0; i < keys; i++)
+            {
+                var offset = cp.GetEntryOffset(i);
+
+                // offsets must be smaller than low
+                if (offset >= low)
+                {
+                    Error(page, pageno, iswrite, "Offset is greater than Low.");
+                }
+
+                if (i == 0)
+                {
+                    // first offset must match branchsize
+                    if (offset != cp.BranchSize)
+                    {
+                        Error(page, pageno, iswrite, "First offset does not match branch size.");
+                    }
+                }
+                else
+                {
+                    // offsets must be ascending
+                    if (offset <= lastoffset)
+                    {
+                        Error(page, pageno, iswrite, "Offsets are not ascending.");
+                    }
+                }
+
+                // compare parsed size with size calculated from offset table
+                var entry = cp.GetEntryAt(i);
+                var size1 = entry.EntrySize;        // get entry size by parsing
+                var size2 = cp.GetEntrySize(i);     // get entry size from offset table
+
+                if (size1 != size2)
+                {
+                    Error(page, pageno, iswrite, "Entry size mismatch.");
+                }
+
+                // save last offset
+                lastoffset = offset;
+            }
         }
 
         private void ValidateMetaPage(AnyPage page, ulong pageno, bool iswrite, MetaPage mp)
         {
+            Perf.CallCount();
+
             if (mp.HeaderTid != mp.FooterTid)
             {
                 Error(page, pageno, iswrite, "HeaderTid does not match FooterTid.");
@@ -428,6 +444,8 @@ namespace KeyValium.Cache
 
         private void ValidateContentHeader(AnyPage page, ulong pageno, bool iswrite)
         {
+            Perf.CallCount();
+
             ref var header = ref page.Header;
 
             // check unused2
@@ -486,6 +504,8 @@ namespace KeyValium.Cache
 
         private void ValidateOverflowHeader(AnyPage page, ulong pageno, bool iswrite)
         {
+            Perf.CallCount();
+
             ref var header = ref page.Header;
 
             if (header.ContentLength == 0)
@@ -496,6 +516,8 @@ namespace KeyValium.Cache
 
         internal static void ValidateCommonHeader(AnyPage page, ulong pageno, bool iswrite)
         {
+            Perf.CallCount();
+
             ref var header = ref page.Header;
 
             // check magic
@@ -530,6 +552,8 @@ namespace KeyValium.Cache
 
         internal static void ValidateFileHeader(AnyPage page, ulong pageno, bool iswrite)
         {
+            Perf.CallCount();
+
             if (page == null)
             {
                 throw new ArgumentNullException(nameof(page));
@@ -585,6 +609,8 @@ namespace KeyValium.Cache
 
         private static void Error(AnyPage page, ulong pageno, bool iswrite, string format, params object[] args)
         {
+            Perf.CallCount();
+
             var header = string.Format("Validation error in page {0} on {1}: ", pageno, iswrite ? "Write" : "Read");
 
             var msg = header + string.Format(format, args);
@@ -616,6 +642,5 @@ namespace KeyValium.Cache
 
             return 0;
         }
-
     }
 }

@@ -78,6 +78,32 @@ namespace KeyValium.Samples.Raw
                     Display(tx.Get(null, encoding.GetBytes("Key3")));
                 }
 
+                // iterate over data
+                using (var tx = db.BeginReadTransaction())
+                {
+                    // iterate using lambda
+                    tx.ForEach(null, (item) => 
+                    {
+                        Display(item.Value);
+                        return true; 
+                    });
+
+                    // iterate using delegate and inner function
+                    tx.ForEach(null, Iterator);
+
+                    bool Iterator(ref ValueRef val)
+                    {
+                        Display(val);
+                        return true;
+                    }
+
+                    // iterate using foreach
+                    foreach (var item in tx.GetIterator(null, true))
+                    {
+                        Display(item.Value);
+                    }
+                }
+
                 // delete data
                 using (var tx = db.BeginWriteTransaction())
                 {

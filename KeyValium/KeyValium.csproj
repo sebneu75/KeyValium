@@ -13,7 +13,7 @@
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>KeyValium</Title>
-    <Version>0.5.2-beta</Version>
+    <Version>0.5.3</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>KeyValium is a very fast key value store for DotNet.</Description>

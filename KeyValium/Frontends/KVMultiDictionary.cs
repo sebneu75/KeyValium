@@ -24,6 +24,7 @@ namespace KeyValium.Frontends
 
             options.InternalTypeCode = InternalTypes.MultiDictionary;
             _db = Database.Open(filename, options);
+            _txmgr = new TransactionManager(_db);
 
             DefaultSerializer = new KvJsonSerializer(new KvJsonSerializerOptions());
         }
@@ -36,11 +37,19 @@ namespace KeyValium.Frontends
 
         internal readonly IKvSerializer DefaultSerializer;
 
-        internal object MdLock = new object();
-
-        private Transaction _tx;
+        internal readonly TransactionManager _txmgr;
 
         #endregion
+
+        internal Transaction Tx
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return _txmgr.Tx;
+            }
+        }
 
         #region Public API
 
@@ -80,35 +89,7 @@ namespace KeyValium.Frontends
         {
             Perf.CallCount();
 
-            lock (MdLock)
-            {
-                var created = EnsureTransaction();
-
-                if (created)
-                {
-                    Tx.AppendMode = appendmode;
-                }
-
-                try
-                {
-                    action.Invoke();
-
-                    if (created)
-                    {
-                        //UpdateCounts();
-                        CommitTransaction();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (created)
-                    {
-                        RollbackTransaction();
-                    }
-
-                    throw;
-                }
-            }
+            _txmgr.Do(action, appendmode);
         }
 
         /// <summary>
@@ -128,7 +109,7 @@ namespace KeyValium.Frontends
 
             Do(() =>
             {
-                var val = _tx.Get(null, namebytes);
+                var val = Tx.Get(null, namebytes);
                 if (val.IsValid)
                 {
                     ret = DefaultSerializer.Deserialize<KvDictionaryInfo>(val.ValueSpan, true);
@@ -151,7 +132,7 @@ namespace KeyValium.Frontends
 
             Do(() =>
             {
-                using (var iter = _tx.GetIterator(null, true))
+                using (var iter = Tx.GetIterator(null, true))
                 {
                     while (iter.MoveNext())
                     {
@@ -379,47 +360,6 @@ namespace KeyValium.Frontends
 
         #endregion
 
-        internal Transaction Tx
-        {
-            get
-            {
-                Perf.CallCount();
-
-                return _tx;
-            }
-        }
-
-        internal bool EnsureTransaction()
-        {
-            Perf.CallCount();
-
-            if (_tx == null)
-            {
-                _tx = _db.BeginWriteTransaction();
-                return true;
-            }
-
-            return false;
-        }
-
-        internal void CommitTransaction()
-        {
-            Perf.CallCount();
-
-            _tx.Commit();
-            _tx.Dispose();
-            _tx = null;
-        }
-
-        internal void RollbackTransaction()
-        {
-            Perf.CallCount();
-
-            _tx.Rollback();
-            _tx.Dispose();
-            _tx = null;
-        }
-
         private void UpdateDictionaryInfo(string name, KvDictionaryInfo dict, bool create)
         {
             Perf.CallCount();
@@ -430,14 +370,14 @@ namespace KeyValium.Frontends
             {
                 if (create)
                 {
-                    using (var treeref = _tx.EnsureTreeRef(TrackingScope.TransactionChain, key))
+                    using (var treeref = Tx.EnsureTreeRef(TrackingScope.TransactionChain, key))
                     {
-                        _tx.Update(null, key, DefaultSerializer.Serialize(dict, true));
+                        Tx.Update(null, key, DefaultSerializer.Serialize(dict, true));
                     }
                 }
                 else
                 {
-                    _tx.Update(null, key, DefaultSerializer.Serialize(dict, true));
+                    Tx.Update(null, key, DefaultSerializer.Serialize(dict, true));
                 }
             });
         }
@@ -462,12 +402,12 @@ namespace KeyValium.Frontends
 
             Do(() =>
             {
-                using (var treeref = _tx.GetTreeRef(TrackingScope.TransactionChain, key))
+                using (var treeref = Tx.GetTreeRef(TrackingScope.TransactionChain, key))
                 {
-                    _tx.DeleteTree(treeref);
+                    Tx.DeleteTree(treeref);
                 }
 
-                _tx.Delete(null, key);
+                Tx.Delete(null, key);
             });
 
             return false;

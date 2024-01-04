@@ -34,6 +34,28 @@ namespace KeyValium.Samples.MultiDictionary
                         var val3 = dict["key3"];
                     });
 
+                    // foreach loops currently require an explicit transaction
+                    dict.Do(() =>
+                    {
+                        // iterate over key value pairs
+                        foreach (var item in dict) 
+                        {
+                            Console.WriteLine("{0}: {1}", item.Key, item.Value);
+                        }
+
+                        // iterate over keys
+                        foreach (var key in dict.Keys)
+                        {
+                            Console.WriteLine("Key: {0}", key);
+                        }
+
+                        // iterate over values
+                        foreach (var val in dict.Values)
+                        {
+                            Console.WriteLine("Value: {0}", val);
+                        }
+                    });
+
                     // check if key exists
                     if (dict.ContainsKey("key1"))
                     {

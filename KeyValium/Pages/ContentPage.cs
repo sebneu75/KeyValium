@@ -80,7 +80,7 @@ namespace KeyValium.Pages
         }
 
         /// <summary>
-        /// Returns the entry size. Size of Offsetentry and Branchsize is not included
+        /// Returns the entry size. Size of OffsetEntry and Branchsize is not included
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>

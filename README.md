@@ -80,6 +80,32 @@ public void Sample1()
             Display(tx.Get(null, encoding.GetBytes("Key3")));
         }
 
+        // iterate over data
+        using (var tx = db.BeginReadTransaction())
+        {
+            // iterate using lambda
+            tx.ForEach(null, (item) => 
+            {
+                Display(item.Value);
+                return true; 
+            });
+
+            // iterate using delegate and inner function
+            tx.ForEach(null, Iterator);
+
+            bool Iterator(ref ValueRef val)
+            {
+                Display(val);
+                return true;
+            }
+
+            // iterate using foreach
+            foreach (var item in tx.GetIterator(null, true))
+            {
+                Display(item.Value);
+            }
+        }
+
         // delete data
         using (var tx = db.BeginWriteTransaction())
         {
@@ -252,6 +278,28 @@ public void Sample1()
                 var val1 = dict["key1"];
                 var val2 = dict["key2"];
                 var val3 = dict["key3"];
+            });
+
+            // foreach loops currently require an explicit transaction
+            dict.Do(() =>
+            {
+                // iterate over key value pairs
+                foreach (var item in dict) 
+                {
+                    Console.WriteLine("{0}: {1}", item.Key, item.Value);
+                }
+
+                // iterate over keys
+                foreach (var key in dict.Keys)
+                {
+                    Console.WriteLine("Key: {0}", key);
+                }
+
+                // iterate over values
+                foreach (var val in dict.Values)
+                {
+                    Console.WriteLine("Value: {0}", val);
+                }
             });
 
             // check if key exists
