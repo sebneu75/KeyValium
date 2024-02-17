@@ -20,7 +20,7 @@ namespace KeyValium.Inspector.Controls
             AllowUserToResizeRows = false;
             AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleVertical;
+            CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Single;
             colheaderstyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             colheaderstyle.BackColor = System.Drawing.SystemColors.ControlLight;
             colheaderstyle.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);

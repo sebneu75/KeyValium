@@ -45,10 +45,10 @@ namespace KeyValium.Inspector
             fileMapView = new Controls.FileMapView();
             tabPageMap = new System.Windows.Forms.TabPage();
             pageMapView = new Controls.PageMapView();
-            tabBenchmark = new System.Windows.Forms.TabPage();
-            benchmarkView = new Controls.BenchmarkView();
             tabFreespace = new System.Windows.Forms.TabPage();
             freeSpaceView = new Controls.FreeSpaceView();
+            tabBenchmark = new System.Windows.Forms.TabPage();
+            benchmarkView = new Controls.BenchmarkView();
             panelLoading = new System.Windows.Forms.Panel();
             cmdCancelLoading = new System.Windows.Forms.Button();
             pbLoading = new System.Windows.Forms.ProgressBar();
@@ -58,8 +58,8 @@ namespace KeyValium.Inspector
             tabProperties.SuspendLayout();
             tabFileMap.SuspendLayout();
             tabPageMap.SuspendLayout();
-            tabBenchmark.SuspendLayout();
             tabFreespace.SuspendLayout();
+            tabBenchmark.SuspendLayout();
             panelLoading.SuspendLayout();
             SuspendLayout();
             // 
@@ -205,27 +205,6 @@ namespace KeyValium.Inspector
             pageMapView.Size = new System.Drawing.Size(1114, 498);
             pageMapView.TabIndex = 0;
             // 
-            // tabBenchmark
-            // 
-            tabBenchmark.Controls.Add(benchmarkView);
-            tabBenchmark.Location = new System.Drawing.Point(4, 24);
-            tabBenchmark.Name = "tabBenchmark";
-            tabBenchmark.Padding = new System.Windows.Forms.Padding(3);
-            tabBenchmark.Size = new System.Drawing.Size(1120, 504);
-            tabBenchmark.TabIndex = 3;
-            tabBenchmark.Text = "Benchmarks";
-            tabBenchmark.UseVisualStyleBackColor = true;
-            // 
-            // benchmarkView
-            // 
-            benchmarkView.Dock = System.Windows.Forms.DockStyle.Fill;
-            benchmarkView.Location = new System.Drawing.Point(3, 3);
-            benchmarkView.Name = "benchmarkView";
-            benchmarkView.Presenter = null;
-            benchmarkView.Size = new System.Drawing.Size(1114, 498);
-            benchmarkView.TabIndex = 0;
-            benchmarkView.Visible = false;
-            // 
             // tabFreespace
             // 
             tabFreespace.Controls.Add(freeSpaceView);
@@ -245,6 +224,26 @@ namespace KeyValium.Inspector
             freeSpaceView.Presenter = null;
             freeSpaceView.Size = new System.Drawing.Size(1114, 498);
             freeSpaceView.TabIndex = 0;
+            // 
+            // tabBenchmark
+            // 
+            tabBenchmark.Controls.Add(benchmarkView);
+            tabBenchmark.Location = new System.Drawing.Point(4, 24);
+            tabBenchmark.Name = "tabBenchmark";
+            tabBenchmark.Padding = new System.Windows.Forms.Padding(3);
+            tabBenchmark.Size = new System.Drawing.Size(1120, 504);
+            tabBenchmark.TabIndex = 3;
+            tabBenchmark.Text = "Benchmarks";
+            tabBenchmark.UseVisualStyleBackColor = true;
+            // 
+            // benchmarkView
+            // 
+            benchmarkView.Dock = System.Windows.Forms.DockStyle.Fill;
+            benchmarkView.Location = new System.Drawing.Point(3, 3);
+            benchmarkView.Name = "benchmarkView";
+            benchmarkView.Presenter = null;
+            benchmarkView.Size = new System.Drawing.Size(1114, 498);
+            benchmarkView.TabIndex = 0;
             // 
             // panelLoading
             // 
@@ -309,8 +308,8 @@ namespace KeyValium.Inspector
             tabProperties.ResumeLayout(false);
             tabFileMap.ResumeLayout(false);
             tabPageMap.ResumeLayout(false);
-            tabBenchmark.ResumeLayout(false);
             tabFreespace.ResumeLayout(false);
+            tabBenchmark.ResumeLayout(false);
             panelLoading.ResumeLayout(false);
             panelLoading.PerformLayout();
             ResumeLayout(false);

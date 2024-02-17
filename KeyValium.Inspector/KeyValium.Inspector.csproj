@@ -26,10 +26,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ScottPlot.WinForms" Version="4.1.70" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\KeyValium.TestBench\KeyValium.TestBench.csproj" />
     <ProjectReference Include="..\KeyValium\KeyValium.csproj" />
   </ItemGroup>
 
@@ -57,7 +59,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Benchmarks\" />
     <Folder Include="Images\" />
   </ItemGroup>
 

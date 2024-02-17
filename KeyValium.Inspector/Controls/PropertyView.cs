@@ -29,22 +29,10 @@ namespace KeyValium.Inspector.Controls
         {
             dgViewMeta.Rows.Clear();
 
+            pgProps.SelectedObject = props;
+
             if (props != null)
             {
-                //lblHostByteorder.Text = string.Format("{0}", props.HostByteOrder);
-                lblFilename.Text = props.Filename;
-                lblFilesize.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0} Bytes", props.FileSize);
-                lblFirstDatapage.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.FirstDataPage);
-                lblFirstMetapage.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.FirstMetaPage);
-                lblMaxEntrysize.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0} Bytes", props.MaxKeyAndValueSize);
-                lblMaxKeysize.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0} Bytes", props.MaxKeySize);
-                lblMetapages.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.MetaPages);
-                lblPagecount.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.PageCount);
-                lblPagesize.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0} Bytes", props.PageSize);
-                lblVersion.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.Version);
-                lblInternalTypecode.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.InternalTypecode);
-                lblUserTypecode.Text = string.Format(CultureInfo.InvariantCulture, "{0:N0}", props.UserTypecode);
-
                 var maxtid = props.MetaInfos.Max(x => x.Tid);
 
                 var rownames = new List<string>()
@@ -121,32 +109,17 @@ namespace KeyValium.Inspector.Controls
                     }
                 }
             }
-            else
-            {
-                lblFilename.Text = "";
-                lblFilesize.Text = "";
-                lblFirstDatapage.Text = "";
-                lblFirstMetapage.Text = "";
-                lblMaxEntrysize.Text = "";
-                lblMaxKeysize.Text = "";
-                lblMetapages.Text = "";
-                lblPagecount.Text = "";
-                lblPagesize.Text = "";
-                lblVersion.Text = "";
-                lblInternalTypecode.Text = "";
-                lblUserTypecode.Text = "";
-            }
         }
 
         public void ShowPageCounts(DatabaseProperties props, FileMap map)
         {
-            dgViewPageCounts2.Rows.Clear();
+            dgViewPageCounts.Rows.Clear();
 
             if (props != null && map != null)
             {
                 var rownames = new List<string>()
                 {
-                    "Total", "DataIndex", "DataLeaf", "Overflow", "FsIndex", "FsLeaf", "FreeSpace", "Unreferenced"
+                    "Total", "Data Index", "Data Leaf", "Data Overflow", "Freespace Index", "Freespace Leaf", "Freespace", "Unreferenced"
                 };
 
                 var rowvalues0 = new List<ulong>()
@@ -166,31 +139,81 @@ namespace KeyValium.Inspector.Controls
                     map.GetPageCount(1),
                     map.GetPageCount(1, PageTypesI.DataIndex),
                     map.GetPageCount(1, PageTypesI.DataLeaf),
-                    map.GetPageCount(1, PageTypesI.DataOverflow) + map.GetPageCount(0, PageTypesI.DataOverflowCont),
+                    map.GetPageCount(1, PageTypesI.DataOverflow) + map.GetPageCount(1, PageTypesI.DataOverflowCont),
                     map.GetPageCount(1, PageTypesI.FsIndex),
                     map.GetPageCount(1, PageTypesI.FsLeaf),
-                    map.GetPageCount(1, PageTypesI.FreeSpace) + map.GetPageCount(0, PageTypesI.FreeSpaceInUse),
+                    map.GetPageCount(1, PageTypesI.FreeSpace) + map.GetPageCount(1, PageTypesI.FreeSpaceInUse),
                     map.GetPageCount(1, PageTypesI.Unknown),
                 };
 
                 for (int i = 0; i < rownames.Count; i++)
                 {
-                    var row = dgViewPageCounts2.Rows[dgViewPageCounts2.Rows.Add()];
+                    var row = dgViewPageCounts.Rows[dgViewPageCounts.Rows.Add()];
 
                     row.HeaderCell.Value = rownames[i];
                     row.Cells[colPageCountsMeta0.Name].Value = rowvalues0[i];
+                    row.Cells[colSizeMeta0.Name].Value = GetMegaBytes(rowvalues0[i], props.PageSize);
                     row.Cells[colPageCountsMeta0P.Name].Value = GetPercentage(rowvalues0[i], rowvalues0[0]);
                     row.Cells[colPageCountsMeta1.Name].Value = rowvalues1[i];
+                    row.Cells[colSizeMeta1.Name].Value = GetMegaBytes(rowvalues1[i], props.PageSize);
                     row.Cells[colPageCountsMeta1P.Name].Value = GetPercentage(rowvalues1[i], rowvalues1[0]); ;
                 }
             }
+        }
+
+        public void ShowUnusedSpace(DatabaseProperties props, FileMap map)
+        {
+            dgViewUnusedPages.Rows.Clear();
+
+            if (props != null && map != null)
+            {
+                var rownames = new List<string>()
+                {
+                    "Total", "Data Index", "Data Leaf", "Freespace Index", "Freespace Leaf"
+                };
+
+                var rowvalues0 = new List<ulong>()
+                {
+                    map.GetUnusedSpace(0),
+                    map.GetUnusedSpace(0, PageTypesI.DataIndex),
+                    map.GetUnusedSpace(0, PageTypesI.DataLeaf),
+                    map.GetUnusedSpace(0, PageTypesI.FsIndex),
+                    map.GetUnusedSpace(0, PageTypesI.FsLeaf),
+                };
+
+                var rowvalues1 = new List<ulong>()
+                {
+                    map.GetUnusedSpace(1),
+                    map.GetUnusedSpace(1, PageTypesI.DataIndex),
+                    map.GetUnusedSpace(1, PageTypesI.DataLeaf),
+                    map.GetUnusedSpace(1, PageTypesI.FsIndex),
+                    map.GetUnusedSpace(1, PageTypesI.FsLeaf),
+                };
+
+
+                for (int i = 0; i < rownames.Count; i++)
+                {
+                    var row = dgViewUnusedPages.Rows[dgViewUnusedPages.Rows.Add()];
+
+                    row.HeaderCell.Value = rownames[i];
+                    row.Cells[colUnusedSpaceMeta0.Name].Value = GetMegaBytes(rowvalues0[i], 1);
+                    row.Cells[colUnusedSpaceMeta0P.Name].Value = GetPercentage(rowvalues0[i], rowvalues0[0]);
+                    row.Cells[colUnusedSpaceMeta1.Name].Value = GetMegaBytes(rowvalues1[i], 1);
+                    row.Cells[colUnusedSpaceMeta1P.Name].Value = GetPercentage(rowvalues1[i], rowvalues1[0]); ;
+                }
+            }
+        }
+
+        private double GetMegaBytes(ulong count, uint pagesize)
+        {
+            return count * pagesize / 1024.0 / 1024.0;
         }
 
         private object GetPercentage(ulong val, ulong total)
         {
             if (total == 0) return 0;
 
-            return (double)val / (double)total;
+            return (double)val / (double)total * 100.0;
         }
 
         #endregion

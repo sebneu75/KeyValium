@@ -1,10 +1,14 @@
-﻿using KeyValium.Inspector.MVP.Presenters;
+﻿using KeyValium.Inspector.Benchmarks;
+using KeyValium.Inspector.MVP.Presenters;
 using KeyValium.Inspector.MVP.Views;
+using KeyValium.TestBench;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,6 +71,126 @@ namespace KeyValium.Inspector.Controls
             }
 
         }
+
+        private void tsbNewBenchmark_Click(object sender, EventArgs e)
+        {
+            TestDescription.WorkingPath = Path.GetTempPath();
+
+            //var config = ManualConfig.CreateEmpty()
+            //    .AddJob(Job.Default // Adding first job
+            //    .WithRuntime(CoreRuntime.Core80) // .NET Framework 4.7.2
+            //    .WithPlatform(Platform.X64) // Run as x64 application
+            //    .WithJit(Jit.RyuJit) // Use default RyuJIT
+            //    .WithGcServer(false) // Use Server GC                
+            //    ).WithOption(ConfigOptions.DisableLogFile, true)
+            //    .WithOption(ConfigOptions.KeepBenchmarkFiles, false); ;
+
+            ///*
+            //    .AddJob(Job.Default // Adding second job
+            //    .AsBaseline() // It will be marked as baseline
+            //    .WithEnvironmentVariable("Key", "Value") // Setting an environment variable
+            //    .WithWarmupCount(0) // Disable warm-up stage
+            //);
+            //*/
+
+            //var summary = BenchmarkRunner.Run<BenchKeyValium>(config, null);
+
+            //var results = new List<BenchmarkResult>();
+
+            //for (int i = 0; i < summary.BenchmarksCases.Length; i++)
+            //{
+            //    var bc = summary.BenchmarksCases[i];
+
+            //    var br = new BenchmarkResult();
+
+            //    br.Name = bc.Descriptor.Categories[0];
+            //    br.Max = Get(summary, i, "Max");
+            //    br.Mean = Get(summary, i, "Mean");
+            //    br.Median = Get(summary, i, "Median");
+            //    br.Min = Get(summary, i, "Min");
+            //    br.Ops = Get(summary, i, "Op/s");
+
+            //    results.Add(br);
+            //}
+
+
+            //var plt = plot.Plot;
+            //plt.Clear();
+
+            //double[] values = results.Select(x => x.Ops / 1000000.0).ToArray();
+
+            //var positions = new double[results.Count];
+            //for (int i = 0; i < results.Count; i++)
+            //{
+            //    positions[i] = i;
+            //}
+            //string[] labels = results.Select(x => x.Name).ToArray(); ;
+            //var bar = plt.AddBar(values, positions);
+            //bar.ValueFormatter = (x) => x.ToString("#0.00");
+            //bar.ShowValuesAboveBars = true;
+            //plt.XTicks(positions, labels);
+            //plt.XAxis.TickLabelStyle(rotation: 30.0f);
+            //plt.SetAxisLimits(yMin: 0);
+            //plt.XLabel("Operation");
+            //plt.YLabel("Millions per second");
+
+            //plot.Refresh();
+
+            //plot.Visible = true;
+
+            return;
+        }
+
+        //private double Get(Summary summary, int caseindex, string name)
+        //{
+        //    var colindex = -1;
+
+        //    for (int i = 0; i < summary.Table.ColumnCount; i++)
+        //    {
+        //        if (summary.Table.Columns[i].Header == name)
+        //        {
+        //            colindex = i;
+        //            break;
+        //        }
+        //    }
+
+        //    if (colindex < 0)
+        //    {
+        //        throw new ArgumentException("Column not found!");
+        //    }
+
+        //    var val = summary.Table.FullContent[caseindex][colindex];
+
+        //    var mul = 1.0;
+
+        //    if (val.EndsWith("ns"))
+        //    {
+        //        val = val.Substring(0, val.Length - 2).Trim();
+        //        mul = 1.0;
+        //    }
+        //    else if (val.EndsWith("μs"))
+        //    {
+        //        val = val.Substring(0, val.Length - 2).Trim();
+        //        mul = 1000.0;
+        //    }
+        //    else if (val.EndsWith("µs"))
+        //    {
+        //        val = val.Substring(0, val.Length - 2).Trim();
+        //        mul = 1000.0;
+        //    }
+        //    else if (val.EndsWith("ms"))
+        //    {
+        //        val = val.Substring(0, val.Length - 2).Trim();
+        //        mul = 1000000.0;
+        //    }
+        //    else if (val.EndsWith("s"))
+        //    {
+        //        val = val.Substring(0, val.Length - 1).Trim();
+        //        mul = 1000000000.0;
+        //    }
+
+        //    return double.Parse(val, CultureInfo.InvariantCulture) * mul;
+        //}
 
         //private void UpdateChart(string name)
         //{

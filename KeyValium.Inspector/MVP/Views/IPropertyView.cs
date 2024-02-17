@@ -8,5 +8,7 @@ namespace KeyValium.Inspector.MVP.Views
         void ShowDatabaseProperties(DatabaseProperties props);
 
         void ShowPageCounts(DatabaseProperties props, FileMap map);
+
+        void ShowUnusedSpace(DatabaseProperties props, FileMap map);
     }
 }

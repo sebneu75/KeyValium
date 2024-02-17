@@ -31,7 +31,7 @@ namespace KeyValium.Inspector
             {
                 return _fslist[metaindex];
             }
-            
+
             return new List<FsEntry>();
         }
 
@@ -54,6 +54,8 @@ namespace KeyValium.Inspector
 
         private SortedDictionary<short, Dictionary<PageTypesI, ulong>> _pagecounts = new();
 
+        //private SortedDictionary<short, Dictionary<PageTypesI, ulong>> _unusedspace = new();
+
         internal PageRangeList GetPageList(short metaindex)
         {
             var ret = new PageRangeList();
@@ -69,7 +71,7 @@ namespace KeyValium.Inspector
             return ret;
         }
 
-        internal bool Add(short metaindex, KvPagenumber pageno, PageTypesI pagetype)
+        internal bool Add(short metaindex, KvPagenumber pageno, PageTypesI pagetype, int unusedspace)
         {
             if (!ExistsPageNumber(pageno))
             {
@@ -87,7 +89,7 @@ namespace KeyValium.Inspector
                 return false;
             }
 
-            _map[metaindex].Add(pageno, new PageInfo() { PageNumber = pageno, PageType = pagetype });
+            _map[metaindex].Add(pageno, new PageInfo() { PageNumber = pageno, PageType = pagetype, UnusedSpace = unusedspace });
 
             if (!_pagecounts.ContainsKey(metaindex))
             {
@@ -100,6 +102,19 @@ namespace KeyValium.Inspector
             }
 
             _pagecounts[metaindex][pagetype]++;
+
+            // unused space
+            //if (!_unusedspace.ContainsKey(metaindex))
+            //{
+            //    _unusedspace.Add(metaindex, new Dictionary<PageTypesI, ulong>());
+            //}
+
+            //if (!_unusedspace[metaindex].ContainsKey(pagetype))
+            //{
+            //    _unusedspace[metaindex].Add(pagetype, 0);
+            //}
+
+            //_unusedspace[metaindex][pagetype] += (ulong)unusedspace;
 
             return true;
         }
@@ -121,7 +136,7 @@ namespace KeyValium.Inspector
         {
             if (_map.ContainsKey(metaindex))
             {
-                return (ulong) _map[metaindex].Count;
+                return (ulong)_map[metaindex].Count;
             }
 
             return 0;
@@ -129,8 +144,8 @@ namespace KeyValium.Inspector
 
         public ulong GetPageCount(short metaindex, PageTypesI pagetype)
         {
-            if (_pagecounts.ContainsKey(metaindex)) 
-            { 
+            if (_pagecounts.ContainsKey(metaindex))
+            {
                 if (_pagecounts[metaindex].ContainsKey(pagetype))
                 {
                     return _pagecounts[metaindex][pagetype];
@@ -166,6 +181,26 @@ namespace KeyValium.Inspector
             }
 
             return PageTypesI.Unknown;
+        }
+
+        internal ulong GetUnusedSpace(short metaindex)
+        {
+            if (_map.ContainsKey(metaindex))
+            {
+                return (ulong)_map[metaindex].Values.Sum(x => x.UnusedSpace);
+            }
+
+            return 0;
+        }
+
+        public ulong GetUnusedSpace(short metaindex, PageTypesI pagetype)
+        {
+            if (_map.ContainsKey(metaindex))
+            {
+                return (ulong)_map[metaindex].Values.Where(x => x.PageType == pagetype).Sum(x => x.UnusedSpace);
+            }
+
+            return 0;
         }
     }
 }

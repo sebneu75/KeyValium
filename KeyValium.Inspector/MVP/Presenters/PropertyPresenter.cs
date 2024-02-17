@@ -31,6 +31,7 @@ namespace KeyValium.Inspector.MVP.Presenters
         private void FileMapChanged(object sender, EventArgs e)
         {
             View.ShowPageCounts(Model?.Inspector?.Properties, Model?.Map);
+            View.ShowUnusedSpace(Model?.Inspector?.Properties, Model?.Map);
         }
     }
 }

@@ -29,90 +29,113 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BenchmarkView));
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.tsbLoadData = new System.Windows.Forms.ToolStripButton();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.listBenchmarks = new System.Windows.Forms.ListBox();
-            this.splitter1 = new System.Windows.Forms.Splitter();
-            this.panelChart = new System.Windows.Forms.Panel();
-            this.toolStrip1.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.SuspendLayout();
+            toolStrip1 = new System.Windows.Forms.ToolStrip();
+            tsbLoadData = new System.Windows.Forms.ToolStripButton();
+            tsbNewBenchmark = new System.Windows.Forms.ToolStripButton();
+            panel1 = new System.Windows.Forms.Panel();
+            listBenchmarks = new System.Windows.Forms.ListBox();
+            splitter1 = new System.Windows.Forms.Splitter();
+            panelChart = new System.Windows.Forms.Panel();
+            plot = new ScottPlot.FormsPlot();
+            toolStrip1.SuspendLayout();
+            panel1.SuspendLayout();
+            panelChart.SuspendLayout();
+            SuspendLayout();
             // 
             // toolStrip1
             // 
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsbLoadData});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(933, 25);
-            this.toolStrip1.TabIndex = 0;
-            this.toolStrip1.Text = "toolStrip1";
+            toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbLoadData, tsbNewBenchmark });
+            toolStrip1.Location = new System.Drawing.Point(0, 0);
+            toolStrip1.Name = "toolStrip1";
+            toolStrip1.Size = new System.Drawing.Size(933, 25);
+            toolStrip1.TabIndex = 0;
+            toolStrip1.Text = "toolStrip1";
             // 
             // tsbLoadData
             // 
-            this.tsbLoadData.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tsbLoadData.Image = ((System.Drawing.Image)(resources.GetObject("tsbLoadData.Image")));
-            this.tsbLoadData.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbLoadData.Name = "tsbLoadData";
-            this.tsbLoadData.Size = new System.Drawing.Size(23, 22);
-            this.tsbLoadData.Text = "toolStripButton1";
-            this.tsbLoadData.Click += new System.EventHandler(this.tsbLoadData_Click);
+            tsbLoadData.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            tsbLoadData.Image = (System.Drawing.Image)resources.GetObject("tsbLoadData.Image");
+            tsbLoadData.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbLoadData.Name = "tsbLoadData";
+            tsbLoadData.Size = new System.Drawing.Size(23, 22);
+            tsbLoadData.Text = "toolStripButton1";
+            tsbLoadData.Click += tsbLoadData_Click;
+            // 
+            // tsbNewBenchmark
+            // 
+            tsbNewBenchmark.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            tsbNewBenchmark.Image = (System.Drawing.Image)resources.GetObject("tsbNewBenchmark.Image");
+            tsbNewBenchmark.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbNewBenchmark.Name = "tsbNewBenchmark";
+            tsbNewBenchmark.Size = new System.Drawing.Size(23, 22);
+            tsbNewBenchmark.Text = "New Benchmark...";
+            tsbNewBenchmark.Click += tsbNewBenchmark_Click;
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.listBenchmarks);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.panel1.Location = new System.Drawing.Point(0, 25);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(200, 544);
-            this.panel1.TabIndex = 1;
+            panel1.Controls.Add(listBenchmarks);
+            panel1.Dock = System.Windows.Forms.DockStyle.Left;
+            panel1.Location = new System.Drawing.Point(0, 25);
+            panel1.Name = "panel1";
+            panel1.Size = new System.Drawing.Size(200, 544);
+            panel1.TabIndex = 1;
             // 
             // listBenchmarks
             // 
-            this.listBenchmarks.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listBenchmarks.FormattingEnabled = true;
-            this.listBenchmarks.ItemHeight = 15;
-            this.listBenchmarks.Location = new System.Drawing.Point(0, 0);
-            this.listBenchmarks.Name = "listBenchmarks";
-            this.listBenchmarks.Size = new System.Drawing.Size(200, 544);
-            this.listBenchmarks.Sorted = true;
-            this.listBenchmarks.TabIndex = 0;
-            this.listBenchmarks.SelectedIndexChanged += new System.EventHandler(this.listBenchmarks_SelectedIndexChanged);
+            listBenchmarks.Dock = System.Windows.Forms.DockStyle.Fill;
+            listBenchmarks.FormattingEnabled = true;
+            listBenchmarks.ItemHeight = 15;
+            listBenchmarks.Location = new System.Drawing.Point(0, 0);
+            listBenchmarks.Name = "listBenchmarks";
+            listBenchmarks.Size = new System.Drawing.Size(200, 544);
+            listBenchmarks.Sorted = true;
+            listBenchmarks.TabIndex = 0;
+            listBenchmarks.SelectedIndexChanged += listBenchmarks_SelectedIndexChanged;
             // 
             // splitter1
             // 
-            this.splitter1.Location = new System.Drawing.Point(200, 25);
-            this.splitter1.Name = "splitter1";
-            this.splitter1.Size = new System.Drawing.Size(3, 544);
-            this.splitter1.TabIndex = 2;
-            this.splitter1.TabStop = false;
+            splitter1.Location = new System.Drawing.Point(200, 25);
+            splitter1.Name = "splitter1";
+            splitter1.Size = new System.Drawing.Size(3, 544);
+            splitter1.TabIndex = 2;
+            splitter1.TabStop = false;
             // 
             // panelChart
             // 
-            this.panelChart.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelChart.Location = new System.Drawing.Point(203, 25);
-            this.panelChart.Name = "panelChart";
-            this.panelChart.Size = new System.Drawing.Size(730, 544);
-            this.panelChart.TabIndex = 3;
+            panelChart.Controls.Add(plot);
+            panelChart.Dock = System.Windows.Forms.DockStyle.Fill;
+            panelChart.Location = new System.Drawing.Point(203, 25);
+            panelChart.Name = "panelChart";
+            panelChart.Size = new System.Drawing.Size(730, 544);
+            panelChart.TabIndex = 3;
+            // 
+            // plot
+            // 
+            plot.Dock = System.Windows.Forms.DockStyle.Fill;
+            plot.Location = new System.Drawing.Point(0, 0);
+            plot.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            plot.Name = "plot";
+            plot.Size = new System.Drawing.Size(730, 544);
+            plot.TabIndex = 0;
+            plot.Visible = false;
             // 
             // BenchmarkView
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.panelChart);
-            this.Controls.Add(this.splitter1);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.toolStrip1);
-            this.Name = "BenchmarkView";
-            this.Size = new System.Drawing.Size(933, 569);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
-            this.panel1.ResumeLayout(false);
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            Controls.Add(panelChart);
+            Controls.Add(splitter1);
+            Controls.Add(panel1);
+            Controls.Add(toolStrip1);
+            Name = "BenchmarkView";
+            Size = new System.Drawing.Size(933, 569);
+            toolStrip1.ResumeLayout(false);
+            toolStrip1.PerformLayout();
+            panel1.ResumeLayout(false);
+            panelChart.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -123,5 +146,7 @@
         private System.Windows.Forms.Panel panelChart;
         private System.Windows.Forms.ToolStripButton tsbLoadData;
         private System.Windows.Forms.ListBox listBenchmarks;
+        private ScottPlot.FormsPlot plot;
+        private System.Windows.Forms.ToolStripButton tsbNewBenchmark;
     }
 }

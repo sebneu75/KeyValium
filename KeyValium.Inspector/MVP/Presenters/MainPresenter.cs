@@ -85,6 +85,7 @@ namespace KeyValium.Inspector.MVP.Presenters
         private void FileMapChanged(object sender, EventArgs e)
         {
             PropertyP.View.ShowPageCounts(Model?.Inspector?.Properties, Model?.Map);
+            PropertyP.View.ShowUnusedSpace(Model?.Inspector?.Properties, Model?.Map);
         }
 
         internal void InspectDatabase(string filename, string password, string keyfile)

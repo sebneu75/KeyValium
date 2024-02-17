@@ -19,8 +19,8 @@ namespace KeyValium.Benchmarks.KV
         private static string Token = DateTime.Now.ToString("(yyyy-MM-dd-HH-mm-ss-ffffff)");
 
 #if DEBUG
-        const int KeyCount =  10000;
-        const int CommitSize = 1000;
+        const int KeyCount =  1000;
+        const int CommitSize = 100;
 #else
         const int KeyCount = 100000;
         const int CommitSize = 10000;

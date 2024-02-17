@@ -40,6 +40,7 @@ namespace KeyValium.Inspector
                     _props.Filename = _database.Filename;
                     _props.FileSize = _database.DbFile.Length;
                     _props.FirstMetaPage = Limits.FirstMetaPage;
+                    _props.Flags = (ushort)_database.Options.Flags;
                     _props.MaxKeyAndValueSize = _database.Limits.MaximumInlineKeyValueSize;
                     _props.MaxKeySize = _database.Limits.MaximumKeySize;
                     _props.MetaPages = Limits.MetaPages;
@@ -79,8 +80,8 @@ namespace KeyValium.Inspector
             ret.FsRootPage = mp.FsRootPage;
             ret.PageNumber = Properties.FirstMetaPage + index;
             ret.Tid = mp.Tid;
-            ret.HeaderTid=mp.HeaderTid;
-            ret.FooterTid=mp.FooterTid;
+            ret.HeaderTid = mp.HeaderTid;
+            ret.FooterTid = mp.FooterTid;
             ret.LastPage = mp.LastPage;
             ret.DataTotalCount = mp.DataTotalCount;
             ret.DataLocalCount = mp.DataLocalCount;
@@ -97,13 +98,13 @@ namespace KeyValium.Inspector
             var ret = new FileMap();
             ret.TotalPageCount = (ulong)Properties.PageCount;
 
-            ret.Add(-1, 0, PageTypesI.FileHeader);
+            ret.Add(-1, 0, PageTypesI.FileHeader, 0);
 
             var mintid = Properties.MetaInfos.Min(x => x.Tid);
 
             for (short i = 0; i < Properties.MetaInfos.Count; i++)
             {
-                ret.Add(-1, Properties.FirstMetaPage + (ulong)i, PageTypesI.Meta);
+                ret.Add(-1, Properties.FirstMetaPage + (ulong)i, PageTypesI.Meta, 0);
 
                 var meta = Properties.MetaInfos[i];
 
@@ -163,12 +164,12 @@ namespace KeyValium.Inspector
                     {
                         throw new Exception("Unexpected empty queue!");
                     }
-                    
+
                     _database.Pager.ReadAheadInspector(pageno);
                     var page = _database.Pager.ReadPageInspector(pageno, Properties.PageSize, true);
 
                     // add current page
-                    if (!map.Add(metaindex, pageno, GetPageTypeI(page)))
+                    if (!map.Add(metaindex, pageno, GetPageTypeI(page), GetFreeSpace(page)))
                     {
                         // TODO deal with duplicate pages
                         continue;
@@ -211,7 +212,7 @@ namespace KeyValium.Inspector
                             ref var ovpage = ref page.AsOverflowPage;
                             for (KvPagenumber p = pageno + 1; p < pageno + ovpage.Header.PageCount; p++)
                             {
-                                map.Add(metaindex, p, PageTypesI.DataOverflowCont);
+                                map.Add(metaindex, p, PageTypesI.DataOverflowCont, 0);
                             }
                             break;
 
@@ -224,7 +225,7 @@ namespace KeyValium.Inspector
 
                                 for (KvPagenumber p = entry.FirstPage; p <= entry.LastPage; p++)
                                 {
-                                    map.Add(metaindex, p, entry.Tid <= mintid ? PageTypesI.FreeSpace : PageTypesI.FreeSpaceInUse);
+                                    map.Add(metaindex, p, entry.Tid <= mintid ? PageTypesI.FreeSpace : PageTypesI.FreeSpaceInUse, 0);
                                 }
 
                                 if (true) // TODO make optional
@@ -265,6 +266,20 @@ namespace KeyValium.Inspector
                     break;
                 }
             }
+        }
+
+        private int GetFreeSpace(AnyPage page)
+        {
+            switch (page.PageType)
+            {
+                case PageTypes.DataIndex:
+                case PageTypes.DataLeaf:
+                case PageTypes.FsIndex:
+                case PageTypes.FsLeaf:
+                    return page.AsContentPage.Header.FreeSpace;
+            }
+
+            return 0;
         }
 
         private PageTypesI GetPageTypeI(AnyPage page)
@@ -473,7 +488,7 @@ namespace KeyValium.Inspector
                 var child = range.AddChild("Entry", (int)(entry.Entry.Pointer - page.Content.Pointer), entry.EntrySize, i, null, null, null);
 
                 child.AddChild(nameof(entry.Flags), 0x00, 2, typeof(ushort), entry.Flags, entry.Flags.ToString("X4"));
-                child.AddChild(nameof(entry.KeyLength), 0x02, 2, typeof(ushort), entry.KeyLength, entry.KeyLength.ToString("N0"));                
+                child.AddChild(nameof(entry.KeyLength), 0x02, 2, typeof(ushort), entry.KeyLength, entry.KeyLength.ToString("N0"));
                 child.AddChild(nameof(entry.FirstPage), 0x04, 8, typeof(ulong), entry.FirstPage, entry.FirstPage.ToString("N0"));
                 child.AddChild(nameof(entry.LastPage), 0x0c, 8, typeof(ulong), entry.LastPage, entry.LastPage.ToString("N0"));
                 child.AddChild(nameof(entry.Tid), 0x14, 8, typeof(ulong), entry.Tid, entry.Tid.ToString("N0"));
@@ -669,13 +684,13 @@ namespace KeyValium.Inspector
             range.AddChild(nameof(mp.DataLocalCount), 0x28, 8, typeof(ulong), mp.DataLocalCount, mp.DataLocalCount.ToString("N0"));
             range.AddChild(nameof(mp.FsTotalCount), 0x30, 8, typeof(ulong), mp.FsTotalCount, mp.FsTotalCount.ToString("N0"));
             range.AddChild(nameof(mp.FsLocalCount), 0x38, 8, typeof(ulong), mp.FsLocalCount, mp.FsLocalCount.ToString("N0"));
-            range.AddChild(nameof(mp.FooterTid), mp.Content.Length-sizeof(KvTid), 8, typeof(ulong), mp.FooterTid, mp.FooterTid.ToString("N0"));
+            range.AddChild(nameof(mp.FooterTid), mp.Content.Length - sizeof(KvTid), 8, typeof(ulong), mp.FooterTid, mp.FooterTid.ToString("N0"));
         }
 
         private void BrAddFileHeader(PageMap map, ByteRange range, UniversalHeader header)
         {
             range.AddChild(nameof(header.Version), 0x10, 2, typeof(ushort), header.Version, header.Version.ToString());
-            range.AddChild(nameof(header.PageSizeExponent), 0x12, 2, typeof(ushort), header.PageSizeExponent, header.PageSizeExponent.ToString());            
+            range.AddChild(nameof(header.PageSizeExponent), 0x12, 2, typeof(ushort), header.PageSizeExponent, header.PageSizeExponent.ToString());
             range.AddChild(nameof(header.Flags), 0x14, 2, typeof(ushort), header.Flags, header.Flags.ToString());
             range.AddChild("Unused", 0x16, 2, typeof(ushort), header.Unused3, header.Unused3.ToString("N0"));
             range.AddChild(nameof(header.InternalTypeCode), 0x18, 4, typeof(uint), header.InternalTypeCode, header.InternalTypeCode.ToString("N0"));

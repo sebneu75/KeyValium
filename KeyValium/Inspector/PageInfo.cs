@@ -13,5 +13,11 @@
             get;
             internal set;
         }
+
+        public int UnusedSpace
+        {
+            get;
+            internal set;
+        }
     }
 }

@@ -38,7 +38,7 @@
             cmbDisplayAs.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             cmbDisplayAs.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             cmbDisplayAs.FormattingEnabled = true;
-            cmbDisplayAs.Items.AddRange(new object[] { "Hexdump", "UTF-8", "ANSI", "ASCII", "UTF-16 (LE)", "UTF-16 (BE)", "Integer (LE)", "Integer (BE)" });
+            cmbDisplayAs.Items.AddRange(new object[] { "Hexdump", "UTF-8", "ANSI", "ASCI", "JSONI", "UTF-16 (LE)", "UTF-16 (BE)", "Integer (LE)", "Integer (BE)" });
             cmbDisplayAs.Location = new System.Drawing.Point(419, 5);
             cmbDisplayAs.Name = "cmbDisplayAs";
             cmbDisplayAs.Size = new System.Drawing.Size(132, 23);
@@ -48,7 +48,7 @@
             // txtBytes
             // 
             txtBytes.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            txtBytes.Font = new System.Drawing.Font("Consolas", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            txtBytes.Font = new System.Drawing.Font("Consolas", 11.25F);
             txtBytes.Location = new System.Drawing.Point(73, 3);
             txtBytes.MaxLength = 262144;
             txtBytes.Multiline = true;

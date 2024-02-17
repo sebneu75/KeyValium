@@ -94,6 +94,9 @@ namespace KeyValium.Inspector.Controls
                 case DisplayType.Integer_BE:
                     txtBytes.Text = Display.FormatInteger(Bytes, true);
                     break;
+                case DisplayType.JSON:
+                    txtBytes.Text = Display.FormatJson(Bytes);
+                    break;
                 default:
                     txtBytes.Text = "???????";
                     break;
@@ -108,6 +111,7 @@ namespace KeyValium.Inspector.Controls
         public enum DisplayType
         {
             Hexdump,
+            JSON,
             UTF8,
             ANSI,
             ASCII,

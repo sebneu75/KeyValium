@@ -7,6 +7,8 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -98,6 +100,42 @@ namespace KeyValium.Inspector
             }
         }
 
+        private static JsonSerializerOptions _jsonoptions;
+
+        static JsonSerializerOptions JsonOptions
+        {
+            get
+            {
+                if (_jsonoptions == null)
+                {
+                    _jsonoptions = new JsonSerializerOptions();
+                    _jsonoptions.WriteIndented = true;
+                    _jsonoptions.ReferenceHandler = ReferenceHandler.Preserve;
+                }
+
+                return _jsonoptions;
+            }
+        }
+
+        internal static string FormatJson(byte[] bytes)
+        {
+            if (bytes == null)
+            {
+                return "";
+            }
+
+            try
+            {
+                var item = JsonSerializer.Deserialize<JsonElement>(bytes, JsonOptions);
+                return JsonSerializer.Serialize(item, JsonOptions);
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+
         internal static string FormatInteger(byte[] bytes, bool bigendian)
         {
             if (bytes == null)
@@ -168,7 +206,7 @@ namespace KeyValium.Inspector
                 }
 
                 sb.AppendLine();
-            }            
+            }
 
             return sb.ToString();
         }

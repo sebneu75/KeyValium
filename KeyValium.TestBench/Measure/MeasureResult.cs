@@ -62,7 +62,6 @@ namespace KeyValium.TestBench.Measure
                 return string.Format("{0}: {1} ticks ", Title, Ticks);
             }
 
-            var tickspersecond = Stopwatch.Frequency;
             var ms = (double)Ticks / Stopwatch.Frequency * 1000.0;
             var mysperitem = ms / OperationCount * 1000.0;
             var itemspers = OperationCount / ms * 1000.0;
