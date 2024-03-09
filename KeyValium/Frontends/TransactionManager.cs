@@ -8,10 +8,13 @@ namespace KeyValium.Frontends
 {
     internal class TransactionManager
     {
-        internal TransactionManager(Database db)
+        internal TransactionManager(Database db, bool prevsnapshot)
         {
             _db = db;
+            _prevsnapshot = prevsnapshot;
         }
+
+        private readonly bool _prevsnapshot;
 
         private readonly object _lock = new object();
 
@@ -63,7 +66,15 @@ namespace KeyValium.Frontends
                 }
                 catch (Exception ex)
                 {
-                    Rollback();
+                    try
+                    {
+                        Rollback();
+                    }
+                    catch (Exception ex2)
+                    {
+                        throw new AggregateException(ex, ex2);
+                    }
+
                     throw;
                 }
             }
@@ -77,7 +88,7 @@ namespace KeyValium.Frontends
 
             if (_tx == null)
             {
-                _tx = _db.BeginWriteTransaction();
+                _tx = _prevsnapshot ? _db.BeginPreviousSnapshotReadTransaction() : _db.BeginWriteTransaction();
                 _tx.AppendMode = appendmode;
                 _refcount = 1;
             }

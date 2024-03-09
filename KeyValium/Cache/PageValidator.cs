@@ -1,4 +1,5 @@
-﻿using KeyValium.Inspector;
+﻿using KeyValium.Collections;
+using KeyValium.Inspector;
 using KeyValium.Pages.Headers;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,10 @@ namespace KeyValium.Cache
 
             Database = db;
             Mode = mode;
+            _rangelist = new PageRangeList();
         }
+
+        private PageRangeList _rangelist;
 
         internal readonly Database Database;
 
@@ -124,17 +128,19 @@ namespace KeyValium.Cache
             ValidateValues(page, pageno, iswrite);
         }
 
-        private void ValidateBranches(AnyPage page, ulong pageno, bool iswrite)
+        private void ValidateBranches(AnyPage page, KvPagenumber pageno, bool iswrite)
         {
             Perf.CallCount();
 
             ref var cp = ref page.AsContentPage;
 
-            if (!cp.IsIndexPage) 
+            if (!cp.IsIndexPage)
             {
                 // only index pages have branches
                 return;
             }
+
+            _rangelist.Clear();
 
             var keys = cp.Header.KeyCount;
 
@@ -147,10 +153,23 @@ namespace KeyValium.Cache
                 {
                     Error(page, pageno, iswrite, "Branch contains invalid page number.");
                 }
+
+                // branch cannot point to the containing page
+                if (branch == pageno)
+                {
+                    Error(page, pageno, iswrite, "Branch points to containing page.");
+                }
+
+                if (_rangelist.Contains(branch))
+                {
+                    Error(page, pageno, iswrite, "Branch is a duplicate.");
+                }
+                
+                _rangelist.AddPage(branch);
             }
         }
 
-        private void ValidateFlags(AnyPage page, ulong pageno, bool iswrite)
+        private void ValidateFlags(AnyPage page, KvPagenumber pageno, bool iswrite)
         {
             Perf.CallCount();
 
@@ -286,7 +305,7 @@ namespace KeyValium.Cache
 
             ref var cp = ref page.AsContentPage;
 
-            if (cp.IsIndexPage) 
+            if (cp.IsIndexPage)
             {
                 // index pages do not have values
                 return;
@@ -327,12 +346,12 @@ namespace KeyValium.Cache
 
             ref var cp = ref page.AsContentPage;
 
-            if (cp.IsFreespacePage) 
+            if (cp.IsFreespacePage)
             {
                 // freespace pages do not have offset tables
                 return;
             }
-                        
+
             var low = cp.Header.Low;
             var high = cp.Header.High;
             var keys = cp.Header.KeyCount;

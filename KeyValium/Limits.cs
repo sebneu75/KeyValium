@@ -13,12 +13,12 @@ namespace KeyValium
         /// <summary>
         /// Internal constant offsets and sizes
         /// </summary>
-        
+
         // Offsets of keylength and keybytes are fixed
         internal const ushort OffsetFlags = 0;
         internal const ushort OffsetKeyLength = OffsetFlags + sizeof(ushort);
         internal const ushort OffsetKeyBytes = OffsetKeyLength + sizeof(ushort);
-        
+
         // size of offset entries
         internal const ushort OffsetEntrySize = sizeof(ushort);
 
@@ -33,6 +33,13 @@ namespace KeyValium
         internal const int TrackingScope_None = 1;
         internal const int TrackingScope_TransactionChain = 2;
         internal const int TrackingScope_Database = 3;
+
+        /// <summary>
+        /// Constants for SharingMode
+        /// </summary>
+        internal const int SharingMode_Exclusive = 0;
+        internal const int SharingMode_SharedLocal = 1;
+        internal const int SharingMode_SharedNetwork = 2;
 
         /// <summary>
         /// Magic value in headers

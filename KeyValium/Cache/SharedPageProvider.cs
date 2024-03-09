@@ -105,7 +105,7 @@ namespace KeyValium.Cache
             _writecache.Clear();
         }
 
-        override protected void CommitWriteCacheInternal()
+        override protected void CommitWriteCacheInternal(KvTid sourcetid, KvTid tid)
         {
             Perf.CallCount();
 
@@ -113,6 +113,9 @@ namespace KeyValium.Cache
             {
                 // copy writecache to cache
                 _writecache.CopyTo(_cache);
+
+                // TODO update Tid on cached pages
+                _cache.UpdateTids(sourcetid, tid);
             }
             catch (Exception)
             {

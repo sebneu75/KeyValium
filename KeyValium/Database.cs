@@ -4,6 +4,7 @@ using KeyValium.Locking;
 using KeyValium.Memory;
 using KeyValium.Options;
 using System.Buffers;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
@@ -30,7 +31,7 @@ namespace KeyValium
 
             if (!File.Exists(dbfile))
             {
-                if (Options.CreateIfNotExists)
+                if (Options.CreateIfNotExists && !Options.ReadOnly)
                 {
                     CreateDatabase(dbfile);
                 }
@@ -41,7 +42,7 @@ namespace KeyValium
             }
 
             var fileaccess = Options.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite;
-            var fileshare = Options.SharingMode == SharingModes.Exclusive ? FileShare.None : FileShare.ReadWrite;
+            var fileshare = Options.InternalSharingMode == InternalSharingModes.Exclusive ? FileShare.None : FileShare.ReadWrite;
 
             DbFile = new FileStream(dbfile, FileMode.Open, fileaccess, fileshare, 4096, FileOptions.RandomAccess);
 
@@ -57,7 +58,7 @@ namespace KeyValium
 
             MetaEntries = new MetaEntry[Limits.MetaPages];
 
-            IsShared = Options.SharingMode != SharingModes.Exclusive;
+            IsShared = Options.InternalSharingMode != InternalSharingModes.Exclusive;
 
             Limits = new Limits(this);
 
@@ -299,7 +300,7 @@ namespace KeyValium
 
         internal MetaEntry[] MetaEntries;
 
-        private MetaPage RefreshMetaEntries(bool returnoldest)
+        internal MetaPage RefreshMetaEntries(bool returnoldest)
         {
             Perf.CallCount();
 
@@ -474,7 +475,7 @@ namespace KeyValium
             Logger.LogInfo(LogTopics.Meta, tx.Tid, "Saving done.");
         }
 
-        internal Meta GetLatestMeta(bool inctid)
+        internal Meta GetLatestMeta(bool inctid, bool prevsnapshot)
         {
             Perf.CallCount();
 
@@ -487,7 +488,7 @@ namespace KeyValium
             // TODO optimize
             //metas = metas.OrderByDescending(x => x.Tid).ToList();
 
-            var metaindex = GetIndexOfNewestTid();
+            var metaindex = prevsnapshot ? GetIndexOfOldestTid() : GetIndexOfNewestTid();
 
             //
             // determine oldest running transaction
@@ -526,7 +527,6 @@ namespace KeyValium
             // return copy with minimum tid and actual last page
             // if maximum last page is returned it leads to gaps in the file
             // this can be fixed but the file would never shrink
-            // TODO older snapshots can only be used readonly
             return new Meta(ref meta, newtid, mintid, minlastpage, maxlastpage);
         }
 
@@ -544,7 +544,7 @@ namespace KeyValium
 
         #endregion
 
-        public void Validate()
+        public void Validate(bool needwriteaccess)
         {
             Perf.CallCount();
 
@@ -553,6 +553,11 @@ namespace KeyValium
             if (_isdisposed)
             {
                 throw new ObjectDisposedException("Database is already disposed.");
+            }
+
+            if (needwriteaccess && Options.ReadOnly)
+            {
+                throw new ObjectDisposedException("Database is in readonly mode.");
             }
         }
 
@@ -564,20 +569,60 @@ namespace KeyValium
 
         private Transaction _writetransaction = null;
 
+        /// <summary>
+        /// Starts a read transaction.
+        /// </summary>
+        /// <returns>A read transaction.</returns>
         public Transaction BeginReadTransaction()
         {
             Perf.CallCount();
 
             lock (_dblock)
             {
-                Validate();
+                Validate(false);
 
                 try
                 {
                     // wait for free slot in lockfile
                     LockFile?.WaitForReaderSlot();
 
-                    var meta = GetLatestMeta(false);
+                    var meta = GetLatestMeta(false, false);
+
+                    var tx = new Transaction(this, meta, true);
+                    _readtransactions.Add(tx.Oid, tx);
+
+                    // write lockfile entry
+                    LockFile?.AddReader(tx);
+
+                    Tracker.OnBeginRootTransaction(tx);
+
+                    return tx;
+                }
+                finally
+                {
+                    LockFile?.Unlock();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Starts a read transaction for the previous snapshot.
+        /// </summary>
+        /// <returns>A read transaction.</returns>
+        public Transaction BeginPreviousSnapshotReadTransaction()
+        {
+            Perf.CallCount();
+
+            lock (_dblock)
+            {
+                Validate(false);
+
+                try
+                {
+                    // wait for free slot in lockfile
+                    LockFile?.WaitForReaderSlot();
+
+                    var meta = GetLatestMeta(false, true);
 
                     var tx = new Transaction(this, meta, true);
                     _readtransactions.Add(tx.Oid, tx);
@@ -602,7 +647,7 @@ namespace KeyValium
 
             lock (_dblock)
             {
-                Validate();
+                Validate(true);
 
                 try
                 {
@@ -616,7 +661,7 @@ namespace KeyValium
                     // wait for free slot in lockfile
                     LockFile?.WaitForWriterSlot();
 
-                    var meta = GetLatestMeta(true);
+                    var meta = GetLatestMeta(true, false);
 
                     var tx = new Transaction(this, meta, false);
                     _writetransaction = tx;

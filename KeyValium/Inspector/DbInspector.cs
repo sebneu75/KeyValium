@@ -148,8 +148,11 @@ namespace KeyValium.Inspector
                 return;
             }
 
+            var level = 0;      // for debugging purposes
+
             var scanqueue = new PageRangeList();
             scanqueue.AddPage(rootpageno);
+            
 
             var pagestoscan = new List<KvPagenumber>();
 
@@ -260,6 +263,7 @@ namespace KeyValium.Inspector
                     pagestoscan = pagestoscan.OrderBy(x => x).ToList();
                     pagestoscan.ForEach(x => scanqueue.AddPage(x));
                     pagestoscan.Clear();
+                    level++;
                 }
                 else
                 {

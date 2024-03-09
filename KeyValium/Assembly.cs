@@ -5,3 +5,5 @@
 [assembly: InternalsVisibleTo("KeyValium.TestBench")]
 [assembly: InternalsVisibleTo("KeyValium.Tests")]
 [assembly: InternalsVisibleTo("KeyValium.UnendingTest")]
+[assembly: InternalsVisibleTo("KeyValium.UnendingTestSharedController")]
+[assembly: InternalsVisibleTo("KeyValium.UnendingTestShared")]

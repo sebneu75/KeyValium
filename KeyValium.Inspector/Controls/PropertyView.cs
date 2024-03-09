@@ -124,26 +124,26 @@ namespace KeyValium.Inspector.Controls
 
                 var rowvalues0 = new List<ulong>()
                 {
-                    map.GetPageCount(0),
+                    props.MetaInfos[0].LastPage - props.FirstDataPage + 1,
                     map.GetPageCount(0, PageTypesI.DataIndex),
                     map.GetPageCount(0, PageTypesI.DataLeaf),
                     map.GetPageCount(0, PageTypesI.DataOverflow) + map.GetPageCount(0, PageTypesI.DataOverflowCont),
                     map.GetPageCount(0, PageTypesI.FsIndex),
                     map.GetPageCount(0, PageTypesI.FsLeaf),
                     map.GetPageCount(0, PageTypesI.FreeSpace) + map.GetPageCount(0, PageTypesI.FreeSpaceInUse),
-                    map.GetPageCount(0, PageTypesI.Unknown),
+                    map.GetUnreferencedCount(0, props),
                 };
 
                 var rowvalues1 = new List<ulong>()
                 {
-                    map.GetPageCount(1),
+                    props.MetaInfos[1].LastPage - props.FirstDataPage + 1,
                     map.GetPageCount(1, PageTypesI.DataIndex),
                     map.GetPageCount(1, PageTypesI.DataLeaf),
                     map.GetPageCount(1, PageTypesI.DataOverflow) + map.GetPageCount(1, PageTypesI.DataOverflowCont),
                     map.GetPageCount(1, PageTypesI.FsIndex),
                     map.GetPageCount(1, PageTypesI.FsLeaf),
                     map.GetPageCount(1, PageTypesI.FreeSpace) + map.GetPageCount(1, PageTypesI.FreeSpaceInUse),
-                    map.GetPageCount(1, PageTypesI.Unknown),
+                    map.GetUnreferencedCount(1, props),
                 };
 
                 for (int i = 0; i < rownames.Count; i++)

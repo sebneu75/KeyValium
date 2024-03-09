@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KeyValium.Locking
@@ -37,6 +38,8 @@ namespace KeyValium.Locking
             if (_islocked)
             {
                 // already locked
+                Monitor.Exit(_lock);
+
                 return;
             }
 
@@ -57,13 +60,13 @@ namespace KeyValium.Locking
                     catch (IOException ex)
                     {
                         //
-                        // most of the time an IOException is thrown
+                        // most of the time an IOException is thrown if the file already exists
                         //                        
                     }
                     catch (UnauthorizedAccessException ex)
                     {
                         //
-                        // in rare cases an UnauthorizedAccessException is thrown
+                        // in rare cases an UnauthorizedAccessException is thrown if the file already exists
                         //
                     }
 
@@ -92,9 +95,15 @@ namespace KeyValium.Locking
                     return;
                 }
 
-                LockFileLock.Dispose();
-
-                _islocked = false;                
+                try
+                {
+                    LockFileLock.Dispose();                    
+                }
+                finally 
+                {
+                    _islocked = false;
+                    Monitor.Exit(_lock);
+                }                
             }
             finally
             {

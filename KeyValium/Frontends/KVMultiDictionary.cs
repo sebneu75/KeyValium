@@ -18,13 +18,13 @@ namespace KeyValium.Frontends
     {
         #region Constructor
 
-        private KvMultiDictionary(string filename, DatabaseOptions options)
+        private KvMultiDictionary(string filename, DatabaseOptions options, bool prevsnapshot)
         {
             Perf.CallCount();
 
             options.InternalTypeCode = InternalTypes.MultiDictionary;
             _db = Database.Open(filename, options);
-            _txmgr = new TransactionManager(_db);
+            _txmgr = new TransactionManager(_db, prevsnapshot);
 
             DefaultSerializer = new KvJsonSerializer(new KvJsonSerializerOptions());
         }
@@ -62,7 +62,19 @@ namespace KeyValium.Frontends
         {
             Perf.CallCount();
 
-            return new KvMultiDictionary(filename, new DatabaseOptions());
+            return Open(filename, new DatabaseOptions(), false);
+        }
+
+        /// <summary>
+        /// Opens a MultiDictionary with default options. If the file does not exist it will be created.
+        /// </summary>
+        /// <param name="filename">The database filename.</param>
+        /// <returns>An instance of KvMultiDictionary.</returns>
+        public static KvMultiDictionary Open(string filename, bool prevsnapshot)
+        {
+            Perf.CallCount();
+
+            return Open(filename, new DatabaseOptions(), prevsnapshot);
         }
 
         /// <summary>
@@ -75,7 +87,14 @@ namespace KeyValium.Frontends
         {
             Perf.CallCount();
 
-            return new KvMultiDictionary(filename, options);
+            return Open(filename, options, false);
+        }
+
+        public static KvMultiDictionary Open(string filename, DatabaseOptions options, bool prevsnapshot)
+        {
+            Perf.CallCount();
+
+            return new KvMultiDictionary(filename, options, prevsnapshot);
         }
 
         /// <summary>
@@ -355,7 +374,7 @@ namespace KeyValium.Frontends
                 throw new ObjectDisposedException("MultiDictionary is already disposed.");
             }
 
-            _db.Validate();
+            _db.Validate(true);
         }
 
         #endregion

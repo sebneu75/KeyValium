@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Neues Profil",
+    "Projects": [
+      {
+        "Name": "KeyValium.UnendingTestShared\\KeyValium.UnendingTestShared.csproj",
+        "Action": "Start"
+      },
+      {
+        "Name": "KeyValium.UnendingTestSharedController\\KeyValium.UnendingTestSharedController.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

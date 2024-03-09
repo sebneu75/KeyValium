@@ -31,17 +31,19 @@ namespace KeyValium.Locking
         {
             Perf.CallCount();
 
-            SharingMode = db.Options.SharingMode;
+            Database = db;
+
+            SharingMode = db.Options.InternalSharingMode;
 
             Filename = db.Filename + ".lock";
 
             FileLock = new FileLock(db, this);
 
-            if (db.Options.SharingMode == SharingModes.SharedNetwork)
+            if (db.Options.InternalSharingMode == InternalSharingModes.SharedNetwork)
             {
                 SelectedLock = FileLock;
             }
-            else if (db.Options.SharingMode == SharingModes.SharedLocal)
+            else if (db.Options.InternalSharingMode == InternalSharingModes.SharedLocal)
             {
                 SelectedLock = new MutexLock(db, this);
             }
@@ -64,11 +66,13 @@ namespace KeyValium.Locking
 
         #region Variables
 
+        internal readonly Database Database;
+
         public readonly string Filename;
 
         public readonly int Filesize;
 
-        internal readonly SharingModes SharingMode;
+        internal readonly InternalSharingModes SharingMode;
 
         private readonly FileStream _lockfile;
 
@@ -185,6 +189,7 @@ namespace KeyValium.Locking
 
             var header = new byte[HEADER_SIZE];
 
+            _lockfile.Flush();
             _lockfile.Seek(0, SeekOrigin.Begin);
             _lockfile.Read(header, 0, HEADER_SIZE);
 
@@ -194,7 +199,7 @@ namespace KeyValium.Locking
 
                 var magic = span.ReadUInt(0x00);
                 var pagetype = span.ReadUShort(0x04);
-                var sharingmode = (SharingModes)span.ReadUShort(0x06);
+                var sharingmode = (InternalSharingModes)span.ReadUShort(0x06);
                 var machineid = span.Slice(0x10, _machineid.Length);
 
                 if (magic != Limits.Magic)
@@ -212,7 +217,7 @@ namespace KeyValium.Locking
                     throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (SharingMode mismatch)");
                 }
 
-                if (SharingMode == SharingModes.SharedLocal)
+                if (SharingMode == InternalSharingModes.SharedLocal)
                 {
                     if (!machineid.Span.SequenceEqual(_machineid))
                     {

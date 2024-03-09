@@ -100,6 +100,19 @@
         }
 
         /// <summary>
+        /// Returns the sharing mode for the database.
+        /// </summary>
+        internal InternalSharingModes InternalSharingMode
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return _options.InternalSharingMode;
+            }
+        }
+
+        /// <summary>
         /// Returns the lock timeout in milliseconds.
         /// </summary>
         public int LockTimeout
@@ -148,16 +161,6 @@
                 Perf.CallCount();
 
                 return _options.ReadOnly;
-            }
-        }
-
-        internal bool PreviousSnapshot
-        {
-            get
-            {
-                Perf.CallCount();
-
-                return _options.PreviousSnapshot;
             }
         }
 

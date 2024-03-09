@@ -3,7 +3,7 @@
     /// <summary>
     /// Different modes for sharing database access.
     /// </summary>
-    public enum SharingModes : ushort
+    public enum InternalSharingModes : ushort
     {
         /// <summary>
         /// The database is opened exclusively. Subsequent attempts to open the database will fail.
@@ -22,8 +22,7 @@
         /// The database is opened in shared mode. Access is managed with a lockfile.  
         /// An additional lockfile is used to synchronize access among multiple database instances.
         /// The database can be used from multiple computers on a network share.
-        /// Disabled because it does not work reliably. Different computers see different content of the lockfile.
         /// </summary>
-        // SharedNetwork = Limits.SharingMode_SharedLocal
+        SharedNetwork = Limits.SharingMode_SharedNetwork
     }
 }

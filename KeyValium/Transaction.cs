@@ -2155,7 +2155,7 @@ namespace KeyValium
                         // update filesize
                         Database.UpdateFilesize();
 
-                        Pager.CommitWriteCache();
+                        Pager.CommitWriteCache(Meta.SourceTid, Meta.Tid);
                     }
                 }
 

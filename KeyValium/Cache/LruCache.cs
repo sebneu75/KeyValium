@@ -267,6 +267,24 @@ namespace KeyValium.Cache
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Sets the Tid of all PageRefs with Tid sourcetid to tid
+        /// </summary>
+        /// <param name="sourcetid"></param>
+        /// <param name="tid"></param>
+        internal void UpdateTids(KvTid sourcetid, KvTid tid)
+        {
+            void UpdateTid(KvPagenumber pageno, ref PageRef item)
+            {
+                if (item.Tid == sourcetid)
+                {
+                    item.Tid = tid;
+                }
+            }
+
+            _pages.ForEach(UpdateTid);
+        }
+
         #endregion
     }
 }

@@ -158,17 +158,17 @@ namespace KeyValium.Cache
             // do nothing by default
         }
 
-        internal void CommitWriteCache()
+        internal void CommitWriteCache(KvTid sourcetid, KvTid tid)
         {
             Perf.CallCount();
 
             lock (_seeklock)
             {
-                CommitWriteCacheInternal();
+                CommitWriteCacheInternal(sourcetid, tid);
             }
         }
 
-        protected virtual void CommitWriteCacheInternal()
+        protected virtual void CommitWriteCacheInternal(KvTid sourcetid, KvTid tid)
         {
             Perf.CallCount();
 

@@ -1,4 +1,5 @@
 ﻿using KeyValium.Collections;
+using System.Linq;
 
 namespace KeyValium.Inspector
 {
@@ -198,6 +199,20 @@ namespace KeyValium.Inspector
             if (_map.ContainsKey(metaindex))
             {
                 return (ulong)_map[metaindex].Values.Where(x => x.PageType == pagetype).Sum(x => x.UnusedSpace);
+            }
+
+            return 0;
+        }
+
+        internal ulong GetUnreferencedCount(short metaindex, DatabaseProperties props)
+        {
+            if (_map.ContainsKey(metaindex))
+            {
+                var ranges = new PageRangeList();
+                ranges.AddRange(Limits.MetaPages + 1, props.MetaInfos[metaindex].LastPage);
+                _map[metaindex].Values.ToList().ForEach(x => ranges.RemovePage(x.PageNumber));
+
+                return ranges.PageCount;
             }
 
             return 0;

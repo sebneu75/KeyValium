@@ -29,7 +29,6 @@ namespace KeyValium.Options
             LockInterval = 40;
             LockIntervalVariance = 20;
 
-            PreviousSnapshot = false;
             InternalTypeCode = 0;
             UserTypeCode = 0;
 
@@ -127,6 +126,22 @@ namespace KeyValium.Options
         /// </summary>
         public SharingModes SharingMode
         {
+            get
+            {
+                return (SharingModes)InternalSharingMode;
+            }
+            set
+            {
+                InternalSharingMode = (InternalSharingModes)value;
+            }
+        }
+
+        /// <summary>
+        /// The sharing mode for the database.
+        /// Default is SharingModes.None.
+        /// </summary>
+        internal InternalSharingModes InternalSharingMode
+        {
             get;
             set;
         }
@@ -169,12 +184,6 @@ namespace KeyValium.Options
         /// Default is false.
         /// </summary>
         public bool ReadOnly
-        {
-            get;
-            set;
-        }
-
-        internal bool PreviousSnapshot
         {
             get;
             set;
@@ -403,14 +412,13 @@ namespace KeyValium.Options
             ret.FlushToDisk = FlushToDisk;
             ret.InternalTypeCode = InternalTypeCode;
             ret.KeyFile = KeyFile;
-            ret.LockTimeout = LockTimeout;
             ret.LockInterval = LockInterval;
             ret.LockIntervalVariance = LockIntervalVariance;
+            ret.LockTimeout = LockTimeout;
             ret.PageSize = PageSize;
             ret.Password = Password;
-            ret.PreviousSnapshot = PreviousSnapshot;
             ret.ReadOnly = ReadOnly;
-            ret.SharingMode = SharingMode;
+            ret.InternalSharingMode = InternalSharingMode;
             ret.SpillSizeMB = SpillSizeMB;
             ret.UserTypeCode = UserTypeCode;
             ret.ValidationMode = ValidationMode;
