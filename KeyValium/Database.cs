@@ -1,4 +1,5 @@
 ﻿using KeyValium.Cache;
+using KeyValium.Collections;
 using KeyValium.Encryption;
 using KeyValium.Locking;
 using KeyValium.Memory;
@@ -44,7 +45,9 @@ namespace KeyValium
             var fileaccess = Options.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite;
             var fileshare = Options.InternalSharingMode == InternalSharingModes.Exclusive ? FileShare.None : FileShare.ReadWrite;
 
-            DbFile = new FileStream(dbfile, FileMode.Open, fileaccess, fileshare, 4096, FileOptions.RandomAccess);
+            var fileoptions = Options.InternalSharingMode == InternalSharingModes.SharedNetwork ? Limits.FileFlagNoBuffering : FileOptions.RandomAccess;
+
+            DbFile = new FileStream(dbfile, FileMode.Open, fileaccess, fileshare, 4096, fileoptions);
 
             try
             {
@@ -70,6 +73,11 @@ namespace KeyValium
             LockFile = IsShared ? new LockFile(this) : null;
 
             Pool = new KeyPool(Limits.MaximumKeySize);
+
+            if (Options.FillCache)
+            {
+                FillCache();
+            }
         }
 
         #region Properties
@@ -210,6 +218,114 @@ namespace KeyValium
             {
                 Logger.LogFatal(LogTopics.Database, ex);
                 throw;
+            }
+        }
+
+        internal void FillCache()
+        {
+            Perf.CallCount();
+
+            using (var tx = BeginReadTransaction())
+            {
+                ScanTree(tx);
+            }
+        }
+
+        /// <summary>
+        /// Scans the tree
+        /// </summary>
+        /// <param name="rootpageno">Pagenumber of the starting page</param>
+        /// <param name="mintid">Minimum Tid</param>
+        internal void ScanTree(Transaction tx)
+        {
+            if (tx.Meta.DataRootPage == 0)
+            {
+                return;
+            }
+
+            var level = 0;      // for debugging purposes
+
+            var scanqueue = new PageRangeList();
+            scanqueue.AddPage(tx.Meta.DataRootPage);
+
+            var pagestoscan = new List<KvPagenumber>();
+
+            // walk the tree *breadth first*
+            // if the tree is walked depth first it can take hours to scan
+            // an uncached big file on mechanical hard disks
+            while (true)
+            {
+                while (!scanqueue.IsEmpty && !Pager.Cache.IsFull)
+                {
+                    if (!scanqueue.TryTakePage(out var pageno))
+                    {
+                        throw new Exception("Unexpected empty queue!");
+                    }
+
+                    using (var page = Pager.ReadPage(tx, pageno, true))
+                    {
+                        switch (page.PageType)
+                        {
+                            case PageTypes.DataIndex:
+                            case PageTypes.FsIndex:
+                                ref var ipage = ref page.AsContentPage;
+                                for (int i = 0; i <= ipage.EntryCount; i++)
+                                {
+                                    var p = ipage.GetLeftBranch(i);
+                                    pagestoscan.Add(p);
+                                }
+                                break;
+
+                            case PageTypes.DataLeaf:
+
+                                ref var lpage = ref page.AsContentPage;
+                                for (int i = 0; i < lpage.EntryCount; i++)
+                                {
+                                    var entry = lpage.GetEntryAt(i);
+
+                                    var p = entry.SubTree;
+                                    if (p.HasValue && p.Value != 0)
+                                    {
+                                        pagestoscan.Add(p.Value);
+                                    }
+
+                                    var p2 = entry.OverflowPageNumber;
+                                    if (p2 != 0)
+                                    {
+                                        pagestoscan.Add(p2);
+                                    }
+                                }
+                                break;
+
+                            //case PageTypes.DataOverflow:
+                            //    ref var ovpage = ref page.AsOverflowPage;
+                            //    break;
+
+                            //case PageTypes.FsLeaf:
+
+                            //    lpage = ref page.AsContentPage;
+                            //    for (int i = 0; i < lpage.EntryCount; i++)
+                            //    {
+                            //        var entry = lpage.GetEntryAt(i);
+                            //    }
+                            //    break;
+
+                            default:
+                                //throw new NotSupportedException("Unexpected Pagetype.");
+                                break;
+                        }
+                    }
+                }
+
+                if (pagestoscan.Count == 0 || Pager.Cache.IsFull)
+                {
+                    break;
+                }
+
+                pagestoscan = pagestoscan.OrderBy(x => x).ToList();
+                pagestoscan.ForEach(x => scanqueue.AddPage(x));
+                pagestoscan.Clear();
+                level++;
             }
         }
 
@@ -760,6 +876,8 @@ namespace KeyValium
         public static Database Open(string filename, DatabaseOptions options)
         {
             Perf.CallCount();
+
+            options.Validate();
 
             return new Database(filename, options);
         }

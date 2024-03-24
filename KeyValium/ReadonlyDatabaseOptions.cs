@@ -164,6 +164,19 @@
             }
         }
 
+        /// <summary>
+        /// Returns true if the cache should be filled after opening the database.
+        /// </summary>
+        public bool FillCache
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return _options.FillCache;
+            }
+        }
+
         #region Validation
 
         /// <summary>

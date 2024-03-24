@@ -20,14 +20,7 @@ namespace KeyValium.Cache
         public ExclusivePageProvider(Database db) : base(db)
         {
             Perf.CallCount();
-
-            _cache = new LruCache(Database.Options.CachedItems);
         }
-
-        /// <summary>
-        /// The Cache
-        /// </summary>
-        internal readonly LruCache _cache;
 
         /// <summary>
         /// Gets a page from the Cache
@@ -41,7 +34,7 @@ namespace KeyValium.Cache
             Perf.CallCount();
 
             // Page is null on the Sentinel value, so no need to check the out parameter "isvalid"
-            ref var pageref = ref _cache.GetPage(pagenumber, out _);
+            ref var pageref = ref Cache.GetPage(pagenumber, out _);
             
             return pageref.Page;
         }
@@ -58,7 +51,7 @@ namespace KeyValium.Cache
 
             var pageref = new PageRef(page.PageNumber, page, 0);
 
-            _cache.UpsertPage(ref pageref);
+            Cache.UpsertPage(ref pageref);
         }
 
         /// <summary>
@@ -124,7 +117,7 @@ namespace KeyValium.Cache
 
             for (var pageno = range.First; pageno <= range.Last; pageno++)
             {
-                _cache.RemovePage(pageno);
+                Cache.RemovePage(pageno);
             }
         }
 
@@ -132,14 +125,14 @@ namespace KeyValium.Cache
         {
             Perf.CallCount();
 
-            return _cache.GetStats();
+            return Cache.GetStats();
         }
 
         internal override void ClearCacheStats()
         {
             Perf.CallCount();
 
-            _cache.ClearStats();;
+            Cache.ClearStats();;
         }
 
         #region IDisposable
@@ -152,7 +145,7 @@ namespace KeyValium.Cache
             {
                 if (disposing)
                 {
-                    _cache?.Dispose();
+                    Cache?.Dispose();
                 }
 
                 // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben

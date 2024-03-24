@@ -189,6 +189,15 @@ namespace KeyValium.Options
             set;
         }
 
+        /// <summary>
+        /// If true the cache will be filled after opening the database by walking the tree breadth first.
+        /// </summary>
+        public bool FillCache
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region Validation
@@ -429,6 +438,32 @@ namespace KeyValium.Options
             ret.ZeroPagesOnEvict = ZeroPagesOnEvict;
 
             return ret;
+        }
+
+        internal void Validate()
+        {
+            if (InternalSharingMode == InternalSharingModes.SharedNetwork)
+            {
+                // SharedNetwork is only available on Windows
+                // SharedNetwork requires a page size of at least 4096
+
+                var msgs = new List<string>();
+
+                if (PageSize < 4096)
+                {
+                    msgs.Add("Page size must be at least 4096 for sharing mode SharedNetwork.");
+                }
+
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    msgs.Add("Sharing mode SharedNetwork is only available on Windows.");
+                }
+
+                if (msgs.Count > 0)
+                {
+                    throw new NotSupportedException(string.Join("\n", msgs.ToArray()));
+                }
+            }
         }
 
         #endregion

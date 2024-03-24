@@ -232,6 +232,14 @@ namespace KeyValium.Cache
             }
         }
 
+        internal bool IsFull
+        {
+            get
+            {
+                return _pages.Count >= MaxItems;
+            }
+        }
+
         #region IDisposable
 
         private bool disposedValue;

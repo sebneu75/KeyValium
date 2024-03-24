@@ -269,7 +269,7 @@ namespace KeyValium.UnendingTest
                     ActionLog?.Log("Cache", msg);
                 }
 
-                pp._cache._pages.ForEach(Iterate);
+                pp.Cache._pages.ForEach(Iterate);
             }
 
             var tx = currenttx;
@@ -391,7 +391,7 @@ namespace KeyValium.UnendingTest
                     var ep = db.Pager as ExclusivePageProvider;
                     if (ep != null)
                     {
-                        Tools.WriteColor(ConsoleColor.Gray, ep._cache.GetStats().ToString());
+                        Tools.WriteColor(ConsoleColor.Gray, ep.Cache.GetStats().ToString());
                     }
 
                     Tools.WriteColor(ConsoleColor.Gray, db.Tracker.GetStats().ToString());
@@ -641,7 +641,7 @@ namespace KeyValium.UnendingTest
                         throw new Exception("Not enough bytes read!");
                     }
 
-                    ref var pageref = ref pp._cache.GetPage((ulong)pageno, out var _);
+                    ref var pageref = ref pp.Cache.GetPage((ulong)pageno, out var _);
                     if (pageref.Page != null)
                     {
                         if (!MemoryExtensions.SequenceEqual<byte>(buffer, pageref.Page.Bytes.Span))
@@ -681,7 +681,7 @@ namespace KeyValium.UnendingTest
 
                 for (ulong pageno = 0; pageno < pagecount; pageno++)
                 {
-                    ref var pageref = ref pp._cache.GetPage((ulong)pageno, out var _);
+                    ref var pageref = ref pp.Cache.GetPage((ulong)pageno, out var _);
                     if (pageref.Page != null)
                     {
                         var span = buffer.AsSpan().Slice(pagesize * (int)pageno, pagesize);
@@ -712,7 +712,7 @@ namespace KeyValium.UnendingTest
             var ep = db.Pager as ExclusivePageProvider;
             if (ep != null)
             {
-                var cachestats = ep._cache.GetStats();
+                var cachestats = ep.Cache.GetStats();
                 if (cachestats.PageCount != allocatorstats.ItemsWithRefCount(1))
                 {
                     var items = allocatorstats.RefCounts.First().Select(x => x.PageNumber).ToList();

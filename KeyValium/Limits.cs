@@ -42,6 +42,11 @@ namespace KeyValium
         internal const int SharingMode_SharedNetwork = 2;
 
         /// <summary>
+        /// Constants for FileOptions (Windows only)
+        /// </summary>
+        internal const FileOptions FileFlagNoBuffering = (FileOptions)0x20000000;
+
+        /// <summary>
         /// Magic value in headers
         /// </summary>
         internal static readonly uint Magic = (uint)(('K' << 8 | 'V') << 8 | '£') << 8 | 'µ'; // KeyVa£iuµ

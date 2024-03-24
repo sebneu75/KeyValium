@@ -38,14 +38,18 @@ namespace KeyValium.Locking
             Filename = db.Filename + ".lock";
 
             FileLock = new FileLock(db, this);
+            
+            var fileoptions= FileOptions.None;
 
             if (db.Options.InternalSharingMode == InternalSharingModes.SharedNetwork)
             {
                 SelectedLock = FileLock;
+                fileoptions = Limits.FileFlagNoBuffering;
             }
             else if (db.Options.InternalSharingMode == InternalSharingModes.SharedLocal)
             {
                 SelectedLock = new MutexLock(db, this);
+                fileoptions = FileOptions.SequentialScan;
             }
             else
             {
@@ -57,7 +61,7 @@ namespace KeyValium.Locking
 
             Filesize = HEADER_SIZE + (MAX_WRITERS + MAX_READERS) * ENTRY_SIZE;
 
-            _lockfile = new FileStream(Filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, Filesize, FileOptions.SequentialScan);
+            _lockfile = new FileStream(Filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, Filesize, fileoptions);
 
             EnsureLockFile();
         }

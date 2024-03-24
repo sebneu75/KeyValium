@@ -15,7 +15,7 @@ Maximum key size depends on the page size (usually 1/4 of it).
 * **Multiple sharing modes:** 
     + **Exclusive**: Only one instance can be opened.
     + **SharedLocal**: Multiple instances can be opened on the same machine.
-    + **SharedNetwork**: Multiple instances can be opened on different machines.
+    + ~~**SharedNetwork**: Multiple instances can be opened on different machines.~~
 * **Count support:** Every tree keeps a local and a total count of keys.
 * **Frontends:** A MultiDictionary which manages multiple persistent dictionaries in one database file. More frontends are possible.
 * **Encryption:** The database can be encrypted with AES via password and/or a keyfile.

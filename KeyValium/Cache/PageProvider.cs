@@ -34,7 +34,16 @@ namespace KeyValium.Cache
             Validator = db.Validator;
 
             MaxPagenumber = ((ulong)long.MaxValue - PageSize) / PageSize;
+
+            Cache = new LruCache(Database.Options.CachedItems);
         }
+
+        #region Variables
+
+        /// <summary>
+        /// The Cache
+        /// </summary>
+        protected internal readonly LruCache Cache;
 
         /// <summary>
         /// The Database instance
@@ -70,6 +79,8 @@ namespace KeyValium.Cache
         /// The page size
         /// </summary>
         protected internal readonly uint PageSize;
+
+        #endregion
 
         #region Accessing the filestream
 

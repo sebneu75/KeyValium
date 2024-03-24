@@ -13,13 +13,14 @@
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>KeyValium</Title>
-    <Version>0.5.4</Version>
+    <Version>0.5.5</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>KeyValium is a very fast key value store for DotNet.</Description>
     <Authors>sebneu75</Authors>
     <PackageTags>database;nosql;embedded;persistence;key value store;</PackageTags>
-    <PackageReleaseNotes>improved page validation
+    <PackageReleaseNotes>new option FillCache that fills the cache after opening a database
+Minor improvements.
 </PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>

@@ -14,13 +14,10 @@ namespace KeyValium.Cache
         {
             Perf.CallCount();
 
-            _cache = new LruCache(Database.Options.CachedItems);
             _writecache = new LruCache(Database.Options.CachedItems >> 2);
 
             MinPageNumber = Limits.MinDataPageNumber;
         }
-
-        private readonly LruCache _cache;
 
         private readonly LruCache _writecache;
 
@@ -52,7 +49,7 @@ namespace KeyValium.Cache
             }
             else
             {
-                ref var pageref = ref _cache.GetPage(pagenumber, out var isvalid);
+                ref var pageref = ref Cache.GetPage(pagenumber, out var isvalid);
                 if (isvalid)
                 {
                     // check if page is still valid
@@ -69,7 +66,7 @@ namespace KeyValium.Cache
                     }
                     else
                     {
-                        _cache.RemovePage(pagenumber);
+                        Cache.RemovePage(pagenumber);
                     }
                 }
 
@@ -94,7 +91,7 @@ namespace KeyValium.Cache
             else
             {
                 var pageref = new PageRef(page.PageNumber, page, meta.SourceTid);
-                _cache.UpsertPage(ref pageref);
+                Cache.UpsertPage(ref pageref);
             }
         }
 
@@ -112,22 +109,22 @@ namespace KeyValium.Cache
             try
             {
                 // copy writecache to cache
-                _writecache.CopyTo(_cache);
+                _writecache.CopyTo(Cache);
 
                 // TODO update Tid on cached pages
-                _cache.UpdateTids(sourcetid, tid);
+                Cache.UpdateTids(sourcetid, tid);
             }
             catch (Exception)
             {
                 try
                 {
                     // rollback the changes in case of error
-                    _writecache.RemoveFrom(_cache);
+                    _writecache.RemoveFrom(Cache);
                 }
                 catch (Exception)
                 {
                     // invalidate complete cache if rollback also fails
-                    _cache.Clear();
+                    Cache.Clear();
                     throw;
                 }
                 finally
@@ -191,14 +188,14 @@ namespace KeyValium.Cache
         {
             Perf.CallCount();
 
-            return _cache.GetStats();
+            return Cache.GetStats();
         }
 
         internal override void ClearCacheStats()
         {
             Perf.CallCount();
 
-            _cache.ClearStats();
+            Cache.ClearStats();
         }
 
         #region IDisposable
@@ -211,7 +208,7 @@ namespace KeyValium.Cache
             {
                 if (disposing)
                 {
-                    _cache.Dispose();
+                    Cache.Dispose();
                     _writecache.Dispose();
                 }
 
