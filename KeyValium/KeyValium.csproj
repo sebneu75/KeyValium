@@ -13,7 +13,7 @@
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>KeyValium</Title>
-    <Version>0.5.5</Version>
+    <Version>0.5.6</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>KeyValium is a very fast key value store for DotNet.</Description>
@@ -24,7 +24,7 @@ Minor improvements.
 </PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright (c) 2023</Copyright>
+    <Copyright>Copyright (c) 2023-2024</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/sebneu75/KeyValium</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sebneu75/KeyValium.git</RepositoryUrl>

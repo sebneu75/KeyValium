@@ -248,13 +248,13 @@ namespace KeyValium
             var scanqueue = new PageRangeList();
             scanqueue.AddPage(tx.Meta.DataRootPage);
 
-            var pagestoscan = new List<KvPagenumber>();
-
             // walk the tree *breadth first*
             // if the tree is walked depth first it can take hours to scan
             // an uncached big file on mechanical hard disks
             while (true)
             {
+                var pagestoscan = new PageRangeList();
+
                 while (!scanqueue.IsEmpty && !Pager.Cache.IsFull)
                 {
                     if (!scanqueue.TryTakePage(out var pageno))
@@ -272,7 +272,7 @@ namespace KeyValium
                                 for (int i = 0; i <= ipage.EntryCount; i++)
                                 {
                                     var p = ipage.GetLeftBranch(i);
-                                    pagestoscan.Add(p);
+                                    pagestoscan.AddPage(p);
                                 }
                                 break;
 
@@ -286,13 +286,13 @@ namespace KeyValium
                                     var p = entry.SubTree;
                                     if (p.HasValue && p.Value != 0)
                                     {
-                                        pagestoscan.Add(p.Value);
+                                        pagestoscan.AddPage(p.Value);
                                     }
 
                                     var p2 = entry.OverflowPageNumber;
                                     if (p2 != 0)
                                     {
-                                        pagestoscan.Add(p2);
+                                        pagestoscan.AddPage(p2);
                                     }
                                 }
                                 break;
@@ -317,14 +317,12 @@ namespace KeyValium
                     }
                 }
 
-                if (pagestoscan.Count == 0 || Pager.Cache.IsFull)
+                if (pagestoscan.RangeCount == 0 || Pager.Cache.IsFull)
                 {
                     break;
                 }
 
-                pagestoscan = pagestoscan.OrderBy(x => x).ToList();
-                pagestoscan.ForEach(x => scanqueue.AddPage(x));
-                pagestoscan.Clear();
+                scanqueue = pagestoscan;
                 level++;
             }
         }

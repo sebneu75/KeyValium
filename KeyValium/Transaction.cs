@@ -439,7 +439,7 @@ namespace KeyValium
                     Logger.LogError(LogTopics.DataAccess, Tid, ex);
                     throw;
                 }
-            }            
+            }
         }
 
         /// <summary>
@@ -1611,6 +1611,13 @@ namespace KeyValium
                         {
                             Pages.Insert(pageno, parentpage, PageStates.DirtyAtParent);
                         }
+                        else if (state == PageStates.Spilled)
+                        {
+                            // do nothing because we do not care about spilled pages at parent
+                            // if the page is unspilled it will be added as DirtyAtParent the next time
+
+                            // throw new NotSupportedException("Unhandled Pagestate!");
+                        }
                         else
                         {
                             throw new NotSupportedException("Unhandled Pagestate!");
@@ -1711,7 +1718,7 @@ namespace KeyValium
                     // spill the pages
                     _tospill.ForEach(pageno =>
                     {
-                        Pager.WritePage(tx, Pages.GetPage(pageno));
+                        Pager.WritePage(tx, tx.Pages.GetPage(pageno));
                         tx.Pages.ChangeState(pageno, PageStates.Spilled);
                     });
 
