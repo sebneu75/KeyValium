@@ -312,34 +312,38 @@ namespace KeyValium.Inspector.Controls
             if (col < 0 || col >= LineLength || row < 0 || row >= LineCount)
             {
                 return null;
-            }
+            }            
 
             var offset = row * LineLength + col;
-            TextRange lastitem = null;
 
-            var queue = new Queue<TextRange>();
-            queue.Enqueue(TextRange);
+            return TextRange?.GetRangeAtOffset(offset);
 
-            while (queue.Count > 0)
-            {
-                var item = queue.Dequeue();
-                if (item.Overlaps(offset, offset))
-                {
-                    if (item.Children.Count == 0)
-                    {
-                        return item;
-                    }
 
-                    lastitem = item;
+            //TextRange lastitem = null;
 
-                    foreach (var child in item.Children)
-                    {
-                        queue.Enqueue(child);
-                    }
-                }
-            }
+            //var queue = new Queue<TextRange>();
+            //queue.Enqueue(TextRange);
 
-            return lastitem;
+            //while (queue.Count > 0)
+            //{
+            //    var item = queue.Dequeue();
+            //    if (item.Overlaps(offset, offset))
+            //    {
+            //        if (item.Children.Count == 0)
+            //        {
+            //            return item;
+            //        }
+
+            //        lastitem = item;
+
+            //        foreach (var child in item.Children)
+            //        {
+            //            queue.Enqueue(child);
+            //        }
+            //    }
+            //}
+
+            //return lastitem;
         }
     }
 }

@@ -137,10 +137,38 @@ namespace KeyValium.Inspector.Controls
 
         internal bool Overlaps(int start, int end)
         {
-            return StartOffset <= start && start <= EndOffset ||
-                   StartOffset <= end && end <= EndOffset ||
-                   start <= StartOffset && StartOffset <= end ||
-                   start <= EndOffset && EndOffset <= end;
+            return (StartOffset <= start && start <= EndOffset) ||
+                   (StartOffset <= end && end <= EndOffset) ||
+                   (start <= StartOffset && StartOffset <= end) ||
+                   (start <= EndOffset && EndOffset <= end);
+        }
+
+        internal bool Contains(int offset)
+        {
+            return StartOffset <= offset && EndOffset >= offset;
+        }
+
+        internal TextRange GetRangeAtOffset(int offset)
+        {
+            TextRange lastitem = null;
+
+            var item = this;
+            while (item != null && item.Contains(offset))
+            {
+                lastitem = item;
+                item = null;
+
+                foreach (var child in lastitem.Children)
+                {
+                    if (child.Contains(offset))
+                    {
+                        item = child;
+                        break;
+                    }
+                }
+            }
+
+            return lastitem;
         }
     }
 }

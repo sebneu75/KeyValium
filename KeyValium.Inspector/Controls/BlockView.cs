@@ -368,7 +368,6 @@ namespace KeyValium.Inspector.Controls
         private int _mousex = -1;
         private int _mousey = -1;
 
-        // TODO Timer for Tooltip
         private void BlockView_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.X != _mousex || e.Y != _mousey)
