@@ -34,7 +34,7 @@ namespace KeyValium.UnendingTest
                 //td.OrderDelete = KeyOrder.Random;
 
                 var td = new TestDescription("Endless");
-                td.Options.PageSize = 512;
+                td.Options.PageSize = 65536;
                 td.Options.SharingMode = SharingModes.Exclusive;
                 td.Options.CacheSizeMB = 256;
                 td.Options.FlushToDisk = false;
@@ -43,13 +43,31 @@ namespace KeyValium.UnendingTest
                 td.MaxKeySize = 48;
                 td.MinValueSize = 0;
                 td.MaxValueSize = (int)td.Options.PageSize * 8 - 32;
-                td.KeyCount = 16;
+                td.KeyCount = 1600;
                 td.CommitSize = 1000;
                 td.TxCount = 1000;
                 td.GenStrategy = KeyGenStrategy.Random;
                 td.OrderInsert = KeyOrder.Random;
                 td.OrderRead = KeyOrder.Random;
                 td.OrderDelete = KeyOrder.Random;
+
+                //var td = new TestDescription("Endless");
+                //td.Options.PageSize = 512;
+                //td.Options.SharingMode = SharingModes.Exclusive;
+                //td.Options.CacheSizeMB = 256;
+                //td.Options.FlushToDisk = false;
+                //td.Options.ValidationMode = PageValidationMode.All;
+                //td.MinKeySize = 2;
+                //td.MaxKeySize = 16;
+                //td.MinValueSize = 0;
+                //td.MaxValueSize = (int)td.Options.PageSize * 8 - 32;
+                //td.KeyCount = 1600;
+                //td.CommitSize = 1000;
+                //td.TxCount = 1000;
+                //td.GenStrategy = KeyGenStrategy.Random;
+                //td.OrderInsert = KeyOrder.Random;
+                //td.OrderRead = KeyOrder.Random;
+                //td.OrderDelete = KeyOrder.Random;
 
                 return td;
             }
