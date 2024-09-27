@@ -109,8 +109,6 @@ namespace KeyValium
 
             switch (pagesize)
             {
-                //case 128:
-                //    return 16;
                 case 256:
                     return 48;
                 default:
@@ -118,14 +116,14 @@ namespace KeyValium
             }
         }
 
-        // maximum size of metadata per data leaf entry (currently 32 Bytes)
-        internal const int MetaDataSizePerEntry = sizeof(ushort) +           // Flags
-                                                  sizeof(ushort) +           // KeyLength
-                                                  sizeof(KvPagenumber) +     // Subtree
-                                                  sizeof(ulong) +            // TotalCount
-                                                  sizeof(ulong) +            // LocalCount
-                                                  sizeof(ushort) +           // ValueLength
-                                                  sizeof(ushort);            // OffsetTableEntry
+        // Maximum size of metadata per data leaf entry (currently 32 Bytes)
+        internal const int MaxMetaDataSizePerEntry = sizeof(ushort) +           // Flags
+                                                     sizeof(ushort) +           // KeyLength
+                                                     sizeof(KvPagenumber) +     // Subtree
+                                                     sizeof(ulong) +            // TotalCount
+                                                     sizeof(ulong) +            // LocalCount
+                                                     sizeof(ushort) +           // ValueLength
+                                                     sizeof(ushort);            // OffsetTableEntry
 
         internal static ushort GetMaxKeyValueSize(uint pagesize)
         {
@@ -133,11 +131,11 @@ namespace KeyValium
 
             ValidatePageSize(pagesize);
 
-            return (ushort)((pagesize - UniversalHeader.HeaderSize - MinKeysPerLeafPage * MetaDataSizePerEntry) / MinKeysPerLeafPage);
+            return (ushort)((pagesize - UniversalHeader.HeaderSize - MinKeysPerLeafPage * MaxMetaDataSizePerEntry) / MinKeysPerLeafPage);
         }
 
         /// <summary>
-        /// checks the pagesize and returns log2
+        /// Checks the pagesize and returns log2 of it
         /// </summary>
         /// <param name="pagesize">pagesize in bytes</param>
         /// <returns>log2 of pagesize</returns>
@@ -224,6 +222,10 @@ namespace KeyValium
         /// page size
         /// </summary>
         internal readonly uint PageSize;
+
+        public const ushort MinPageSizeExponent = 8;
+
+        public const ushort MaxPageSizeExponent = 16;
 
         /// <summary>
         /// maximum Length of a value that is stored inline (depends on keysize)

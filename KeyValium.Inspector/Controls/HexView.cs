@@ -173,81 +173,88 @@ namespace KeyValium.Inspector.Controls
 
             //e.Graphics.TranslateTransform(0, AutoScrollPosition.Y);
 
-            RenderOffset(e.Graphics);
-            RenderHex(e.Graphics);
-            RenderText(e.Graphics);
+            Render(e.Graphics);
 
             AutoScrollMinSize = new Size(_textleft + _textwidth + _padding.Horizontal, _rmhex.LineCount * _charsize.Height + _padding.Vertical);
         }
 
-        private void RenderOffset(Graphics g)
+        private void Render(Graphics g)
         {
-            var bg = new Rectangle(AutoScrollPosition.X, AutoScrollPosition.Y, _offsetwidth, ClientSize.Height - AutoScrollPosition.Y);
+            // Render offset background
+            var bg = new Rectangle(AutoScrollPosition.X, -_charsize.Height, _offsetwidth, ClientSize.Height + _charsize.Height);
             g.FillRectangle(new SolidBrush(SystemColors.ControlLight), bg);
 
             for (int i = 0; i < _rmhex.LineCount; i++)
             {
-                var x = _offsetleft + AutoScrollPosition.X;
                 var y = i * _charsize.Height + _padding.Top + AutoScrollPosition.Y;
 
-                var text = string.Format("{0:X4}:", i * _rmhex.BytesPerLine);
-                //var textsize = TextRenderer.MeasureText(g, text, Font, Size.Empty, _textformatflags);
-                var rect = new Rectangle(x, y, _offsetwidth - 4, _charsize.Height);
-
-                TextRenderer.DrawText(g, text, Font, rect, this.ForeColor, _textformatflags | TextFormatFlags.Right);
-            }
-        }
-
-        private void RenderHex(Graphics g)
-        {
-            for (int i = 0; i < _rmhex.LineCount; i++)
-            {
-                var renderlist = _rmhex.GetTextRenderList(i);
-
-                var x = _hexleft + _padding.Left + AutoScrollPosition.X;
-                var y = i * _charsize.Height + _padding.Top + AutoScrollPosition.Y;
-
-                foreach (var item in renderlist.Items)
+                if (IsVisible(y))
                 {
-                    var text = _rmhex.Text.Substring(item.StartOffset, item.Length);
-                    var textsize = TextRenderer.MeasureText(g, text, Font, Size.Empty, _textformatflags);
-                    var rect = new Rectangle(x, y, textsize.Width, textsize.Height);
-
-                    if (item.BackColor.HasValue)
-                    {
-                        g.FillRectangle(new SolidBrush(item.BackColor.Value), rect);
-                    }
-
-                    TextRenderer.DrawText(g, text, Font, rect, item.ForeColor.Value, _textformatflags);
-                    x += textsize.Width;
+                    RenderOffset(g, i, y);
+                    RenderHex(g, i, y);
+                    RenderText(g, i, y);
                 }
             }
         }
 
-        private void RenderText(Graphics g)
+        private bool IsVisible(int y)
         {
-            for (int i = 0; i < _rmtext.LineCount; i++)
+            return y >= -_charsize.Height && y <= ClientSize.Height + _charsize.Height;
+        }
+
+        private void RenderOffset(Graphics g, int i, int y)
+        {
+            var x = _offsetleft + AutoScrollPosition.X;
+
+            var text = string.Format("{0:X4}:", i * _rmhex.BytesPerLine);
+            //var textsize = TextRenderer.MeasureText(g, text, Font, Size.Empty, _textformatflags);
+            var rect = new Rectangle(x, y, _offsetwidth - 4, _charsize.Height);
+
+            TextRenderer.DrawText(g, text, Font, rect, this.ForeColor, _textformatflags | TextFormatFlags.Right);
+        }
+
+
+        private void RenderHex(Graphics g, int i, int y)
+        {
+            var renderlist = _rmhex.GetTextRenderList(i);
+            var x = _hexleft + _padding.Left + AutoScrollPosition.X;
+
+            foreach (var item in renderlist.Items)
             {
-                var renderlist = _rmtext.GetTextRenderList(i);
+                var text = _rmhex.Text.Substring(item.StartOffset, item.Length);
+                var textsize = TextRenderer.MeasureText(g, text, Font, Size.Empty, _textformatflags);
+                var rect = new Rectangle(x, y, textsize.Width, textsize.Height);
 
-                var x = _textleft + _padding.Left + AutoScrollPosition.X;
-                var y = i * _charsize.Height + _padding.Top + AutoScrollPosition.Y;
-
-                foreach (var item in renderlist.Items)
+                if (item.BackColor.HasValue)
                 {
-                    var text = _rmtext.Text.Substring(item.StartOffset, item.Length);
-                    var textsize = TextRenderer.MeasureText(g, text, Font, Size.Empty, _textformatflags);
-                    var rect = new Rectangle(x, y, textsize.Width, textsize.Height);
-
-                    if (item.BackColor.HasValue)
-                    {
-                        g.FillRectangle(new SolidBrush(item.BackColor.Value), rect);
-                    }
-
-                    TextRenderer.DrawText(g, text, Font, rect, item.ForeColor.Value, _textformatflags);
-
-                    x += textsize.Width;
+                    g.FillRectangle(new SolidBrush(item.BackColor.Value), rect);
                 }
+
+                TextRenderer.DrawText(g, text, Font, rect, item.ForeColor.Value, _textformatflags);
+                x += textsize.Width;
+            }
+        }
+
+        private void RenderText(Graphics g, int i, int y)
+        {
+            var renderlist = _rmtext.GetTextRenderList(i);
+
+            var x = _textleft + _padding.Left + AutoScrollPosition.X;
+
+            foreach (var item in renderlist.Items)
+            {
+                var text = _rmtext.Text.Substring(item.StartOffset, item.Length);
+                var textsize = TextRenderer.MeasureText(g, text, Font, Size.Empty, _textformatflags);
+                var rect = new Rectangle(x, y, textsize.Width, textsize.Height);
+
+                if (item.BackColor.HasValue)
+                {
+                    g.FillRectangle(new SolidBrush(item.BackColor.Value), rect);
+                }
+
+                TextRenderer.DrawText(g, text, Font, rect, item.ForeColor.Value, _textformatflags);
+
+                x += textsize.Width;
             }
         }
 

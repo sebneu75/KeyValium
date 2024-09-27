@@ -1,15 +1,9 @@
 ﻿using KeyValium.Exceptions;
-using KeyValium.Inspector.Controls;
 using KeyValium.Inspector.MVP.Presenters;
 using KeyValium.Inspector.MVP.Views;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace KeyValium.Inspector
@@ -185,7 +179,7 @@ namespace KeyValium.Inspector
                         }
                         catch (KeyValiumException ex)
                         {
-                            if (ex.ErrorCode == ErrorCodes.InvalidFileFormat)
+                            if (ex.ErrorCode == ErrorCodes.InvalidFileFormat || ex.ErrorCode == ErrorCodes.PageValidation)
                             {
                                 var dlg = new frmPassword();
                                 dlg.DbFile = openFileDialog.FileName;

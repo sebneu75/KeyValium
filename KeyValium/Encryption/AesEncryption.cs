@@ -108,6 +108,21 @@ namespace KeyValium.Encryption
             _crypt.DecryptCbc(_cipherbuffer, iv, page.Bytes.Span, PaddingMode.None);
         }
 
+        public unsafe void Decrypt(Span<byte> buffer, ulong pagenumber)
+        {
+            Perf.CallCount();
+
+            fixed (byte* ptr = _cipherbuffer)
+            fixed (byte* buf = buffer) 
+            {
+                MemUtils.MemoryCopy(ptr, buf, buffer.Length);
+            }
+
+            var iv = GetIV(pagenumber);
+
+            _crypt.DecryptCbc(_cipherbuffer, iv, buffer, PaddingMode.None);
+        }
+
         private readonly MD5 _md5 = MD5.Create();
 
         /// <summary>

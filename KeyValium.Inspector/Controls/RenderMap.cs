@@ -222,7 +222,7 @@ namespace KeyValium.Inspector.Controls
         }
 
         /// <summary>
-        /// gets alle textranges for the given line
+        /// gets all textranges for the given line
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>

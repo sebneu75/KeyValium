@@ -13,5 +13,12 @@ namespace KeyValium.Encryption
         /// <param name="cipher"></param>
         /// <returns></returns>
         void Decrypt(AnyPage page);
+
+        /// <summary>
+        /// For testing purposes only
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="pagenumber"></param>
+        void Decrypt(Span<byte> page, ulong pagenumber);  
     }
 }

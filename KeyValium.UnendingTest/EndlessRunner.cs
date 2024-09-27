@@ -685,6 +685,10 @@ namespace KeyValium.UnendingTest
                     if (pageref.Page != null)
                     {
                         var span = buffer.AsSpan().Slice(pagesize * (int)pageno, pagesize);
+                        
+                        // Decrypt page
+                        db.Encryptor.Decrypt(span, pageno);
+
                         if (!MemoryExtensions.SequenceEqual<byte>(span, pageref.Page.Bytes.Span))
                         {
                             throw new Exception(string.Format("VERIFY: Cache does not match file! Pagenumber={0}/{1}\nFileValue={2}\nCachedValue={3}\nFileLength={4}",

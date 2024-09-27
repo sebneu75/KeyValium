@@ -164,7 +164,7 @@ namespace KeyValium.Cache
                 {
                     Error(page, pageno, iswrite, "Branch is a duplicate.");
                 }
-                
+
                 _rangelist.AddPage(branch);
             }
         }
@@ -466,6 +466,7 @@ namespace KeyValium.Cache
             Perf.CallCount();
 
             ref var header = ref page.Header;
+            ref var cp = ref page.AsContentPage;
 
             // check unused2
             if (header.Unused2 != 0)
@@ -476,12 +477,13 @@ namespace KeyValium.Cache
             var csize = header.ContentSize;
 
             //
-            // check low and high
+            // check Low and High
             // 
             var low = header.Low;
             var high = header.High;
 
-            if (low >= csize)
+            // Low can be equal to content size if the page has no offset table and is completely full
+            if (low >= csize + (cp.IsFreespacePage ? 1 : 0))
             {
                 Error(page, pageno, iswrite, "Low is outside of content.");
             }
@@ -575,7 +577,7 @@ namespace KeyValium.Cache
 
             if (page == null)
             {
-                throw new ArgumentNullException(nameof(page));
+                Error(page, pageno, iswrite, "Page is null");
             }
 
             if (page.PageType != PageTypes.FileHeader)
@@ -599,7 +601,7 @@ namespace KeyValium.Cache
             }
 
             // check page size exponent
-            if (header.PageSizeExponent < 8 || header.PageSizeExponent > 16)
+            if (header.PageSizeExponent < Limits.MinPageSizeExponent || header.PageSizeExponent > Limits.MaxPageSizeExponent)
             {
                 Error(page, pageno, iswrite, "Page size exponent is out of range.");
             }

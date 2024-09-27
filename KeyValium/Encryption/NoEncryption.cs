@@ -26,6 +26,16 @@ namespace KeyValium.Encryption
             Perf.CallCount();
         }
 
+        /// <summary>
+        /// For testing purposes only
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="pagenumber"></param>
+        public void Decrypt(Span<byte> buffer, ulong pagenumber)
+        {
+            Perf.CallCount();
+        }
+
         #endregion
 
         #region IDisposable
