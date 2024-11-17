@@ -111,16 +111,6 @@ namespace KeyValium.Cache
             UpsertPage(page, tx.Meta, true);
         }
 
-        protected override void RemoveCachedPagesInternal(Transaction tx, PageRange range)
-        {
-            Perf.CallCount();
-
-            for (var pageno = range.First; pageno <= range.Last; pageno++)
-            {
-                Cache.RemovePage(pageno);
-            }
-        }
-
         internal override CacheStats GetCacheStats()
         {
             Perf.CallCount();

@@ -1,26 +1,14 @@
-﻿using KeyValium.Cache;
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KeyValium.Memory
+﻿namespace KeyValium.Memory
 {
     internal unsafe sealed class PageAllocator : IDisposable
     {
         /// <summary>
-        /// minimum number of pages to allocate at once
+        /// minimum number of pages to allocate in one call
         /// </summary>
         internal const int MinPageCount = 16;
 
         /// <summary>
-        /// maximum size of chunk to allocate
+        /// maximum number of bytes to allocate in one call
         /// </summary>
         internal const int MaxChunkSize = 4 * 1024 * 1024;
 
@@ -84,9 +72,6 @@ namespace KeyValium.Memory
         // total number of page recycles
         private ulong _recycled;
 
-        // total number of page deletes
-        private ulong _deleted;
-
         // number of deallocated pages
         private ulong _deallocated;
 
@@ -141,7 +126,7 @@ namespace KeyValium.Memory
                 }
                 else
                 {
-                    throw new NotSupportedException("No AnyPage available!");
+                    throw new KeyValiumException(ErrorCodes.InternalError, "No AnyPage available!");
                 }
             }
 
@@ -150,7 +135,7 @@ namespace KeyValium.Memory
 
             KvDebug.Assert(!createheader || page.PageType == page.Header.PageType, "FAIL");
 
-            Logger.LogInfo(LogTopics.Allocation, tid, "Allocator.GetPage(): reused page old:{0} new:{1}", oldpageno, page.PageNumber);
+            Logger.LogInfo(LogTopics.Allocation, tid, "Reused AnyPage old:{0} new:{1}", oldpageno, page.PageNumber);
 
             return page;
         }
@@ -192,28 +177,25 @@ namespace KeyValium.Memory
                     throw new NotSupportedException("Recycled AnyPage was not in use!");
                 }
 
-                Logger.LogInfo(LogTopics.Allocation, "Allocator.Recycle(): recycled page {0}", page.PageNumber);
-
                 if (_zeromemory)
                 {
-                    page.Bytes.Span.Fill(0);
+                    page.Bytes.Span.Clear();
                 }
 
-                // recycle
-                _queue.Enqueue(page);
-                _recycled++;
-
-                if (_queue.Count > _maxqueuecount)
+                if (_queue.Count < _maxqueuecount)
                 {
-                    // remove half of the pages
-                    for (int i = 0; i < _maxqueuecount >> 1; i++)
-                    {
-                        var oldpage = _queue.Dequeue();
-
-                        // TOOD check if needed
-                        oldpage.Destroy();
-                    }
+                    // recycle
+                    _queue.Enqueue(page);
+                    _recycled++;
                 }
+                else
+                {
+                    // deallocate
+                    page.Deallocate();
+                    _deallocated++;
+                }
+
+                Logger.LogInfo(LogTopics.Allocation, "Allocator.Recycle(): recycled page {0}", page.PageNumber);
             }
         }
 
@@ -294,28 +276,45 @@ namespace KeyValium.Memory
         #region IDisposable
 
         private bool disposedValue;
+        private bool disposedValue1;
 
         private void Dispose(bool disposing)
         {
             Perf.CallCount();
 
-            if (!disposedValue)
+            lock (_lock)
             {
-                if (disposing)
+                if (!disposedValue)
                 {
-                    // TODO Destroy pages and check refcounts all zero
-                    // check allocation count
-                    //if (_queue.Count != _allocated)
+                    //if (disposing)
                     //{
-                    //    //var msg = string.Format("Lost {0} PageHandles!", _allocated - _queue.Count);
-                    //    //throw new InvalidOperationException(msg);
-                    //}
 
-                    // Dispose all queued items
-                    //while (_queue.Count > 0)
-                    //{
-                    //    var handle = _queue.Dequeue();
-                    //    handle.Dispose();
+                    if (_usedpages.Count > 0)
+                    {
+                        throw new KeyValiumException(ErrorCodes.InternalError, "One or more pages are still in use while disposing the Allocator.");
+                    }
+
+                    // deallocate all queued pages because they are pinned
+                    while (_queue.Count > 0)
+                    {
+                        var page = _queue.Dequeue();
+
+                        if (page.RefCount != 0)
+                        {
+                            var msg = string.Format("RefCount is not zero while disposing the Allocator. (Page {0}: RefCount {1})", page.PageNumber, page.RefCount);
+                            throw new KeyValiumException(ErrorCodes.InternalError, msg);
+                        }
+
+                        page.Deallocate();
+                        _deallocated++;
+                    }
+
+                    if (_allocated != _deallocated)
+                    {
+                        var msg = string.Format("The number of allocated pages does not match the number of deallocated ones. (Allocated: {0} Deallocated: {1})", _allocated, _deallocated);
+                        throw new KeyValiumException(ErrorCodes.InternalError, msg);
+                    }
+
                     //}
                 }
 

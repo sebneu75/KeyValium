@@ -28,6 +28,7 @@ namespace KeyValium.Inspector.Controls
         private short _selmetaindex;
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal short SelectedMetaIndex
         {
             get
@@ -65,8 +66,9 @@ namespace KeyValium.Inspector.Controls
                 return _numbercolumnwidth;
             }
         }
-        
+
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal FileMap FileMap
         {
             get
@@ -82,6 +84,7 @@ namespace KeyValium.Inspector.Controls
         }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Size BlockSize
         {
             get;
@@ -89,12 +92,14 @@ namespace KeyValium.Inspector.Controls
         }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Padding BlockMargin
         {
             get;
             set;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Padding InnerMargin
         {
             get;
@@ -177,16 +182,11 @@ namespace KeyValium.Inspector.Controls
                     e.Graphics.DrawString(number, this.Font, brush_font, rect, format);
                 }
 
-                var brush = GetBrush(pos);
-                e.Graphics.FillRectangle(brush, x, y, BlockSize.Width, BlockSize.Height);
+                DrawBlock(e.Graphics, GetBrush(pos), pen_border, x, y, GetRangeKind(pos));
 
                 if (pos == SelectedPage)
                 {
                     e.Graphics.DrawRectangle(pen_selectedborder, x, y, BlockSize.Width, BlockSize.Height);
-                }
-                else
-                {
-                    e.Graphics.DrawRectangle(pen_border, x, y, BlockSize.Width, BlockSize.Height);
                 }
 
                 x += BlockSize.Width + BlockMargin.Horizontal;
@@ -204,6 +204,84 @@ namespace KeyValium.Inspector.Controls
             }
         }
 
+        private void DrawBlock(Graphics g, Brush brush, Pen pen, int x, int y, RangeKind rk)
+        {
+            var width = BlockSize.Width;
+            var height = BlockSize.Height;
+
+            //if (rk==RangeKind.Start || rk==RangeKind.Center)
+            //{
+            //    width += BlockMargin.Right + BlockMargin.Left +1;
+            //}
+
+            g.FillRectangle(brush, x, y, width, height);
+            g.DrawRectangle(pen, x, y, width, height);
+
+            switch (rk)
+            {
+                case RangeKind.Center:
+                    g.DrawLine(pen, x + 2, y + height / 2, x + width - 2, y + height / 2);
+                    break;
+
+                case RangeKind.Start:
+                    g.DrawLine(pen, x + width / 2, y + height / 2, x + width, y + height / 2);
+                    g.DrawLine(pen, x + width / 2, y + height / 4, x + width / 2, y + height - height / 4);
+                    break;
+
+                case RangeKind.End:
+                    g.DrawLine(pen, x, y + height / 2, x + width / 2, y + height / 2);
+                    g.DrawLine(pen, x + width / 2, y + height / 4, x + width / 2, y + height - height / 4);
+                    break;
+            }
+
+
+            {
+                //g.FillRectangle(new SolidBrush(Color.Gray), x, y, width, height);
+                //g.DrawRectangle(pen, x, y, width, height);
+
+                //var points = new Point[5];
+
+                //if (rk == RangeKind.Start)
+                //{
+                //    points[0] = new Point(x, y + height / 2);
+                //    points[1] = new Point(x + width / 2, y);
+                //    points[2] = new Point(x + width, y);
+                //    points[3] = new Point(x + width, y + height);
+                //    points[4] = new Point(x + width / 2, y + height);
+                //}
+                //else if (rk == RangeKind.End)
+                //{
+                //    points[0] = new Point(x, y);
+                //    points[1] = new Point(x + width / 2, y);
+                //    points[2] = new Point(x + width, y + height / 2);
+                //    points[3] = new Point(x + width / 2, y + height);
+                //    points[4] = new Point(x, y + height);
+                //}
+
+                //g.FillPolygon(brush, points);
+
+                //g.DrawPolygon(pen, points);
+                //g.DrawRectangle(pen, x, y, width, height);
+
+                //// draw top border
+                //g.DrawLine(pen, x, y, x + width, y);
+
+                //// draw bottom border
+                //g.DrawLine(pen, x, y + height, x + width, y + height);
+
+                //if (rk == RangeKind.Start)
+                //{
+                //    // draw left border
+                //    g.DrawLine(pen, x, y, x, y + height);
+                //}
+                //else if (rk == RangeKind.End)
+                //{
+                //    // draw right border
+                //    g.DrawLine(pen, x + width, y, x + width, y + height);
+                //}
+            }
+        }
+
         private Pen pen_border = new Pen(BlockViewColors.Border);
         private Pen pen_selectedborder = new Pen(BlockViewColors.SelectedBorder, 4);
 
@@ -218,10 +296,10 @@ namespace KeyValium.Inspector.Controls
         private Brush brush_dataleaf = new SolidBrush(BlockViewColors.DataLeaf);
         private Brush brush_dataoverflow = new SolidBrush(BlockViewColors.DataOverflow);
         private Brush brush_dataovercont = new SolidBrush(BlockViewColors.DataOverFlowCont);
+        private Brush brush_border = new SolidBrush(BlockViewColors.Border);
 
         private Brush brush_font = new SolidBrush(BlockViewColors.FontForeGround);
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private Brush GetBrush(long pos)
         {
             var type = _filemap.GetPageType((short)SelectedMetaIndex, (KvPagenumber)pos);
@@ -263,6 +341,11 @@ namespace KeyValium.Inspector.Controls
             }
 
             return brush_unknown;
+        }
+
+        private RangeKind GetRangeKind(long pos)
+        {
+            return _filemap.GetRangeKind((short)SelectedMetaIndex, (KvPagenumber)pos);
         }
 
         private void FileMapView_Resize(object sender, EventArgs e)

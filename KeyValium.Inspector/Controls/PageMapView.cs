@@ -33,12 +33,14 @@ namespace KeyValium.Inspector.Controls
 
         #region IPageMapView
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PageMapPresenter Presenter
         {
             get;
             set;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public KvPagenumber? MaxPagenumber
         {
             get;
@@ -70,6 +72,7 @@ namespace KeyValium.Inspector.Controls
         }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PageMap PageMap
         {
             get

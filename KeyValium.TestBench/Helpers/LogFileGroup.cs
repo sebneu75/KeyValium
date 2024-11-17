@@ -13,7 +13,6 @@ namespace KeyValium.TestBench.Helpers
             BaseName = basename;
         }
 
-
         public string BaseName
         {
             get;

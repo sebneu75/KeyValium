@@ -34,6 +34,7 @@ namespace KeyValium.Inspector.Controls
             cmbDisplayAs.SelectedIndex = 0;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Title
         {
             get
@@ -48,6 +49,7 @@ namespace KeyValium.Inspector.Controls
 
         private byte[] _bytes;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] Bytes
         {
             get

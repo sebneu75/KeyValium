@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KeyValium.TestBench.Shared;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -9,68 +10,40 @@ namespace KeyValium.UnendingTestShared
 {
     internal class FolderWatcher
     {
-        static List<string> Folders = new List<string>()
-        {
-            @"\\thesource\!KeyValium-OpLocks",
-            @"\\thesource\!KeyValium-No-OpLocks",
-            @"\\Madhouse\!KeyValium",
-        };
-
         const int WaitTime = 1000;
 
-        public FolderWatcher(string id)
+        public FolderWatcher(SharedTestInfo ti)
         {
-            Id = id;
+            TestInfo = ti;
         }
 
-        private readonly string Id;
-
-        public string Pattern
-        {
-            get
-            {
-                var eid = "";
-
-                if (!string.IsNullOrEmpty(Id))
-                {
-                    eid = "-" + Id;
-                }
-
-                return string.Format("{0}{1}*.kvjob", Environment.MachineName.ToLowerInvariant(), eid);
-            }
-        }
+        private readonly SharedTestInfo TestInfo;
 
         public void Watch()
         {
-            foreach (var folder in Folders)
-            {
-                Console.WriteLine("Watching folder {0}...", folder);
-            }
+            Console.WriteLine("Watching folder {0} for {1} ...", TestInfo.NetworkPath, TestInfo.ControlFilePattern);
 
             while (true)
             {
-                foreach (var folder in Folders)
+                try
                 {
-                    try
+                    var files = Directory.GetFiles(TestInfo.NetworkPath, TestInfo.ControlFilePattern);
+                    foreach (var file in files)
                     {
-                        var files = Directory.GetFiles(folder, Pattern);
-                        foreach (var file in files)
-                        {
-                            DoWork(file);
-
-                            Console.WriteLine("-----------------------");
-                        }
-
-                        if (files.Length == 0)
-                        {
-                            Thread.Sleep(WaitTime);
-                        }
+                        DoWork(file);
+                        
+                        Console.WriteLine("-----------------------");
                     }
-                    catch (Exception ex)
+
+                    if (files.Length == 0)
                     {
-                        Console.WriteLine(ex);
-                        Thread.Sleep(WaitTime * 5);
+                        Thread.Sleep(WaitTime);
                     }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    Thread.Sleep(WaitTime * 5);
                 }
             }
         }
@@ -80,13 +53,18 @@ namespace KeyValium.UnendingTestShared
             try
             {
                 Console.WriteLine("Processing file {0}...", file);
-                Worker.Run(file);
+                var worker = new Worker(TestInfo);
+                worker.Run();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
-
+            finally
+            {
+                File.Delete(file);
+            }
+            
             Console.WriteLine("Processing done.");
         }
     }

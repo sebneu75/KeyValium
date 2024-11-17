@@ -329,6 +329,16 @@
             }
         }
 
+        public ulong PageCount
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return LastPage - FirstPage + 1;
+            }
+        }
+
         public KvTid Tid
         {
             get

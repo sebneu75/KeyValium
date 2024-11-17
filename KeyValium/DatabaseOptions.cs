@@ -50,7 +50,37 @@ namespace KeyValium.Options
             CacheSizeMB = 16;
             SpillSizeMB = 16;
             ValueSpillSizeMB = 4;
+
+            SetLogDefaults();
         }
+
+        #region Options for Debugging
+
+        internal LogLevel LogLevel 
+        { 
+            get; 
+            set; 
+        }
+
+        internal LogTopics LogTopics
+        {
+            get;
+            set;
+        }
+
+        [Conditional("DEBUG")]
+        internal void SetLogDefaults()
+        {
+            LogLevel = LogLevel.All;
+
+            //LogTopics.Lock | LogTopics.Transaction | LogTopics.Meta);
+            //LogTopics.All);
+            //LogTopics.Freespace | LogTopics.Allocation | LogTopics.Transaction);
+            //LogTopics.Transaction | LogTopics.Validation | LogTopics.Insert);
+            LogTopics = LogTopics.All & ~(LogTopics.Tracking | LogTopics.Allocation | LogTopics.Validation | LogTopics.Cursor);
+        }
+
+        #endregion
 
         #region Options for Creating a Database
 

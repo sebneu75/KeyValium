@@ -44,6 +44,8 @@ namespace KeyValium.Inspector.MVP.Presenters
 
         protected async override void OnModelChanged(InspectorModel oldmodel)
         {
+            oldmodel?.CloseDatabase();
+
             PropertyP.Model = Model;
             FileMapP.Model = Model;
             PageMapP.Model = Model;

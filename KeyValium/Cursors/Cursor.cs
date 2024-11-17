@@ -846,12 +846,11 @@ namespace KeyValium.Cursors
 
 
         /// <summary>
-        /// builds the path to the given key starting with pageno
+        /// Builds the path to the given key starting with pageno
         /// </summary>
-        /// <param name="pageno"></param>
-        /// <param name="key"></param>
-        /// <param name="movetofirst">if true moves to first key of page, otherwise last </param>
-        /// <returns>returns true when the cursor is positioned on the exact key. When key is null always returns true</returns>
+        /// <param name="pageno">Page number of the starting page. This should be the root page.</param>
+        /// <param name="key">The key to search.</param>
+        /// <returns>Returns true when the cursor is positioned on the exact key.</returns>
         [SkipLocalsInit]
         internal bool SeekToKey(KvPagenumber pageno, ref ReadOnlySpan<byte> key)
         {
@@ -1119,7 +1118,6 @@ namespace KeyValium.Cursors
             }
 
             CurrentPath.MoveLast();
-
 
             while (true)
             {

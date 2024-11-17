@@ -1,6 +1,7 @@
 ﻿using KeyValium.Cache;
 using KeyValium.Collections;
 using KeyValium.Cursors;
+using KeyValium.Inspector;
 using KeyValium.Iterators;
 using KeyValium.Locking;
 using KeyValium.Memory;
@@ -146,18 +147,27 @@ namespace KeyValium
 
         #region Properties
 
+        /// <summary>
+        /// The state of the transaction
+        /// </summary>
         public TransactionStates State
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// The parent of a child transaction or null for the root transaction
+        /// </summary>
         public Transaction Parent
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// The child transaction or null if there is none.
+        /// </summary>
         public Transaction Child
         {
             get;
@@ -191,6 +201,22 @@ namespace KeyValium
 
             Perf.CallCount();
 
+            if (State != TransactionStates.Active)
+            {
+                if (State == TransactionStates.Committed)
+                {
+                    throw new NotSupportedException("Transaction is already committed.");
+                }
+                else if (State == TransactionStates.RolledBack)
+                {
+                    throw new NotSupportedException("Transaction is already rolled back.");
+                }
+                else if (State == TransactionStates.Failed)
+                {
+                    throw new NotSupportedException("Transaction has failed.");
+                }
+            }
+
             //Database.Validate();
 
             if (_isdisposed)
@@ -211,19 +237,6 @@ namespace KeyValium
             if (Child != null)
             {
                 throw new NotSupportedException("Transaction has open child transaction.");
-            }
-
-            if (State == TransactionStates.Committed)
-            {
-                throw new NotSupportedException("Transaction is already committed.");
-            }
-            else if (State == TransactionStates.RolledBack)
-            {
-                throw new NotSupportedException("Transaction is already rolled back.");
-            }
-            else if (State == TransactionStates.Failed)
-            {
-                throw new NotSupportedException("Transaction has failed.");
             }
         }
 
@@ -305,8 +318,6 @@ namespace KeyValium
         /// <summary>
         /// Moves the freespace bookkeeping to the parent transaction on commit
         /// </summary>
-        /// <param name="transaction"></param>
-        /// <exception cref="NotImplementedException"></exception>
         internal void UpdateParentFreeSpace()
         {
             Perf.CallCount();
@@ -386,14 +397,14 @@ namespace KeyValium
 
         #endregion
 
-        #region external API
+        #region External API
 
         /// <summary>
         /// Returns the local number of keys (not including subtrees) in the subtree pointed to by treeref.
         /// If treeref is null the root tree is used.
         /// </summary>
         /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
-        /// <returns>The number of keys in tree excluding its subtrees.</returns>
+        /// <returns>The number of keys in the tree excluding its subtrees.</returns>
         public ulong GetLocalCount(TreeRef treeref)
         {
             Perf.CallCount();
@@ -420,7 +431,7 @@ namespace KeyValium
         /// If treeref is null the root tree is used.
         /// </summary>
         /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
-        /// <returns>The number of keys in tree including its subtrees.</returns>
+        /// <returns>The number of keys in the tree including its subtrees.</returns>
         public ulong GetTotalCount(TreeRef treeref)
         {
             Perf.CallCount();
@@ -477,7 +488,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -616,14 +627,14 @@ namespace KeyValium
                     {
                         if (ex.ErrorCode != ErrorCodes.KeyNotFound)
                         {
-                            Fail(true);
+                            Fail();
                         }
 
                         throw;
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -746,9 +757,6 @@ namespace KeyValium
 
                                 var entry = new EntryExtern(key, val, subtree, tc, lc, ovpageno, ovlength);
                                 cursor.UpdateKey(ref entry);
-
-
-                                Version++;
                             }
                             else
                             {
@@ -763,10 +771,10 @@ namespace KeyValium
                                 var entry = new EntryExtern(key, val, null, 0, 0, ovpageno, ovlength);
                                 cursor.InsertKey(ref entry);
 
-                                Version++;
-
                                 ret = true;
                             }
+
+                            Version++;
 
                             //Console.WriteLine(cursor.Dump());
                             KvDebug.ValidateCursor2(this, cursor, treeref, key);
@@ -778,7 +786,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -874,49 +882,49 @@ namespace KeyValium
                     treeref?.Validate(this);
                     ValidateKey(ref key);
 
+                    var keyexists = false;
+
                     try
                     {
                         using (var cursor = GetDataCursor(treeref))
                         {
                             if (cursor.SetPosition(key))
                             {
-                                throw new KeyValiumException(ErrorCodes.KeyAlreadyExists, "Key already exists.");
+                                keyexists = true;
                             }
-
-                            //Console.WriteLine(cursor.Dump());
-
-                            ulong ovpageno = 0;
-                            ulong ovlength = 0;
-
-                            if (val.Length > Database.Limits.MaxInlineValueSize((ushort)key.Length))
+                            else
                             {
-                                CreateOverflowPages(ref val, out ovpageno, out ovlength);
+                                //Console.WriteLine(cursor.Dump());
+
+                                ulong ovpageno = 0;
+                                ulong ovlength = 0;
+
+                                if (val.Length > Database.Limits.MaxInlineValueSize((ushort)key.Length))
+                                {
+                                    CreateOverflowPages(ref val, out ovpageno, out ovlength);
+                                }
+
+                                var entry = new EntryExtern(key, val, null, 0, 0, ovpageno, ovlength);
+                                cursor.InsertKey(ref entry);
+
+                                Version++;
+
+                                KvDebug.ValidateCursor2(this, cursor, treeref, key);
+
+                                SpillCheck();
                             }
-
-                            var entry = new EntryExtern(key, val, null, 0, 0, ovpageno, ovlength);
-                            cursor.InsertKey(ref entry);
-
-                            Version++;
-
-                            KvDebug.ValidateCursor2(this, cursor, treeref, key);
                         }
-
-                        SpillCheck();
-                    }
-                    catch (KeyValiumException ex)
-                    {
-                        if (ex.ErrorCode != ErrorCodes.KeyAlreadyExists)
-                        {
-                            Fail(true);
-                        }
-
-                        throw;
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
+                    }
+
+                    if (keyexists)
+                    {
+                        throw new KeyValiumException(ErrorCodes.KeyAlreadyExists, "The key already exists.");
                     }
                 }
                 catch (Exception ex)
@@ -958,7 +966,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -1034,7 +1042,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -1077,7 +1085,57 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
+
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(LogTopics.DataAccess, Tid, ex);
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if a key has a nonempty subtree.
+        /// </summary>
+        /// <param name="treeref">The reference to the subtree or null for the root tree.</param>
+        /// <param name="key">The key.</param>
+        /// <returns>
+        /// True if the key exists and has a nonempty subtree.
+        /// False if the key does not exist or it has no subtree.
+        /// </returns>
+        public bool HasSubtree(TreeRef treeref, ReadOnlySpan<byte> key)
+        {
+            Perf.CallCount();
+
+            lock (TxLock)
+            {
+                try
+                {
+                    Validate(false);
+                    treeref?.Validate(this);
+                    ValidateKey(ref key);
+
+                    try
+                    {
+                        using (var cursor = GetDataCursor(treeref))
+                        {
+                            if (cursor.SetPosition(key))
+                            {
+                                var subtree = cursor.GetCurrentSubTree();
+
+                                return subtree.HasValue && subtree.Value != 0;
+                            }
+
+                            return false;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Fail();
 
                         throw;
                     }
@@ -1129,7 +1187,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -1181,7 +1239,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -1240,7 +1298,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -1306,7 +1364,7 @@ namespace KeyValium
                     }
                     catch (Exception ex)
                     {
-                        Fail(true);
+                        Fail();
 
                         throw;
                     }
@@ -1421,7 +1479,8 @@ namespace KeyValium
         /// <summary>
         /// returns the metrics for storing data in overflow pages
         /// </summary>
-        /// <param name="pagesize">the page size</param>
+        /// <param name="valuelen">length of value to store</param>
+        /// <param name="pagecount">number of pages</param>
         /// <param name="firstpage">number of bytes to write in the first overflow page</param>
         /// <param name="fullpages">number of full overflow pages to write</param>
         /// <param name="lastpage">number of bytes to write in the last overflow page</param>
@@ -1662,6 +1721,8 @@ namespace KeyValium
         {
             Perf.CallCount();
 
+            Exception first = null;
+
             try
             {
                 // acquire lockfile and verify tx exists in lockfile and is not expired
@@ -1733,13 +1794,37 @@ namespace KeyValium
                 // TODO check if necessary (probably not)
                 Pager.Flush();
             }
+            catch (Exception ex)
+            {
+                // save exception in case finally block throws
+                first = ex;
+
+                Logger.LogError(LogTopics.Transaction, Tid, ex);
+
+                throw;
+            }
             finally
             {
-                Database.LockFile?.Unlock();
+                try
+                {
+                    Database.LockFile?.Unlock();
+                }
+                catch (Exception ex)
+                {
+                    if (first != null)
+                    {
+                        // save first exception otherwise it will be lost
+                        throw new AggregateException(first, ex);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
         }
 
-        // TODO what does unspill mean
+        // TODO what does unspill mean?
         internal AnyPage UnspillPage(KvPagenumber pageno, bool createheader, bool unspill)
         {
             Perf.CallCount();
@@ -2078,9 +2163,12 @@ namespace KeyValium
             }
             catch (Exception ex)
             {
-                State = TransactionStates.Failed;
+                // TODO check if self-disposing is needed
 
                 Logger.LogError(LogTopics.Transaction, Tid, ex);
+
+                Fail();
+
                 throw;
             }
         }
@@ -2110,6 +2198,8 @@ namespace KeyValium
                 UpdateParentFreeSpace();
 
                 Parent.Version++;
+
+                // TODO fail parent transaction in case of an error because pages may be updated partially
             }
 
             Database.Tracker.OnCommitChildTransaction(this);
@@ -2120,6 +2210,8 @@ namespace KeyValium
             Perf.CallCount();
 
             KvDebug.Assert(Monitor.IsEntered(TxLock), "Write lock not held!");
+
+            Exception first = null;
 
             try
             {
@@ -2170,14 +2262,32 @@ namespace KeyValium
             }
             catch (Exception ex)
             {
-                // TODO Error handling
-                // rollback in case of error and mark as failed
+                // save exception in case finally block throws
+                first = ex;
+
+                Logger.LogError(LogTopics.Transaction, Tid, ex);
+
+                // rollback in case of error and marking as failed done by caller
                 throw;
             }
             finally
             {
-                // TODO check if self-disposing is needed
-                Database.LockFile?.RemoveAndUnlock(this);
+                try
+                {
+                    Database.LockFile?.RemoveAndUnlock(this);
+                }
+                catch (Exception ex)
+                {
+                    if (first != null)
+                    {
+                        // save first exception otherwise it will be lost
+                        throw new AggregateException(first, ex);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
         }
 
@@ -2191,23 +2301,13 @@ namespace KeyValium
             }
         }
 
-        internal void Fail(bool rollback)
-        {
-            Perf.CallCount();
-
-            if (rollback)
-            {
-                RollbackInternal();
-            }
-
-            State = TransactionStates.Failed;
-        }
-
         private void RollbackInternal()
         {
             KvDebug.Assert(Monitor.IsEntered(TxLock), "Write lock not held!");
 
             Perf.CallCount();
+
+            Exception first = null;
 
             try
             {
@@ -2246,18 +2346,185 @@ namespace KeyValium
             }
             catch (Exception ex)
             {
+                Logger.LogError(LogTopics.Transaction, Tid, ex);
+
+                // save exception in case finally block throws
+                first = ex;
+
+                Fail(false);
+
+                throw;
+            }
+            finally
+            {
+                try
+                {
+                    if (Root == this)
+                    {
+                        Database.LockFile?.RemoveAndUnlock(this);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Fail(false);
+
+                    if (first != null)
+                    {
+                        // save first exception otherwise it will be lost
+                        throw new AggregateException(first, ex);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
+        internal void Fail(bool tryrollback = true)
+        {
+            Perf.CallCount();
+
+            KvDebug.Assert(Monitor.IsEntered(TxLock), "Write lock not held!");
+
+            Root.FailAll(tryrollback);
+        }
+
+        internal void FailAll(bool tryrollback = true)
+        {
+            Perf.CallCount();
+
+            KvDebug.Assert(Monitor.IsEntered(TxLock), "Write lock not held!");
+
+            if (Root != this)
+            {
+                throw new KeyValiumException(ErrorCodes.InternalError, "FailAll must be called on the root transaction.");
+            }
+
+            FailInternal(tryrollback);
+        }
+
+        /// <summary>
+        /// same as RollbackInternal but different error handling
+        /// </summary>
+        internal void FailInternal(bool tryrollback = true)
+        {
+            Perf.CallCount();
+
+            // bottom to top
+            Child?.FailInternal(tryrollback);
+
+            if (State != TransactionStates.Active || _isdisposed)
+            {
+                // transaction already ended
+                return;
+            }
+
+            if (tryrollback)
+            {
+                //
+                // try a normal rollback first
+                //
+                try
+                {
+                    // Check how to deal with child transactions
+                    RollbackInternal();
+
+                    State = TransactionStates.Failed;
+
+                    // return on success
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    // ignore for now
+                }
+            }
+
+            //
+            // try rollback with different error handling
+            //
+            try
+            {
+                Logger.LogInfo(LogTopics.Transaction, Tid, "Failing Transaction...");
+
+                // Check how to deal with child transactions
+                //Child?.Fail();
+
+                var islockedandverified = false;
+
+                if (Root == this)
+                {
+                    try
+                    {
+                        // acquire lockfile and verify tx exists in lockfile and is not expired
+                        Database.LockFile?.LockAndVerify(this);
+                        islockedandverified = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(LogTopics.Transaction, Tid, ex);
+                    }
+                }
+
+                if (Root == this)
+                {
+                    try
+                    {
+                        //
+                        // rollback to disk
+                        //
+                        Database.Tracker.OnRollbackRootTransaction(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(LogTopics.Transaction, Tid, ex);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        //
+                        // rollback to parent transaction
+                        //
+                        Database.Tracker.OnRollbackChildTransaction(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(LogTopics.Transaction, Tid, ex);
+                    }
+                }
+
+                if (Root == this && islockedandverified)
+                {
+                    try
+                    {
+                        Database.LockFile?.RemoveAndUnlock(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(LogTopics.Transaction, Tid, ex);
+                    }
+                }
+
+                ClearPages();
+
+                Pager.ClearWriteCache();
+
+                State = TransactionStates.Failed;
+
+                Logger.LogInfo(LogTopics.Transaction, Tid, "Transaction failed successfully.");
+            }
+            catch (Exception ex)
+            {
                 State = TransactionStates.Failed;
 
                 Logger.LogError(LogTopics.Transaction, Tid, ex);
                 throw;
             }
-            finally
-            {
-                if (Root == this)
-                {
-                    Database.LockFile?.RemoveAndUnlock(this);
-                }
-            }
+
+            State = TransactionStates.Failed;
         }
 
         #endregion
@@ -2540,7 +2807,7 @@ namespace KeyValium
         /// <summary>
         /// maximum number of free space entries to be reserved in one call
         /// </summary>
-        public const int MaxReservedFsEntries = 4096;
+        private const int MaxReservedFsEntries = 4096;
 
         /// <summary>
         /// current number of free space entries to be reserved in one call
@@ -2559,6 +2826,19 @@ namespace KeyValium
         private SortedList<KvPagenumber, FsEntryExtern> _fsreserved = new(256);
 
         /// <summary>
+        /// number of entries to reserve for freespace index pages
+        /// </summary>
+        private const int ReservedFsEntriesForIndex = 8;
+
+        /// <summary>
+        /// untouched freespace entries, ordered by first pagenumber
+        /// reserved for FsIndex pages, see GetFreePages(ushort, ulong)
+        /// no need to copy it for child transactions because it is only 
+        /// used when storing freespace which happens only in the root transaction
+        /// </summary>
+        private SortedList<KvPagenumber, FsEntryExtern> _fsreservedforindex = new(ReservedFsEntriesForIndex);
+
+        /// <summary>
         /// touched freespace entries that need to be deleted later
         /// </summary>
         private SortedSet<KvPagenumber> _fstodelete = new();
@@ -2572,6 +2852,73 @@ namespace KeyValium
         /// freespace entries that have not been completely used yet
         /// </summary>
         private PageRangeList _fstouchedranges = new();
+
+        /// <summary>
+        /// Compacts the free space. Adjacent free space entries that where freed within different transactions will be merged.
+        /// </summary>
+        public void CompactFreespace()
+        {
+            Perf.CallCount();
+
+            lock (TxLock)
+            {
+                try
+                {
+                    Validate(true);
+
+                    try
+                    {
+                        Logger.LogDebug(LogTopics.Freespace, Tid, "Compacting free space started.");
+
+                        // reserve all available freespace
+                        ReserveFreespace(true);
+
+                        var tomove = new HashSet<ulong>();
+                        FsEntryExtern? last = null;
+
+                        // find adjacent neighbours
+                        foreach (var entry in _fsreserved)
+                        {
+                            if (last.HasValue)
+                            {
+                                if (last.Value.LastPage + 1 == entry.Value.FirstPage)
+                                {
+                                    tomove.Add(last.Value.FirstPage);
+                                    tomove.Add(entry.Value.FirstPage);
+                                }
+                            }
+
+                            last = entry.Value;
+                        }
+
+                        // move entries to touched ranges
+                        foreach (var key in tomove)
+                        {
+                            if (_fsreserved.Remove(key, out var entry))
+                            {
+                                _fstouchedranges.AddRange(entry.FirstPage, entry.LastPage);
+                                _fstodelete.Add(entry.FirstPage);
+                            }
+                        }
+
+                        Logger.LogDebug(LogTopics.Freespace, Tid, "Compacting free space finished.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(LogTopics.Freespace, Tid, ex, "Error compacting freespace");
+
+                        Fail();
+
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(LogTopics.DataAccess, Tid, ex);
+                    throw;
+                }
+            }
+        }
 
         private KvPagenumber? GetFreePage(ushort pagetype)
         {
@@ -2589,8 +2936,10 @@ namespace KeyValium
 
                 return range.First;
             }
+
             return null;
         }
+
         private PageRange GetFreePages(ushort pagetype, ulong count)
         {
             Perf.CallCount();
@@ -2598,33 +2947,86 @@ namespace KeyValium
             KvDebug.Assert(Monitor.IsEntered(TxLock), "Write lock not held!");
 
             var range = GetFreePagesFromRanges(count);
-
-            // Do not scan freespace tree when the requested pagetype is FsIndex. That happens when freespace runs out
-            // while touching the freespace cursor. This is necessary to avoid scanning an inconsistent tree.
-            // Example: while a free space cursor is touched. Cursors are touched from bottom to top.
-            // The leaf page might be dirtied with the last loose page. The index page above is not dirtied yet.
-            // Scanning the freespace in this state will result in the error "Trying to read free page." because
-            // the index page will point to an already freed page.
-            // Example: while a (possibly cascading) split or merge is in progress.
-            if (pagetype != PageTypes.FsIndex)
+            if (!range.IsEmpty)
             {
-                while (range.IsEmpty && !_fsexhausted)
-                {
-                    // adjust entrycount according to count
-                    while (count > (ulong)_fsentriestoreserve && _fsentriestoreserve < MaxReservedFsEntries)
-                    {
-                        _fsentriestoreserve <<= 1;
-                    }
+                // fast return
+                return range;
+            }
 
-                    if (ReserveFreespace())
-                    {
-                        // try again
-                        range = GetFreePagesFromRanges(count);
-                    }
+            if (pagetype == PageTypes.FsIndex)
+            {
+                if (count == 1 && Parent == null)
+                {
+                    // only root transaction create freespace pages
+                    //
+                    // Do not scan freespace tree when the requested pagetype is FsIndex. That happens when freespace runs out
+                    // while touching the freespace cursor. This is necessary to avoid scanning an inconsistent tree.
+                    // Example: while a free space cursor is touched. Cursors are touched from bottom to top.
+                    // The leaf page might be dirtied with the last loose page. The index page above is not dirtied yet.
+                    // Scanning the freespace in this state will result in the error "Trying to read free page." because
+                    // the index page will point to an already freed page.
+                    // Example: while a (possibly cascading) split or merge is in progress.
+
+                    return GetFreePageForFsIndex();
+                }
+                else
+                {
+                    throw new KeyValiumException(ErrorCodes.InternalError, "Getting free pages of type FsIndex is only allowed in root transactions.");
+                }
+            }
+
+            while (range.IsEmpty && !_fsexhausted)
+            {
+                // adjust entrycount according to count
+                // TODO fix mixup between page count and entry count
+                while (count > (ulong)_fsentriestoreserve && _fsentriestoreserve < MaxReservedFsEntries)
+                {
+                    _fsentriestoreserve <<= 1;
+                }
+
+                if (ReserveFreespace(false))
+                {
+                    // try again
+                    range = GetFreePagesFromRanges(count);
                 }
             }
 
             return range;
+        }
+
+        /// <summary>
+        /// Looks in _fsreservedforindex for a free page
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        internal PageRange GetFreePageForFsIndex()
+        {
+            Perf.CallCount();
+
+            if (_fsreservedforindex.Count == 0)
+            {
+                return PageRange.Empty;
+            }
+
+            // take first entry
+            var key = _fsreservedforindex.Keys[0];
+            _fsreservedforindex.Remove(key, out var entry);
+
+            // take first page
+            var ret = new PageRange(entry.FirstPage, entry.FirstPage);
+
+            // add to deletees
+            _fstodelete.Add(ret.First);
+
+            // check if entry has more than one page
+            if (entry.PageCount > 1)
+            {
+                // save remaining range to common freespace
+                _fsreservedranges.AddRange(entry.FirstPage + 1, entry.LastPage);
+                _fstouchedranges.AddRange(entry.FirstPage + 1, entry.LastPage);
+            }
+
+            return ret;
         }
 
         /// <summary>
@@ -2636,7 +3038,7 @@ namespace KeyValium
         /// reads up to MaxReservedFreespaceEntries freespace entries and puts them into the reserved list
         /// </summary>
         /// <returns>true, if new freespace has been reserved</returns>
-        private bool ReserveFreespace()
+        private bool ReserveFreespace(bool reserveall)
         {
             Perf.CallCount();
 
@@ -2649,50 +3051,80 @@ namespace KeyValium
             Logger.LogDebug(LogTopics.Freespace, Tid, "Scanning FsEntries...");
 
             var found = false;
-            FsEntryExtern? last = null;
+            FsEntryExtern? lastfsentry = null;
 
             using (var cursor = GetFsCursor1())
             {
-                var span = _fslastreserved == null ? ReadOnlySpan<byte>.Empty : new EntryExtern(_fslastreserved.Value.FirstPage, _fslastreserved.Value.LastPage, _fslastreserved.Value.Tid).Key;
-
-                var result = _fslastreserved == null ?
-                    cursor.SetPosition(CursorPositions.BeforeFirst) :
-                    cursor.SetPosition(span);
-
-                if (result)
+                if (_fslastreserved == null)
                 {
-                    var count = 0;
+                    cursor.SetPosition(CursorPositions.BeforeFirst);
+                }
+                else
+                {
+                    var span = new EntryExtern(_fslastreserved.Value.FirstPage, _fslastreserved.Value.LastPage, _fslastreserved.Value.Tid).Key;
 
-                    while (cursor.MoveToNextKey() && count < _fsentriestoreserve) // && _fsreserved.Count < _fsentriestoreserve)
+                    if (!cursor.SetPosition(span))
                     {
-                        var entry = cursor.GetCurrentLeafEntry();
-                        if (entry.Tid < Meta.MinTid)
+                        // lastfsentry may have been deleted by the first cycle of StoreFreeSpace().
+                        //
+                        // If lastfsentry is not found the cursor is positioned on the following item.
+                        // To avoid skipping an entry it is necessary to move to the previous entry.
+                        //
+                        // If lastfsentry was actually the last free space entry in the database the cursor
+                        // points to where the key should be inserted which is an invalid position for reading.
+                        // Therefore it is necessary to move to the previous entry.
+                        cursor.MoveToPrevKey();
+                    }
+                }
+
+                var count = 0;
+
+                while ((count < _fsentriestoreserve || reserveall) && cursor.MoveToNextKey())
+                {
+                    var entry = cursor.GetCurrentLeafEntry();
+
+                    // only use entries with expired transaction id
+                    if (entry.Tid < Meta.MinTid)
+                    {
+                        Logger.LogDebug(LogTopics.Freespace, Tid, "FsEntry read: {0}[{1}-{2}]", entry.Tid, entry.FirstPage, entry.LastPage);
+
+                        if (!_fsreserved.ContainsKey(entry.FirstPage) && !_fstodelete.Contains(entry.FirstPage) && !_fsreservedforindex.ContainsKey(entry.FirstPage))
                         {
-                            Logger.LogDebug(LogTopics.Freespace, Tid, "FsEntry read: {0}[{1}-{2}]", entry.Tid, entry.FirstPage, entry.LastPage);
+                            found = true;
+                            var fsentry = new FsEntryExtern(entry.FirstPage, entry.LastPage, entry.Tid);
 
-                            if (!_fsreserved.ContainsKey(entry.FirstPage) && !_fstodelete.Contains(entry.FirstPage))
+                            if (Parent == null && _fsreservedforindex.Count < ReservedFsEntriesForIndex && fsentry.PageCount < 4)
                             {
-                                found = true;
-                                var fsentry = new FsEntryExtern(entry.FirstPage, entry.LastPage, entry.Tid);
-                                _fsreserved.Add(entry.FirstPage, fsentry);
-                                _fsreservedranges.AddRange(entry.FirstPage, entry.LastPage);
+                                // Only in  root transaction. Only small entries.
+                                // Make sure a certain amount of freespace is reserved to avoid allocations of freespace
+                                // index pages at the end of the database file. See GetFreePages(ushort, ulong) for reasons.
 
-                                last = fsentry;
-                                count++;
+                                Logger.LogDebug(LogTopics.Freespace, Tid, "FsEntry reserved for FsIndex: {0}[{1}-{2}]", entry.Tid, entry.FirstPage, entry.LastPage);
+
+                                _fsreservedforindex.Add(entry.FirstPage, fsentry);
                             }
                             else
                             {
-                                throw new KeyValiumException(ErrorCodes.InternalError, "Freespace entry read twice.");
+                                _fsreserved.Add(entry.FirstPage, fsentry);
+                                _fsreservedranges.AddRange(entry.FirstPage, entry.LastPage);
+
+                                count++;
                             }
+
+                            lastfsentry = fsentry;
+                        }
+                        else
+                        {
+                            throw new KeyValiumException(ErrorCodes.InternalError, "Freespace entry read twice.");
                         }
                     }
                 }
             }
 
-            if (last != null)
+            if (lastfsentry != null)
             {
                 // make a copy of the last scanned entry because it might be changed
-                _fslastreserved = last;
+                _fslastreserved = lastfsentry;
             }
 
             if (!found)
@@ -2716,21 +3148,6 @@ namespace KeyValium
         /// tries to get a free page from the already touched ranges
         /// </summary>
         /// <returns></returns>
-        //private KvPagenumber? GetFreePageFromRanges()
-        //{
-        //    var range = GetFreePagesFromRanges(1);
-        //    if (range != null)
-        //    {
-        //        return range.First;
-        //    }
-
-        //    return null;
-        //}
-
-        /// <summary>
-        /// tries to get a free page from the already touched ranges
-        /// </summary>
-        /// <returns></returns>
         private PageRange GetFreePagesFromRanges(ulong count)
         {
             Perf.CallCount();
@@ -2745,13 +3162,11 @@ namespace KeyValium
                 for (KvPagenumber page = ret.First; page <= ret.Last; page++)
                 {
                     // remove from reserved and mark as to be deleted
-                    if (_fsreserved.ContainsKey(page))
+                    if (_fsreserved.Remove(page, out var entry))
                     {
-                        // move entry to deletees
-                        _fsreserved.Remove(page, out var entry);
-
                         //KvDebug.Assert(entry != null, "Entry not found!");
 
+                        // move entry to deletees
                         _fstodelete.Add(page);
 
                         // check if entry is completely used
@@ -2794,13 +3209,11 @@ namespace KeyValium
                 for (KvPagenumber page = lastrange.First; page <= lastrange.Last; page++)
                 {
                     // remove from reserved and mark as to be deleted
-                    if (_fsreserved.ContainsKey(page))
+                    if (_fsreserved.Remove(page, out var _))
                     {
-                        // move entry to deletees
-                        _fsreserved.Remove(page);
-
                         //KvDebug.Assert(entry != null, "Entry not found!");
 
+                        // move entry to deletees
                         _fstodelete.Add(page);
 
                         // TODO test
@@ -2867,7 +3280,7 @@ namespace KeyValium
 
                 foreach (var range in touchedranges)
                 {
-                    // set Tid to 0 on touched entries
+                    // set Tid to 0 on touched entries to make them immediately reusable
                     StoreFreePages(0, range);
                 }
 
@@ -2880,6 +3293,11 @@ namespace KeyValium
                 {
                     // store in freelist
                     StoreFreePages(Tid, range);
+
+                    // Remove pages from cache.
+                    // This is important for the SharedPageprovider.
+                    // Otherwise free pages might be carried along and appear as still valid.
+                    Pager.RemoveCachedPages(this, range);
                 }
 
                 cycle++;
@@ -3097,7 +3515,7 @@ namespace KeyValium
 
         #region IDisposable
 
-        private volatile bool _isdisposed;
+        private bool _isdisposed;
 
         private void Dispose(bool disposing, bool removefromdb = true)
         {
@@ -3113,7 +3531,15 @@ namespace KeyValium
 
                     if (State == TransactionStates.Active)
                     {
-                        Rollback();
+                        try
+                        {
+                            Rollback();
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(LogTopics.Transaction, Tid, ex);
+                            Fail();
+                        }
                     }
 
                     if (Root == this)
@@ -3149,7 +3575,7 @@ namespace KeyValium
             GC.SuppressFinalize(this);
         }
 
-        public void Dispose(bool removefromdb)
+        internal void Dispose(bool removefromdb)
         {
             Perf.CallCount();
 

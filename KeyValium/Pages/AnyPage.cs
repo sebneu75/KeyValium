@@ -182,7 +182,7 @@ namespace KeyValium.Pages
             }
         }
 
-        internal void Destroy()
+        internal void Deallocate()
         {
             Perf.CallCount();
 

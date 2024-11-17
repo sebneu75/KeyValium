@@ -4,50 +4,55 @@ using KeyValium.Encryption;
 using KeyValium.Locking;
 using KeyValium.Memory;
 using KeyValium.Options;
-using System.Buffers;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 
 namespace KeyValium
 {
+    /// <summary>
+    /// Represents a KeyValium database.
+    /// </summary>
     public sealed class Database : IDisposable
     {
+        private static ulong OidCounter = 0;
+
         internal Database(string dbfile, DatabaseOptions dboptions)
         {
             Perf.CallCount();
 
-            Filename = dbfile;
+            Oid = Interlocked.Increment(ref OidCounter);
 
-            Logger.CreateInstance(dbfile + ".log", LogLevel.All,
-                //LogTopics.Lock | LogTopics.Transaction | LogTopics.Meta);
-                //LogTopics.All);
-                //LogTopics.Freespace | LogTopics.Allocation | LogTopics.Transaction);
-                //LogTopics.Transaction | LogTopics.Validation | LogTopics.Insert);
-                LogTopics.All & ~(LogTopics.Tracking | LogTopics.Allocation | LogTopics.Validation | LogTopics.Cursor));
+            Filename = dbfile;
 
             Options = new ReadonlyDatabaseOptions(dboptions);
 
+            Logger.CreateInstance(Filename, dboptions.LogLevel, dboptions.LogTopics);
+
             Validator = new PageValidator(this, Options.ValidationMode);
 
-            if (!File.Exists(dbfile))
+            TryCreateDatabase(Filename);
+
+            IsShared = Options.InternalSharingMode != InternalSharingModes.Exclusive;
+
+            if (IsShared && Environment.OSVersion.Platform != PlatformID.Win32NT)
             {
-                if (Options.CreateIfNotExists && !Options.ReadOnly)
-                {
-                    CreateDatabase(dbfile);
-                }
-                else
-                {
-                    throw new KeyValiumException(ErrorCodes.InvalidFileFormat, "Database file not found.");
-                }
+                throw new KeyValiumException(ErrorCodes.InvalidParameter, "The SharingModes SharedLocal and SharedNetwork are only available on Windows.");
             }
 
             var fileaccess = Options.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite;
-            var fileshare = Options.InternalSharingMode == InternalSharingModes.Exclusive ? FileShare.None : FileShare.ReadWrite;
+            var fileshare = IsShared ? FileShare.ReadWrite : FileShare.None;
+            var fileoptions = FileOptions.RandomAccess;
 
-            var fileoptions = Options.InternalSharingMode == InternalSharingModes.SharedNetwork ? Limits.FileFlagNoBuffering : FileOptions.RandomAccess;
+            if (Options.InternalSharingMode == InternalSharingModes.SharedLocal)
+            {
+                // check if all flags necessary
+                //fileoptions |= FileOptions.WriteThrough | Limits.FileFlagNoBuffering;
+            }
+            else if (Options.InternalSharingMode == InternalSharingModes.SharedNetwork)
+            {
+                // necessary for files on network drives
+                fileoptions |= FileOptions.WriteThrough | Limits.FileFlagNoBuffering;
+            }
 
-            DbFile = new FileStream(dbfile, FileMode.Open, fileaccess, fileshare, 4096, fileoptions);
+            DbFile = TryOpenFile(dbfile, FileMode.Open, fileaccess, fileshare, fileoptions);
 
             try
             {
@@ -60,8 +65,6 @@ namespace KeyValium
             }
 
             MetaEntries = new MetaEntry[Limits.MetaPages];
-
-            IsShared = Options.InternalSharingMode != InternalSharingModes.Exclusive;
 
             Limits = new Limits(this);
 
@@ -80,6 +83,7 @@ namespace KeyValium
             }
         }
 
+
         #region Properties
 
         internal readonly ReadonlyDatabaseOptions Options;
@@ -94,7 +98,7 @@ namespace KeyValium
 
         internal readonly PageAllocator Allocator;
 
-        internal readonly FileStream DbFile;
+        internal FileStream DbFile;
 
         internal readonly Cursors.CursorTracker Tracker;
 
@@ -105,6 +109,8 @@ namespace KeyValium
         internal readonly KeyPool Pool;
 
         internal readonly PageValidator Validator;
+
+        internal readonly ulong Oid;
 
         //public readonly uint PageSize;
 
@@ -170,6 +176,11 @@ namespace KeyValium
                     // will throw if out of bounds
                     Limits.ValidatePageSize(pagesize);
 
+                    if (dboptions.InternalSharingMode != InternalSharingModes.Exclusive && pagesize < 4096)
+                    {
+                        throw new KeyValiumException(ErrorCodes.InvalidParameter, "The SharingModes SharedLocal and SharedNetwork require a page size of at least 4096 bytes.");
+                    }
+
                     dboptions.Version = hpany.Header.Version;
                     if (dboptions.Version != 1)
                     {
@@ -228,14 +239,17 @@ namespace KeyValium
             using (var tx = BeginReadTransaction())
             {
                 ScanTree(tx);
+
+                // unnecessary
+                tx.Commit();
             }
         }
 
         /// <summary>
-        /// Scans the tree
+        /// Scans the tree starting with the DataRootPage of the transactions Meta.
+        /// Does not scan free space.
         /// </summary>
-        /// <param name="rootpageno">Pagenumber of the starting page</param>
-        /// <param name="mintid">Minimum Tid</param>
+        /// <param name="tx">The transaction to use.</param>
         internal void ScanTree(Transaction tx)
         {
             if (tx.Meta.DataRootPage == 0)
@@ -297,18 +311,21 @@ namespace KeyValium
                                 }
                                 break;
 
-                            //case PageTypes.DataOverflow:
-                            //    ref var ovpage = ref page.AsOverflowPage;
-                            //    break;
+                            case PageTypes.DataOverflow:
+                                ref var ovpage = ref page.AsOverflowPage;
 
-                            //case PageTypes.FsLeaf:
+                                // don't read large values
+                                if (ovpage.Header.PageCount <= 64)
+                                {
+                                    for (KvPagenumber p = pageno + 1; p < pageno + ovpage.Header.PageCount; p++)
+                                    {
+                                        using (var page2 = Pager.ReadPage(tx, p, false))
+                                        {
+                                        }
+                                    }
+                                }
 
-                            //    lpage = ref page.AsContentPage;
-                            //    for (int i = 0; i < lpage.EntryCount; i++)
-                            //    {
-                            //        var entry = lpage.GetEntryAt(i);
-                            //    }
-                            //    break;
+                                break;
 
                             default:
                                 //throw new NotSupportedException("Unexpected Pagetype.");
@@ -344,6 +361,103 @@ namespace KeyValium
             PageValidator.ValidateFileHeader(page, 0, false);
 
             return page;
+        }
+
+        private FileStream TryOpenFile(string dbfile, FileMode open, FileAccess fileaccess, FileShare fileshare, FileOptions fileoptions)
+        {
+            Perf.CallCount();
+
+            // retry because of race condition when multiple threads(processes) try to create/open the database
+            var retry = 5;
+
+            while (retry >= 0)
+            {
+                try
+                {
+                    return new FileStream(dbfile, FileMode.Open, fileaccess, fileshare, 4096, fileoptions);
+                }
+                catch (IOException ex)
+                {
+                    if (true)
+                    {
+                        retry--;
+                        if (retry < 0)
+                        {
+                            throw;
+                        }
+
+                        Thread.Sleep(20);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            // should not happen
+            return null;
+        }
+
+        private void TryCreateDatabase(string dbfile)
+        {
+            Perf.CallCount();
+
+            if (!Options.CreateIfNotExists)
+            {
+                return;
+            }
+
+            if (File.Exists(dbfile))
+            {
+                return;
+            }
+
+            if (Options.ReadOnly)
+            {
+                throw new KeyValiumException(ErrorCodes.InvalidFileFormat, "The database file cannot be created in readonly mode.");
+            }
+
+            // retry because of race condition when multiple threads(processes) try to create the database
+            var retry = 5;
+            while (retry >= 0)
+            {
+                try
+                {
+                    CreateDatabase(dbfile);
+                    
+                    return;
+                }
+                catch (IOException ex)
+                {
+                    if ((uint)ex.HResult == 0x80070050)
+                    {
+                        // file already exists
+
+                        if (File.Exists(dbfile))
+                        {
+                            return;
+                        }
+
+                        retry--;
+                        if (retry < 0)
+                        {
+                            throw;
+                        }
+
+                        Thread.Sleep(20);
+
+                        if (File.Exists(dbfile))
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -634,13 +748,20 @@ namespace KeyValium
 
             ref var meta = ref MetaEntries[metaindex];
 
-            var newtid = meta.Tid + (ulong)(inctid ? 1 : 0);
+            var newtid = meta.Tid;
+
+            if (inctid)
+            {
+                if (newtid == ulong.MaxValue)
+                {
+                    throw new KeyValiumException(ErrorCodes.InternalError, "Transaction Ids exhausted.");
+                }
+
+                newtid++;
+            }
 
             GetMinMaxLastPage(out var minlastpage, out var maxlastpage);
 
-            // return copy with minimum tid and actual last page
-            // if maximum last page is returned it leads to gaps in the file
-            // this can be fixed but the file would never shrink
             return new Meta(ref meta, newtid, mintid, minlastpage, maxlastpage);
         }
 
@@ -653,8 +774,6 @@ namespace KeyValium
                 throw new KeyValiumException(ErrorCodes.InternalError, "Tid mismatch in Meta page!");
             }
         }
-
-
 
         #endregion
 
@@ -691,14 +810,14 @@ namespace KeyValium
         {
             Perf.CallCount();
 
-            lock (_dblock)
+            try
             {
-                Validate(false);
+                // wait for free slot in lockfile
+                LockFile?.WaitForReaderSlot();
 
-                try
+                lock (_dblock)
                 {
-                    // wait for free slot in lockfile
-                    LockFile?.WaitForReaderSlot();
+                    Validate(false);
 
                     var meta = GetLatestMeta(false, false);
 
@@ -712,10 +831,10 @@ namespace KeyValium
 
                     return tx;
                 }
-                finally
-                {
-                    LockFile?.Unlock();
-                }
+            }
+            finally
+            {
+                LockFile?.Unlock();
             }
         }
 
@@ -727,14 +846,14 @@ namespace KeyValium
         {
             Perf.CallCount();
 
-            lock (_dblock)
+            try
             {
-                Validate(false);
+                // wait for free slot in lockfile
+                LockFile?.WaitForReaderSlot();
 
-                try
+                lock (_dblock)
                 {
-                    // wait for free slot in lockfile
-                    LockFile?.WaitForReaderSlot();
+                    Validate(false);
 
                     var meta = GetLatestMeta(false, true);
 
@@ -748,10 +867,10 @@ namespace KeyValium
 
                     return tx;
                 }
-                finally
-                {
-                    LockFile?.Unlock();
-                }
+            }
+            finally
+            {
+                LockFile?.Unlock();
             }
         }
 
@@ -759,21 +878,21 @@ namespace KeyValium
         {
             Perf.CallCount();
 
-            lock (_dblock)
+            try
             {
-                Validate(true);
+                // wait for free slot in lockfile
+                LockFile?.WaitForWriterSlot();
 
-                try
+                lock (_dblock)
                 {
+                    Validate(true);
+
                     if (_writetransaction != null)
                     {
                         throw new KeyValiumException(ErrorCodes.TransactionFailed, "A write transaction is already in progress.");
                     }
 
                     // TODO check flags and file accessibility
-
-                    // wait for free slot in lockfile
-                    LockFile?.WaitForWriterSlot();
 
                     var meta = GetLatestMeta(true, false);
 
@@ -787,10 +906,10 @@ namespace KeyValium
 
                     return tx;
                 }
-                finally
-                {
-                    LockFile?.Unlock();
-                }
+            }
+            finally
+            {
+                LockFile?.Unlock();
             }
         }
 
@@ -945,7 +1064,11 @@ namespace KeyValium
 
                         Tracker?.Dispose();
                         Pager?.Dispose();
+
+                        // Allocator must be the last object disposed that contains references to AnyPages
+                        // because it checks that all pages have returned to allocator
                         Allocator?.Dispose();
+
                         LockFile?.Dispose();
                         DbFile?.Dispose();
                     }

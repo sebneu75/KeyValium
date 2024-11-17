@@ -2,10 +2,8 @@
 {
     internal class NullLogger : ILogger
     {
-        public LogTopics Topics
+        public void SetThreadName(string name)
         {
-            get;
-            set;
         }
 
         public void LogDebug(LogTopics topics, string format, params object[] args)

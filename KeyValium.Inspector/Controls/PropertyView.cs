@@ -3,6 +3,7 @@ using KeyValium.Inspector.MVP.Presenters;
 using KeyValium.Inspector.MVP.Views;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace KeyValium.Inspector.Controls
 
         #region IPropertyView
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PropertyPresenter Presenter
         {
             get;

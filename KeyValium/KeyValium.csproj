@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net7.0;net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -13,14 +13,14 @@
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>KeyValium</Title>
-    <Version>0.5.6</Version>
+    <Version>0.6.0</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>KeyValium is a very fast key value store for DotNet.</Description>
     <Authors>sebneu75</Authors>
     <PackageTags>database;nosql;embedded;persistence;key value store;</PackageTags>
-    <PackageReleaseNotes>new option FillCache that fills the cache after opening a database
-Minor improvements.
+    <PackageReleaseNotes>- fixed an error in SharingModes.SharedLocal that could cause database corruption
+- SharingModes.SharedNetwork seems to work now
 </PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>

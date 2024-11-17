@@ -98,6 +98,19 @@ namespace KeyValium.Frontends
         }
 
         /// <summary>
+        /// Compacts the free space entries
+        /// </summary>
+        public void CompactFreespace()
+        {
+            Perf.CallCount();
+
+            Do(() =>
+            {
+                Tx.CompactFreespace();
+            });
+        }
+
+        /// <summary>
         /// Does an action within a transaction. Calls can be nested.
         /// If no transaction exists one is started. 
         /// If the call created a transaction it is rolled back if action throws an exception. Otherwise it is committed.

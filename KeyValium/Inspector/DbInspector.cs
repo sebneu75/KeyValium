@@ -152,7 +152,7 @@ namespace KeyValium.Inspector
 
             var scanqueue = new PageRangeList();
             scanqueue.AddPage(rootpageno);
-            
+
 
             var pagestoscan = new List<KvPagenumber>();
 
@@ -172,10 +172,13 @@ namespace KeyValium.Inspector
                     var page = _database.Pager.ReadPageInspector(pageno, Properties.PageSize, true);
 
                     // add current page
-                    if (!map.Add(metaindex, pageno, GetPageTypeI(page), GetFreeSpace(page)))
+                    if (page.PageType != PageTypes.DataOverflow)
                     {
-                        // TODO deal with duplicate pages
-                        continue;
+                        if (!map.Add(metaindex, pageno, GetPageTypeI(page), GetFreeSpace(page)))
+                        {
+                            // TODO deal with duplicate pages
+                            continue;
+                        }
                     }
 
                     switch (page.PageType)
@@ -213,10 +216,16 @@ namespace KeyValium.Inspector
 
                         case PageTypes.DataOverflow:
                             ref var ovpage = ref page.AsOverflowPage;
+
+                            map.Add(metaindex, pageno, PageTypesI.DataOverflow, 0,
+                                    GetRangeKind(pageno, ovpage.Header.PageNumber, ovpage.Header.PageCount));
+
                             for (KvPagenumber p = pageno + 1; p < pageno + ovpage.Header.PageCount; p++)
                             {
-                                map.Add(metaindex, p, PageTypesI.DataOverflowCont, 0);
+                                map.Add(metaindex, p, PageTypesI.DataOverflowCont, 0,
+                                        GetRangeKind(p, ovpage.Header.PageNumber, ovpage.Header.PageCount));
                             }
+
                             break;
 
                         case PageTypes.FsLeaf:
@@ -228,7 +237,8 @@ namespace KeyValium.Inspector
 
                                 for (KvPagenumber p = entry.FirstPage; p <= entry.LastPage; p++)
                                 {
-                                    map.Add(metaindex, p, entry.Tid <= mintid ? PageTypesI.FreeSpace : PageTypesI.FreeSpaceInUse, 0);
+                                    map.Add(metaindex, p, entry.Tid <= mintid ? PageTypesI.FreeSpace : PageTypesI.FreeSpaceInUse, 0,
+                                            GetRangeKind(p, entry.FirstPage, entry.PageCount));
                                 }
 
                                 if (true) // TODO make optional
@@ -270,6 +280,26 @@ namespace KeyValium.Inspector
                     break;
                 }
             }
+        }
+
+        private RangeKind GetRangeKind(ulong pageno, ulong firstpage, ulong pagecount)
+        {
+            var lastpage = firstpage + pagecount - 1;
+
+            if (firstpage == lastpage)
+            {
+                return RangeKind.FullBlock;
+            }
+            else if (pageno == firstpage)
+            {
+                return RangeKind.Start;
+            }
+            else if (pageno == lastpage)
+            {
+                return RangeKind.End;
+            }
+
+            return RangeKind.Center;
         }
 
         private int GetFreeSpace(AnyPage page)

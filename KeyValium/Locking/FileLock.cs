@@ -9,50 +9,60 @@ namespace KeyValium.Locking
 {
     internal class FileLock : ILockable
     {
-        public FileLock(Database db, LockFile lockfile)
+        #region Constructor
+
+        internal FileLock(Database db, LockFile lockfile)
         {
-            _lock = lockfile.LockObject;
             Path = lockfile.Filename + ".lock";
 
-            Timeout = new LockTimeout(db.Options.LockTimeout, db.Options.LockInterval, db.Options.LockIntervalVariance);
+            LockTimeout = db.Options.LockTimeout;
+            LockInterval = db.Options.LockInterval;
+            LockVariance = db.Options.LockIntervalVariance;
         }
 
-        internal readonly string Path;        
+        #endregion
+
+        #region Variables
 
         internal FileStream LockFileLock;
 
-        internal readonly object _lock;
+        internal int LockTimeout;
+        internal int LockInterval;
+        internal int LockVariance;
 
-        internal volatile bool _islocked;       
+        internal readonly string Path;
 
-        internal readonly LockTimeout Timeout;
+        internal readonly object _lock = new object();
+
+        #endregion
+
+        #region ILockable implementation
 
         public void Lock()
         {
             Perf.CallCount();
 
-            Timeout.Reset();
+            ValidateLock(false);
 
             Monitor.Enter(_lock);
-
-            if (_islocked)
-            {
-                // already locked
-                Monitor.Exit(_lock);
-
-                return;
-            }
+            Logger.LogInfo(LogTopics.Lock, "Monitor entered. (lock)");
 
             try
             {
+                if (LockFileLock != null)
+                {
+                    throw new InvalidOperationException("LockFileLock already exists.");
+                }
+
+                // create LockTimeout per caller
+                var timeout = new LockTimeout(LockTimeout, LockInterval, LockVariance);
+
                 while (true)
                 {
                     try
                     {
-                        LockFileLock = new FileStream(Path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
+                        LockFileLock = new FileStream(Path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0, FileOptions.DeleteOnClose);
 
-                        //_lockfile.Lock(0, Filesize);
-                        _islocked = true;
                         Logger.LogInfo(LogTopics.Lock, "Lock taken.");
 
                         return;
@@ -61,22 +71,56 @@ namespace KeyValium.Locking
                     {
                         //
                         // most of the time an IOException is thrown if the file already exists
-                        //                        
+                        //
+
+                        if ((uint)ex.HResult == 0x80070050)
+                        {
+                            // expected error
+                            // The file '...' already exists.
+                        }
+                        //else if (ex is FileNotFoundException && (uint)ex.HResult == 80070002)
+                        //{
+                        //    // expected error
+                        //    // for some strange reason in rare cases a FileNotFoundException is thrown 
+                        //    // Could not find file '...'.
+                        //}
+                        else
+                        {
+                            Logger.LogError(LogTopics.Lock, ex, "Creation of LockFileLock failed. " + ex.HResult.ToString("X8"));
+                        }
                     }
                     catch (UnauthorizedAccessException ex)
                     {
                         //
                         // in rare cases an UnauthorizedAccessException is thrown if the file already exists
                         //
+                        Logger.LogError(LogTopics.Lock, ex, "Creation of LockFileLock failed. " + ex.HResult.ToString("X8"));
                     }
 
                     Logger.LogInfo(LogTopics.Lock, "Waiting for Lock...");
-                    Timeout.Wait();
+                    timeout.Wait();
                 }
+            }
+            catch (TimeoutException ex)
+            {
+                LockFileLock?.Dispose();
+                LockFileLock = null;
+
+                Monitor.Exit(_lock);
+                Logger.LogInfo(LogTopics.Lock, "Monitor exited (lock timeout).");
+
+                throw;
             }
             catch (Exception ex)
             {
+                Logger.LogError(LogTopics.Lock, ex, "Error while locking.");
+
+                LockFileLock?.Dispose();
+                LockFileLock = null;
+
                 Monitor.Exit(_lock);
+                Logger.LogInfo(LogTopics.Lock, "Monitor exited (lock error).");
+
                 throw;
             }
         }
@@ -85,29 +129,29 @@ namespace KeyValium.Locking
         {
             Perf.CallCount();
 
+            ValidateLock(true);
+
             try
             {
                 Monitor.Enter(_lock);
-
-                if (!_islocked)
-                {
-                    // already unlocked
-                    return;
-                }
+                Logger.LogInfo(LogTopics.Lock, "Monitor entered (unlock).");
 
                 try
                 {
-                    LockFileLock.Dispose();                    
+                    LockFileLock.Dispose();
+                    LockFileLock = null;
                 }
-                finally 
+                finally
                 {
-                    _islocked = false;
+                    //IsLocked = false;
                     Monitor.Exit(_lock);
-                }                
+                    Logger.LogInfo(LogTopics.Lock, "Monitor exited. (unlock1)");
+                }
             }
             finally
             {
                 Monitor.Exit(_lock);
+                Logger.LogInfo(LogTopics.Lock, "Monitor exited (unlock2).");
                 Logger.LogInfo(LogTopics.Lock, "Lock released.");
             }
         }
@@ -116,16 +160,65 @@ namespace KeyValium.Locking
         {
             Perf.CallCount();
 
-            if (_islocked != expected)
+            var msg = "";
+
+            var islocked = Monitor.IsEntered(_lock);
+            if (islocked != expected)
             {
-                throw new InvalidOperationException("Lock has wrong state.");
+                msg += string.Format("Lock has wrong state. Actual={0} Expected={1}.", islocked, expected);
+            }
+
+            if (islocked)
+            {
+                // if locked then filehandle must be nonzero
+                if (LockFileLock == null)
+                {
+                    msg += string.Format(" LockFileLock has wrong state. Actual={0} Expected={1}.", LockFileLock != null, expected);
+                }
+            }
+
+            if (msg != "")
+            {
+                throw new InvalidOperationException(msg.Trim());
             }
         }
+
+        public void LockForCreation()
+        {
+            Lock();
+        }
+
+        public void UnlockForCreation()
+        {
+            Unlock();
+        }
+
+        public void ValidateCreationLock(bool expected)
+        {
+            ValidateLock(expected);
+        }
+
+        public void CreateLock(Guid guid)
+        {
+            // must be empty for FileLock
+            if (guid != Guid.Empty)
+            {
+                throw new KeyValiumException(ErrorCodes.InternalError, "LockGuid is not empty.");
+            }
+
+            // do nothing
+        }
+
+        #endregion
+
+        #region IDisposable implementation
 
         public void Dispose()
         {
             LockFileLock?.Dispose();
             LockFileLock = null;
         }
+
+        #endregion
     }
 }

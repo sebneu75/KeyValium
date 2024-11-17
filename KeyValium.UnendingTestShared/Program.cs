@@ -1,13 +1,41 @@
-﻿namespace KeyValium.UnendingTestShared
+﻿using KeyValium.TestBench;
+using KeyValium.TestBench.Shared;
+
+namespace KeyValium.UnendingTestShared
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            var id = args.Length > 0 ? args[0] : "";
+            ThreadPool.GetMaxThreads(out var maxt, out var maxcpt);
+            ThreadPool.SetMaxThreads(256, maxcpt);
 
-            var watcher = new FolderWatcher(id);
-            watcher.Watch();
+            if (args.Length < 1)
+            {
+                Console.WriteLine("Missing command line parameter.");
+                Console.WriteLine("Ready.");
+                Console.ReadLine();
+
+                return -1;
+            }
+            else
+            {
+                try
+                {
+                    var ti = KvJson.Load<SharedTestInfo>(args[0]);
+
+                    TestManager.Run(ti);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex);
+                    Console.WriteLine("Ready.");
+                    Console.ReadLine();
+                    return -1;
+                }
+            }
+
+            return 0;
         }
     }
 }

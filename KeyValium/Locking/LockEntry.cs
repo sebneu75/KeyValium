@@ -3,13 +3,15 @@ using System.Text;
 
 namespace KeyValium.Locking
 {
-    internal unsafe class LockEntry
+    internal ref struct LockEntry
     {
-        internal LockEntry(Memory<byte> data, int index)
+        internal const int ENTRY_SIZE = 64;
+
+        internal LockEntry(Span<byte> data, int index)
         {
             Perf.CallCount();
 
-            if (data.Length != LockFile.ENTRY_SIZE)
+            if (data.Length != ENTRY_SIZE)
             {
                 throw new InvalidOperationException("Entry size mismatch.");
             }
@@ -20,7 +22,7 @@ namespace KeyValium.Locking
 
         public readonly int Index;
 
-        internal Memory<byte> _data;
+        internal Span<byte> _data;
 
         /// <summary>
         /// 0x00 : 1 Byte Transaction Type
@@ -28,19 +30,19 @@ namespace KeyValium.Locking
         ///        0x01 - Read
         ///        0x02 - Write
         /// </summary>
-        public byte Type
+        public ushort Type
         {
             get
             {
                 Perf.CallCount();
 
-                return _data.Span[0];
+                return BinaryPrimitives.ReadUInt16LittleEndian(_data);
             }
             set
             {
                 Perf.CallCount();
 
-                _data.Span[0] = value;
+                BinaryPrimitives.WriteUInt16LittleEndian(_data, value);
             }
         }
 
@@ -53,18 +55,18 @@ namespace KeyValium.Locking
             {
                 Perf.CallCount();
 
-                return BinaryPrimitives.ReadInt32LittleEndian(_data.Slice(0x04).Span);
+                return BinaryPrimitives.ReadInt32LittleEndian(_data.Slice(0x04));
             }
             set
             {
                 Perf.CallCount();
 
-                BinaryPrimitives.WriteInt32LittleEndian(_data.Slice(0x04).Span, value);
+                BinaryPrimitives.WriteInt32LittleEndian(_data.Slice(0x04), value);
             }
         }
 
         /// <summary>
-        /// 0x08 : 8 Byte Oid
+        /// 0x08 : 8 Byte Transaction Object Id
         /// </summary>
         public ulong Oid
         {
@@ -72,31 +74,18 @@ namespace KeyValium.Locking
             {
                 Perf.CallCount();
 
-                return BinaryPrimitives.ReadUInt64LittleEndian(_data.Slice(0x08).Span);
+                return BinaryPrimitives.ReadUInt64LittleEndian(_data.Slice(0x08));
             }
             set
             {
                 Perf.CallCount();
 
-                BinaryPrimitives.WriteUInt64LittleEndian(_data.Slice(0x08).Span, value);
+                BinaryPrimitives.WriteUInt64LittleEndian(_data.Slice(0x08), value);
             }
         }
 
         /// <summary>
-        /// 0x10 : 16 Byte MachineId
-        /// </summary>
-        public Span<byte> MachineId
-        {
-            get
-            {
-                Perf.CallCount();
-
-                return _data.Slice(0x10, 0x10).Span;
-            }
-        }
-
-        /// <summary>
-        /// 0x20 : 8 Byte Tid
+        /// 0x10 : 8 Byte Transaction Id
         /// </summary>
         public KvTid Tid
         {
@@ -104,18 +93,18 @@ namespace KeyValium.Locking
             {
                 Perf.CallCount();
 
-                return BinaryPrimitives.ReadUInt64LittleEndian(_data.Slice(0x20).Span);
+                return BinaryPrimitives.ReadUInt64LittleEndian(_data.Slice(0x10));
             }
             set
             {
                 Perf.CallCount();
 
-                BinaryPrimitives.WriteUInt64LittleEndian(_data.Slice(0x20).Span, value);
+                BinaryPrimitives.WriteUInt64LittleEndian(_data.Slice(0x10), value);
             }
         }
 
         /// <summary>
-        /// 0x28 : 8 Byte Expires
+        /// 0x18 : 8 Byte Expires
         /// </summary>
         public DateTime ExpiresUtc
         {
@@ -123,7 +112,7 @@ namespace KeyValium.Locking
             {
                 Perf.CallCount();
 
-                var utc= BinaryPrimitives.ReadInt64LittleEndian(_data.Slice(0x28).Span);
+                var utc = BinaryPrimitives.ReadInt64LittleEndian(_data.Slice(0x18));
                 return DateTime.FromFileTimeUtc(utc);
             }
             set
@@ -131,8 +120,51 @@ namespace KeyValium.Locking
                 Perf.CallCount();
 
                 var utc = value.ToFileTimeUtc();
-                BinaryPrimitives.WriteInt64LittleEndian(_data.Slice(0x28).Span, utc);
+                BinaryPrimitives.WriteInt64LittleEndian(_data.Slice(0x18), utc);
             }
+        }
+
+        /// <summary>
+        /// 0x20 : 16 Byte MachineId
+        /// </summary>
+        public Span<byte> MachineId
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return _data.Slice(0x20, 0x10);
+            }
+            set
+            {
+                Perf.CallCount();
+
+                value.CopyTo(_data.Slice(0x20, 0x10));
+            }
+        }
+
+        /// <summary>
+        /// 0x30 : 16 Byte Hostname
+        /// </summary>
+        public Span<byte> MachineName
+        {
+            get
+            {
+                Perf.CallCount();
+
+                return _data.Slice(0x30, 0x10);
+            }
+            set
+            {
+                Perf.CallCount();
+
+                value.CopyTo(_data.Slice(0x30, 0x10));
+            }
+        }
+
+        internal void Clear()
+        {
+            _data.Clear();
         }
 
         public override string ToString()

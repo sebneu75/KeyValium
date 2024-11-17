@@ -50,7 +50,7 @@ namespace KeyValium.UnendingTest
                 td.OrderInsert = KeyOrder.Random;
                 td.OrderRead = KeyOrder.Random;
                 td.OrderDelete = KeyOrder.Random;
-                td.Options.Password = "123";
+                //td.Options.Password = "123";
 
                 //var td = new TestDescription("Endless");
                 //td.Options.PageSize = 65536;

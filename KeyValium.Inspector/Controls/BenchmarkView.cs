@@ -35,6 +35,7 @@ namespace KeyValium.Inspector.Controls
 
         #region IBenchmark
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BenchmarkPresenter Presenter
         {
             get;

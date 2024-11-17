@@ -72,7 +72,7 @@ namespace KeyValium.Inspector
             return ret;
         }
 
-        internal bool Add(short metaindex, KvPagenumber pageno, PageTypesI pagetype, int unusedspace)
+        internal bool Add(short metaindex, KvPagenumber pageno, PageTypesI pagetype, int unusedspace, RangeKind rk = RangeKind.FullBlock)
         {
             if (!ExistsPageNumber(pageno))
             {
@@ -90,7 +90,7 @@ namespace KeyValium.Inspector
                 return false;
             }
 
-            _map[metaindex].Add(pageno, new PageInfo() { PageNumber = pageno, PageType = pagetype, UnusedSpace = unusedspace });
+            _map[metaindex].Add(pageno, new PageInfo() { PageNumber = pageno, PageType = pagetype, UnusedSpace = unusedspace, RangeKind = rk });
 
             if (!_pagecounts.ContainsKey(metaindex))
             {
@@ -216,6 +216,34 @@ namespace KeyValium.Inspector
             }
 
             return 0;
+        }
+
+        internal RangeKind GetRangeKind(short metaindex, KvPagenumber pageno)
+        {
+            SortedDictionary<KvPagenumber, PageInfo> maindict = null;
+            SortedDictionary<KvPagenumber, PageInfo> metadict = null;
+
+            if (_map.ContainsKey(-1))
+            {
+                maindict = _map[-1];
+            }
+
+            if (_map.ContainsKey(metaindex))
+            {
+                metadict = _map[metaindex];
+            }
+
+            if (metadict != null && metadict.ContainsKey(pageno))
+            {
+                return metadict[pageno].RangeKind;
+            }
+
+            if (maindict != null && maindict.ContainsKey(pageno))
+            {
+                return maindict[pageno].RangeKind;
+            }
+
+            return RangeKind.FullBlock;
         }
     }
 }

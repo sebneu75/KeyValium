@@ -28,7 +28,7 @@ namespace KeyValium.Cache
             DbFile = db.DbFile;
             PageSize = db.Options.PageSize;
             Allocator = db.Allocator;
-            
+
             Encryptor = db.Encryptor;
 
             Validator = db.Validator;
@@ -58,7 +58,7 @@ namespace KeyValium.Cache
         /// <summary>
         /// The FileStream of the Database file
         /// </summary>
-        protected internal readonly FileStream DbFile;
+        internal readonly FileStream DbFile;
 
         /// <summary>
         /// The Encryptor
@@ -109,7 +109,7 @@ namespace KeyValium.Cache
             KvDebug.Assert(read == page.Bytes.Length, string.Format("Read length mismatch! ({0} != {1})", read, page.Bytes.Length));
 
             Encryptor.Decrypt(page);
-            
+
             if (createheader)
             {
                 page.CreateHeaderAndContent(null, 0);
@@ -216,20 +216,16 @@ namespace KeyValium.Cache
             }
         }
 
-        protected virtual void RemoveCachedPagesInternal(Transaction tx, PageRange range)
-        {
-            Perf.CallCount();
-
-            // do nothing by default
-        }
-
         internal void RemoveCachedPages(Transaction tx, PageRange range)
         {
             Perf.CallCount();
 
             lock (_seeklock)
             {
-                RemoveCachedPagesInternal(tx, range);
+                for (var pageno = range.First; pageno <= range.Last; pageno++)
+                {
+                    Cache.RemovePage(pageno);
+                }
             }
         }
 

@@ -3,6 +3,7 @@ using KeyValium.Inspector.MVP.Presenters;
 using KeyValium.Inspector.MVP.Views;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -57,6 +58,7 @@ namespace KeyValium.Inspector
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MainPresenter Presenter
         {
             get;
@@ -77,6 +79,9 @@ namespace KeyValium.Inspector
 
         public void SetMetas(IReadOnlyList<MetaInfo> metainfos, int? active)
         {
+            tsbMeta0.Checked = false;
+            tsbMeta1.Checked = false;
+
             if (metainfos == null)
             {
                 tsbMeta0.Enabled = false;

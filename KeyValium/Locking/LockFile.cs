@@ -1,4 +1,7 @@
-﻿using KeyValium.Options;
+﻿using KeyValium.Collections;
+using KeyValium.Options;
+using System.IO;
+using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -10,20 +13,17 @@ namespace KeyValium.Locking
         const int MAX_WRITERS = 1;
 
         const int READERSLOT = 1;
-        const int MAX_READERS = 1022;
-
-        internal const int ENTRY_SIZE = 64;
-        const int HEADER_SIZE = 64;
+        const int MAX_READERS = 62;
 
         /// <summary>
         /// Timeout in seconds
         /// </summary>
-        public const int TX_TIMEOUT = 600; // 10 Minutes transaction timeout
+        internal const int TX_TIMEOUT = 600; // 10 Minutes transaction timeout
 
         /// <summary>
         /// Grace period in seconds (adds to Timeout)
         /// </summary>
-        public const int TX_GRACE = 60; // 1 Minute grace period
+        const int TX_GRACE = 60; // 1 Minute grace period
 
         #region Constructor
 
@@ -37,31 +37,39 @@ namespace KeyValium.Locking
 
             Filename = db.Filename + ".lock";
 
-            FileLock = new FileLock(db, this);
-            
-            var fileoptions= FileOptions.None;
-
-            if (db.Options.InternalSharingMode == InternalSharingModes.SharedNetwork)
+            if (db.Options.InternalSharingMode == InternalSharingModes.SharedLocal)
             {
-                SelectedLock = FileLock;
-                fileoptions = Limits.FileFlagNoBuffering;
+                Lockable = new MutexLock(db);
+                FileOptions = FileOptions.None; // FileOptions.WriteThrough | Limits.FileFlagNoBuffering;
             }
-            else if (db.Options.InternalSharingMode == InternalSharingModes.SharedLocal)
+            else if (db.Options.InternalSharingMode == InternalSharingModes.SharedNetwork)
             {
-                SelectedLock = new MutexLock(db, this);
-                fileoptions = FileOptions.SequentialScan;
+                Lockable = new FileLock(db, this);
+
+                // necessary for files on network drives
+                FileOptions = FileOptions.WriteThrough | Limits.FileFlagNoBuffering;
             }
             else
             {
-                throw new KeyValiumException(ErrorCodes.InvalidParameter, "Unsupported sharing mode!");
+                throw new KeyValiumException(ErrorCodes.InvalidParameter, "Unsupported sharing mode.");
             }
 
-            _processid = Process.GetCurrentProcess().Id;
+            using (var proc = Process.GetCurrentProcess())
+            {
+                _processid = proc.Id;
+            }
+
             _machineid = GetMachineId();
+            _machinename = GetMachineName();
 
-            Filesize = HEADER_SIZE + (MAX_WRITERS + MAX_READERS) * ENTRY_SIZE;
+            Filesize = LockHeader.HEADER_SIZE + (MAX_WRITERS + MAX_READERS) * LockEntry.ENTRY_SIZE;
 
-            _lockfile = new FileStream(Filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, Filesize, fileoptions);
+            if (Filesize != 4096)
+            {
+                throw new KeyValiumException(ErrorCodes.InvalidParameter, "Lockfile size must be 4096.");
+            }
+
+            FileBuffer = new byte[Filesize];
 
             EnsureLockFile();
         }
@@ -72,55 +80,31 @@ namespace KeyValium.Locking
 
         internal readonly Database Database;
 
-        public readonly string Filename;
+        internal readonly string Filename;
 
-        public readonly int Filesize;
+        internal readonly int Filesize;
 
         internal readonly InternalSharingModes SharingMode;
 
-        private readonly FileStream _lockfile;
+        internal readonly FileOptions FileOptions;
 
-        internal readonly object LockObject = new object();
+        private FileStream _lockfile;
 
         private readonly byte[] _machineid;
 
+        private readonly byte[] _machinename;
+
         private readonly int _processid;
 
-        internal readonly FileLock FileLock;
+        internal readonly ILockable Lockable;
 
-        internal readonly ILockable SelectedLock;
+        private byte[] FileBuffer;
+
+        private bool IsFileBufferValid;
 
         #endregion
 
-        private byte[] GetMachineId()
-        {
-            Perf.CallCount();
-
-            var md5 = MD5.Create();
-            var ret = md5.ComputeHash(Encoding.UTF8.GetBytes(Environment.MachineName));
-
-            if (ret.Length != 16)
-            {
-                throw new KeyValiumException(ErrorCodes.InternalError, "MachineId length mismatch.");
-            }
-
-            return ret;
-        }
-
-        internal void Lock()
-        {
-            SelectedLock.Lock();
-        }
-
-        internal void Unlock()
-        {
-            SelectedLock.Unlock();
-        }
-
-        internal void ValidateLock(bool expected)
-        {
-            SelectedLock.ValidateLock(expected);
-        }
+        #region Lockfile creation
 
         /// <summary>
         /// creates and/or verifies the lockfile 
@@ -133,7 +117,10 @@ namespace KeyValium.Locking
 
             try
             {
-                FileLock.Lock();
+                // always use filelock
+                LockForCreation();
+
+                _lockfile = new FileStream(Filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, Filesize, FileOptions);
 
                 if (_lockfile.Length == 0)
                 {
@@ -154,82 +141,225 @@ namespace KeyValium.Locking
             }
             finally
             {
-                FileLock.Unlock();
+                UnlockForCreation();
             }
         }
+
+        #endregion
+
+        #region Reading and Writing the Lockfile 
 
         private void WriteHeader()
         {
             Perf.CallCount();
 
-            FileLock.ValidateLock(true);
+            var header = new LockHeader(FileBuffer.AsSpan().Slice(0, LockHeader.HEADER_SIZE));
 
-            var header = new byte[HEADER_SIZE];
+            header.Magic = Limits.Magic;
+            header.PageType = PageTypes.LockFile;
+            header.SharingMode = SharingMode;
+            header.MachineId = _machineid;
+            header.MachineName = _machinename;
+            header.LockGuid = GetLockGuid();
 
-            fixed (byte* ptr = header)
-            {
-                var span = new ByteSpan(ptr, HEADER_SIZE);
-                span.WriteUInt(0, Limits.Magic);
-                span.WriteUShort(0x04, PageTypes.LockFile);
-                span.WriteUShort(0x06, (ushort)SharingMode);
-                _machineid.CopyTo(span.Slice(0x10, _machineid.Length).Span);
-            }
+            // declare FileBuffer valid
+            IsFileBufferValid = true;
 
-            _lockfile.Seek(0, SeekOrigin.Begin);
-            _lockfile.Write(header, 0, HEADER_SIZE);
-            _lockfile.Flush();
+            WriteLockfile(true);
         }
 
         private void ValidateHeader()
         {
             Perf.CallCount();
 
-            FileLock.ValidateLock(true);
+            ReadLockfile(true);
 
-            if (_lockfile.Length < HEADER_SIZE)
+            var header = new LockHeader(FileBuffer.AsSpan().Slice(0, LockHeader.HEADER_SIZE));
+
+            if (header.Magic != Limits.Magic)
             {
-                throw new KeyValiumException(ErrorCodes.InvalidFileFormat, "Invalid lockfile.");
+                throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (Magic mismatch)");
             }
 
-            var header = new byte[HEADER_SIZE];
-
-            _lockfile.Flush();
-            _lockfile.Seek(0, SeekOrigin.Begin);
-            _lockfile.Read(header, 0, HEADER_SIZE);
-
-            fixed (byte* ptr = header)
+            if (header.PageType != PageTypes.LockFile)
             {
-                var span = new ByteSpan(ptr, HEADER_SIZE);
+                throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (Pagetype mismatch)");
+            }
 
-                var magic = span.ReadUInt(0x00);
-                var pagetype = span.ReadUShort(0x04);
-                var sharingmode = (InternalSharingModes)span.ReadUShort(0x06);
-                var machineid = span.Slice(0x10, _machineid.Length);
+            if (header.SharingMode != SharingMode)
+            {
+                throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (SharingMode mismatch)");
+            }
 
-                if (magic != Limits.Magic)
+            if (SharingMode == InternalSharingModes.SharedLocal)
+            {
+                if (!header.MachineId.SequenceEqual(_machineid))
                 {
-                    throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (Magic mismatch)");
+                    throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (MachineId mismatch)");
                 }
 
-                if (pagetype != PageTypes.LockFile)
+                if (header.LockGuid == Guid.Empty)
                 {
-                    throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (Pagetype mismatch)");
+                    throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (LockGuid is empty)");
+                }
+            }
+
+            // create secondary objects
+            Lockable.CreateLock(header.LockGuid);
+        }
+
+        private void ReadLockfile(bool iscreation)
+        {
+            Perf.CallCount();
+
+            if (iscreation)
+            {
+                ValidateCreationLock(true);
+            }
+            else
+            {
+                ValidateLock(true);
+            }
+
+            if (!IsFileBufferValid)
+            {
+                _lockfile.Flush();
+                _lockfile.Seek(0, SeekOrigin.Begin);
+                var bytesread = _lockfile.Read(FileBuffer);
+
+                if (bytesread != Filesize)
+                {
+                    throw new KeyValiumException(ErrorCodes.InternalError, "Lockfile size mismatch.");
                 }
 
-                if (sharingmode != SharingMode)
-                {
-                    throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (SharingMode mismatch)");
-                }
-
-                if (SharingMode == InternalSharingModes.SharedLocal)
-                {
-                    if (!machineid.Span.SequenceEqual(_machineid))
-                    {
-                        throw new KeyValiumException(ErrorCodes.InternalError, "Invalid lockfile. (MachineId mismatch)");
-                    }
-                }
+                IsFileBufferValid = true;
             }
         }
+
+        private void WriteLockfile(bool iscreation)
+        {
+            Perf.CallCount();
+
+            if (iscreation)
+            {
+                ValidateCreationLock(true);
+            }
+            else
+            {
+                ValidateLock(true);
+            }
+
+            if (!IsFileBufferValid)
+            {
+                throw new KeyValiumException(ErrorCodes.InternalError, "LockFile.FileBuffer not valid.");
+            }
+
+            _lockfile.Seek(0, SeekOrigin.Begin);
+            _lockfile.Write(FileBuffer);
+            _lockfile.Flush(true);
+        }
+
+        #endregion
+
+        #region Locking Wrappers
+
+        private void Lock()
+        {
+            ValidateLock(false);
+
+            Lockable.Lock();
+
+            // declare buffer invalid after getting the lock
+            IsFileBufferValid = false;
+
+            ValidateLock(true);
+        }
+
+        internal void Unlock()
+        {
+            ValidateLock(true);
+
+            Lockable.Unlock();
+
+            ValidateLock(false);
+        }
+
+        private void ValidateLock(bool expected)
+        {
+            Lockable.ValidateLock(expected);
+        }
+
+        private void LockForCreation()
+        {
+            ValidateCreationLock(false);
+
+            Lockable.LockForCreation();
+
+            // declare buffer invalid after getting the lock
+            IsFileBufferValid = false;
+
+            ValidateCreationLock(true);
+        }
+
+        internal void UnlockForCreation()
+        {
+            ValidateCreationLock(true);
+
+            Lockable.UnlockForCreation();
+
+            ValidateCreationLock(false);
+        }
+
+        private void ValidateCreationLock(bool expected)
+        {
+            Lockable.ValidateCreationLock(expected);
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private Guid GetLockGuid()
+        {
+            switch (SharingMode)
+            {
+                case InternalSharingModes.SharedLocal:
+                    return Guid.NewGuid();
+            }
+
+            return Guid.Empty;
+        }
+
+        private byte[] GetMachineId()
+        {
+            Perf.CallCount();
+
+            var md5 = MD5.Create();
+            var ret = md5.ComputeHash(Encoding.UTF8.GetBytes(Environment.MachineName));
+
+            if (ret.Length != 16)
+            {
+                throw new KeyValiumException(ErrorCodes.InternalError, "MachineId length mismatch.");
+            }
+
+            return ret;
+        }
+
+        private byte[] GetMachineName()
+        {
+            Perf.CallCount();
+
+            var ret = new byte[16];
+
+            var val = Environment.MachineName ?? "";
+            var buf = Encoding.UTF8.GetBytes(val);
+
+            buf.AsSpan().Slice(0, Math.Min(buf.Length, 16)).CopyTo(ret.AsSpan());
+
+            return ret;
+        }
+
+        #endregion
 
         internal KvTid GetMinTid()
         {
@@ -241,9 +371,9 @@ namespace KeyValium.Locking
 
             for (int i = 0; i < MAX_READERS + MAX_WRITERS; i++)
             {
-                var entry = ReadLockEntry(i);
+                var entry = GetLockEntry(i);
 
-                if (entry.Type != 0 && entry.Tid < mintid)
+                if (entry.Type != LockEntryTypes.Free && entry.Tid < mintid)
                 {
                     mintid = entry.Tid;
                 }
@@ -265,7 +395,7 @@ namespace KeyValium.Locking
                     Lock();
 
                     // check if writer slot is empty or expired
-                    var entry = ReadLockEntry(WRITERSLOT);
+                    var entry = GetLockEntry(WRITERSLOT);
                     if (IsFreeOrExpired(entry))
                     {
                         Logger.LogInfo(LogTopics.Lock, "WaitForWriterSlot succeeded.");
@@ -275,6 +405,9 @@ namespace KeyValium.Locking
                     Unlock();
 
                     Logger.LogInfo(LogTopics.Lock, "Waiting for WriterSlot...");
+
+                    // wait if no writer found
+                    Thread.Sleep(Database.Options.LockInterval);
                 }
             }
             catch (Exception)
@@ -290,46 +423,40 @@ namespace KeyValium.Locking
 
             ValidateLock(true);
 
-            if (entry.Type == 0)
+            if (entry.Type == LockEntryTypes.Free)
             {
                 return true;
             }
 
             if (DateTime.UtcNow > entry.ExpiresUtc.AddSeconds(TX_GRACE))
             {
-                entry.Type = 0;
-                WriteLockEntry(entry); // TODO check if necessary
+                entry.Clear();
+                WriteLockEntry(entry); // update Lockfile
+
                 return true;
             }
 
             return false;
         }
 
-        private LockEntry ReadLockEntry(int index)
+        private LockEntry GetLockEntry(int index)
         {
             Perf.CallCount();
 
-            ValidateLock(true);
+            ReadLockfile(false);
 
-            _lockfile.Flush();
-            _lockfile.Seek(HEADER_SIZE + index * ENTRY_SIZE, SeekOrigin.Begin);
-            var bytes = new byte[ENTRY_SIZE];
-            _lockfile.Read(bytes, 0, ENTRY_SIZE);
+            var span = FileBuffer.AsSpan().Slice(LockHeader.HEADER_SIZE + index * LockEntry.ENTRY_SIZE, LockEntry.ENTRY_SIZE);
 
-            return new LockEntry(bytes, index);
+            return new LockEntry(span, index);
         }
 
         private void WriteLockEntry(LockEntry entry)
         {
             Perf.CallCount();
 
-            ValidateLock(true);
+            WriteLockfile(false);
 
-            _lockfile.Seek(HEADER_SIZE + entry.Index * ENTRY_SIZE, SeekOrigin.Begin);
-            _lockfile.Write(entry._data.Span);
-            _lockfile.Flush(true);
-
-            Logger.LogInfo(LogTopics.Lock, "LockEntry written: {0}", entry);
+            Logger.LogInfo(LogTopics.Lock, "LockEntry written: {0}", entry.ToString());
         }
 
         internal void AddWriter(Transaction tx)
@@ -338,18 +465,20 @@ namespace KeyValium.Locking
 
             ValidateLock(true);
 
-            var entry = ReadLockEntry(WRITERSLOT);
-            if (entry.Type != 0)
+            var entry = GetLockEntry(WRITERSLOT);
+
+            if (entry.Type != LockEntryTypes.Free)
             {
                 throw new InvalidOperationException("Writer slot is not free.");
             }
 
-            entry.Type = 0x02;
-            _machineid.CopyTo(entry.MachineId);
+            entry.Type = LockEntryTypes.Writer;
+            entry.MachineId = _machineid;
             entry.ProcessId = _processid;
             entry.Oid = tx.Root.Oid;
             entry.Tid = tx.Tid;
             entry.ExpiresUtc = tx.ExpiresUtc;
+            entry.MachineName = _machinename;
 
             WriteLockEntry(entry);
         }
@@ -364,9 +493,18 @@ namespace KeyValium.Locking
             {
                 Lock();
 
-                var entry = tx.IsReadOnly ? FindReaderEntry(tx) : FindWriterEntry(tx);
+                LockEntry entry;
+                var found = false;
+                if (tx.IsReadOnly)
+                {
+                    found = TryFindReaderEntry(tx, out entry);
+                }
+                else
+                {
+                    found = TryFindWriterEntry(tx, out entry);
+                }
 
-                if (entry == null)
+                if (!found)
                 {
                     throw new KeyValiumException(0, "Transaction timed out.");
                 }
@@ -383,52 +521,56 @@ namespace KeyValium.Locking
             }
         }
 
-        private LockEntry FindWriterEntry(Transaction tx)
+        private bool TryFindWriterEntry(Transaction tx, out LockEntry entry)
         {
             Perf.CallCount();
 
             ValidateLock(true);
 
-            var entry = ReadLockEntry(WRITERSLOT);
+            entry = GetLockEntry(WRITERSLOT);
             if (IsMatch(entry, tx))
             {
-                return entry;
+                return true;
             }
 
-            return null;
+            return false;
         }
 
         /// <summary>
         /// Finds a reader slot. if tx is null it returns the first free slot
         /// </summary>
         /// <param name="tx"></param>
-        /// <returns></returns>
-        private LockEntry FindReaderEntry(Transaction tx)
+        /// <param name="entry">the entry, only valid if returns true</param>
+        /// <returns>false if no free slot has been found, otherwise false</returns>
+        private bool TryFindReaderEntry(Transaction tx, out LockEntry entry)
         {
             Perf.CallCount();
 
             ValidateLock(true);
 
+            // to satisfy compiler
+            entry = GetLockEntry(READERSLOT);
+
             for (int i = READERSLOT; i < READERSLOT + MAX_READERS; i++)
             {
-                var entry = ReadLockEntry(i);
+                entry = GetLockEntry(i);
                 if (tx == null)
                 {
                     if (IsFreeOrExpired(entry))
                     {
-                        return entry;
+                        return true;
                     }
                 }
                 else
                 {
                     if (IsMatch(entry, tx))
                     {
-                        return entry;
+                        return true;
                     }
                 }
             }
 
-            return null;
+            return false;
         }
 
         internal void WaitForReaderSlot()
@@ -443,9 +585,8 @@ namespace KeyValium.Locking
                 {
                     Lock();
 
-                    // check if reader slot is empty or expired
-                    var entry = FindReaderEntry(null);
-                    if (entry != null)
+                    // find empty reader slot
+                    if (TryFindReaderEntry(null, out var entry))
                     {
                         return;
                     }
@@ -453,6 +594,9 @@ namespace KeyValium.Locking
                     Unlock();
 
                     Logger.LogInfo(LogTopics.Lock, "Waiting for ReaderSlot...");
+
+                    // wait if no reader found
+                    Thread.Sleep(Database.Options.LockInterval);
                 }
             }
             catch (Exception)
@@ -468,12 +612,12 @@ namespace KeyValium.Locking
 
             if (tx.IsReadOnly)
             {
-                if (entry.Type != 0x01)
+                if (entry.Type != LockEntryTypes.Reader)
                     return false;
             }
             else
             {
-                if (entry.Type != 0x02)
+                if (entry.Type != LockEntryTypes.Writer)
                     return false;
             }
 
@@ -497,6 +641,11 @@ namespace KeyValium.Locking
                 return false;
             }
 
+            if (entry.MachineName.SequenceCompareTo(_machinename) != 0)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -506,18 +655,18 @@ namespace KeyValium.Locking
 
             ValidateLock(true);
 
-            var entry = FindReaderEntry(null);
-            if (entry == null)
+            if (!TryFindReaderEntry(null, out var entry))
             {
                 throw new InvalidOperationException("Reader slot is not free.");
             }
 
-            entry.Type = 0x01;
-            _machineid.CopyTo(entry.MachineId);
+            entry.Type = LockEntryTypes.Reader;
+            entry.MachineId = _machineid;
             entry.ProcessId = _processid;
             entry.Oid = tx.Root.Oid;
             entry.Tid = tx.Tid;
             entry.ExpiresUtc = tx.ExpiresUtc;
+            entry.MachineName = _machinename;
 
             WriteLockEntry(entry);
         }
@@ -530,14 +679,25 @@ namespace KeyValium.Locking
 
             try
             {
-                var entry = tx.IsReadOnly ? FindReaderEntry(tx) : FindWriterEntry(tx);
-                if (entry == null)
+                LockEntry entry;
+                var found = false;
+                if (tx.IsReadOnly)
                 {
-                    throw new KeyValiumException(0, "LockEntry not found.");
+                    found = TryFindReaderEntry(tx, out entry);
+                }
+                else
+                {
+                    found = TryFindWriterEntry(tx, out entry);
                 }
 
-                entry.Type = 0x00;
-                this.WriteLockEntry(entry);
+                if (!found)
+                {
+                    throw new KeyValiumException(ErrorCodes.InternalError, "LockEntry not found.");
+                }
+
+                entry.Clear();
+
+                WriteLockEntry(entry);
             }
             finally
             {
@@ -559,9 +719,8 @@ namespace KeyValium.Locking
                 {
                     // TODO: Verwalteten Zustand (verwaltete Objekte) bereinigen
 
-                    FileLock.Dispose();
-                    SelectedLock.Dispose();
-                    _lockfile.Dispose();
+                    Lockable.Dispose();
+                    _lockfile?.Dispose();
 
                     try
                     {

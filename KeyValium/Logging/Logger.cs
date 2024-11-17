@@ -10,23 +10,30 @@ namespace KeyValium.Logging
             _instance = new NullLogger();
         }
 
-        internal static LogTopics Topics
+        static object _lock = new object();
+
+        [Conditional("DEBUG")]
+        internal static void CreateInstance(string dbfile, LogLevel level, LogTopics topics)
         {
-            get
+            lock (_lock)
             {
-                return _instance.Topics;
-            }
-            set
-            {
-                _instance.Topics = value;
+                if (!(_instance is FileLogger))
+                {
+                    var logfilename = "";
+                    using (var proc = Process.GetCurrentProcess())
+                    {
+                        logfilename = string.Format("{0}.{1}.{2}.log", dbfile, Environment.MachineName, proc.Id);
+                    }
+
+                    _instance = new FileLogger(logfilename, level, topics);
+                }
             }
         }
 
         [Conditional("DEBUG")]
-        internal static void CreateInstance(string path, LogLevel level, LogTopics topics)
+        internal static void SetThreadName(string name)
         {
-            _instance = new FileLogger(path, level);
-            _instance.Topics = topics;
+            _instance.SetThreadName(name);
         }
 
         private static ILogger _instance;

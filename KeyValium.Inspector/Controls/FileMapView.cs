@@ -3,6 +3,7 @@ using KeyValium.Inspector.MVP.Presenters;
 using KeyValium.Inspector.MVP.Views;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
@@ -18,6 +19,7 @@ namespace KeyValium.Inspector.Controls
 
         #region IFileMapView
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FileMapPresenter Presenter
         {
             get;

@@ -2,11 +2,7 @@
 {
     internal interface ILogger
     {
-        LogTopics Topics
-        {
-            get;
-            set;
-        }
+        void SetThreadName(string name);
 
         void LogDebug(LogTopics topics, string format, params object[] args);
 

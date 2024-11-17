@@ -22,10 +22,12 @@ namespace KeyValium.Inspector.Controls
         public static readonly Color DataIndex = Color.LightSteelBlue;
         public static readonly Color DataLeaf = Color.SteelBlue;
 
-        public static readonly Color DataOverflow = Color.Magenta;
-        public static readonly Color DataOverFlowCont = Color.DarkMagenta;
+        public static readonly Color DataOverflow = Color.DeepSkyBlue;
+        public static readonly Color DataOverFlowCont = Color.DeepSkyBlue;
 
         public static readonly Color Border = Color.Black;
+        public static readonly Color Arrow = Color.Gray;
+
         public static readonly Color SelectedBorder = Color.BlueViolet;
 
         public static readonly Color FontForeGround = Color.Black;

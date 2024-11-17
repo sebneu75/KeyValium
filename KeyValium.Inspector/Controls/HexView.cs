@@ -19,6 +19,7 @@ namespace KeyValium.Inspector.Controls
         private PageMap _pagemap;
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal PageMap PageMap
         {
             get
@@ -38,6 +39,7 @@ namespace KeyValium.Inspector.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal TextRange HighLightedRange
         {
             get
@@ -56,6 +58,7 @@ namespace KeyValium.Inspector.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal TextRange SelectedRange
         {
             get

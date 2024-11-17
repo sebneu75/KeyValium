@@ -4,6 +4,7 @@ using KeyValium.Inspector.MVP.Presenters;
 using KeyValium.Inspector.MVP.Views;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Reflection.PortableExecutable;
@@ -22,6 +23,7 @@ namespace KeyValium.Inspector.Controls
 
         #region IFreeSpaceView
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FreeSpacePresenter Presenter
         {
             get;

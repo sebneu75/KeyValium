@@ -21,6 +21,7 @@ namespace KeyValium.Inspector
 
         private string _dbfile;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DbFile
         {
             get
@@ -34,6 +35,7 @@ namespace KeyValium.Inspector
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Password
         {
             get
@@ -46,6 +48,7 @@ namespace KeyValium.Inspector
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Keyfile
         {
             get

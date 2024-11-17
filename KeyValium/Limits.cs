@@ -116,7 +116,9 @@ namespace KeyValium
             }
         }
 
-        // Maximum size of metadata per data leaf entry (currently 32 Bytes)
+        /// <summary>
+        /// Maximum size of metadata per data leaf entry (currently 32 Bytes)
+        /// </summary>
         internal const int MaxMetaDataSizePerEntry = sizeof(ushort) +           // Flags
                                                      sizeof(ushort) +           // KeyLength
                                                      sizeof(KvPagenumber) +     // Subtree

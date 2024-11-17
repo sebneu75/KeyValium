@@ -1,39 +1,38 @@
 ﻿using System.Text;
+using System.Xml.Linq;
 
 namespace KeyValium.Logging
 {
     internal class FileLogger : ILogger
     {
-        public FileLogger(string path, LogLevel level)
+        public FileLogger(string path, LogLevel level, LogTopics topics)
         {
             Logfile = path;
             Level = level;
-
-            _procid = Process.GetCurrentProcess().Id;
-
-            Topics = LogTopics.All;
+            Topics = topics;
         }
 
-        public LogTopics Topics
-        {
-            get;
-            set;
-        }
-
-        private int _procid;
+        public readonly LogTopics Topics;
 
         private static object _lock = new object();
 
-        public string Logfile
-        {
-            get;
-            private set;
-        }
+        public readonly string Logfile;
 
-        public LogLevel Level
+        public readonly LogLevel Level;
+
+        private static Dictionary<int, string> _threadnames = new();
+
+        public void SetThreadName(string name)
         {
-            get;
-            private set;
+            var threadid = Thread.CurrentThread.ManagedThreadId;
+
+            lock (_lock)
+            {
+                if (!_threadnames.TryAdd(threadid, name))
+                {
+                    _threadnames[threadid] = name;
+                }
+            }
         }
 
         private void Log(KvTid? tid, LogLevel level, LogTopics topic, Exception ex, string format, params object[] args)
@@ -46,34 +45,50 @@ namespace KeyValium.Logging
                 return;
             }
 
-            var threadid = Thread.CurrentThread.ManagedThreadId;
-
-            if (format == null)
+            try
             {
-                format = ex?.Message;
-            }
-
-            var msg1 = string.Format(format, args);
-            var msg2 = string.Format("{0:yyyy-MM-dd_HH:mm:ss.ffffff} {1}.{2} Tx{3} {4} [{5}] {6}", DateTime.Now, _procid, threadid, tid.HasValue ? tid.Value : "-", level, topic, msg1);
-
-            string exmsg = null;
-
-            if (ex != null)
-            {
-                exmsg = ex.ToString();
-                exmsg = "    " + exmsg.Trim().Replace("\n", "\n    ");
-            }
-
-            lock (_lock)
-            {
-                using (var writer = new StreamWriter(Logfile, true, Encoding.UTF8))
+                if (format == null)
                 {
-                    writer.WriteLine(msg2);
-                    if (exmsg != null)
+                    format = ex?.Message;
+                }
+
+                var threadid = Thread.CurrentThread.ManagedThreadId;
+                var threadname = threadid.ToString();
+
+                lock (_lock)
+                {
+                    if (_threadnames.TryGetValue(threadid, out var name))
                     {
-                        writer.WriteLine(exmsg);
+                        threadname = name;
                     }
                 }
+
+                var msg1 = string.Format(format, args);
+                var msg2 = string.Format("{0:yyyy-MM-dd_HH:mm:ss.ffffff} {1} Tx{2} {3} [{4}] {5}", DateTime.Now, threadname, tid.HasValue ? tid.Value : "-", level, topic, msg1);
+
+                string exmsg = null;
+
+                if (ex != null)
+                {
+                    exmsg = ex.ToString();
+                    exmsg = "    " + exmsg.Trim().Replace("\n", "\n    ");
+                }
+
+                lock (_lock)
+                {
+                    using (var writer = new StreamWriter(Logfile, true, Encoding.UTF8))
+                    {
+                        writer.WriteLine(msg2);
+                        if (exmsg != null)
+                        {
+                            writer.WriteLine(exmsg);
+                        }
+                    }
+                }
+            }
+            catch(Exception exc)
+            {
+                Console.WriteLine("Error logging: {0}", exc);
             }
         }
 

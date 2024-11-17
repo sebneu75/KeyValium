@@ -111,7 +111,12 @@ namespace KeyValium.Cache
                 // copy writecache to cache
                 _writecache.CopyTo(Cache);
 
-                // TODO update Tid on cached pages
+                // Update Tid on cached pages
+                // Don't do that because it will mess up the lifetime of freed pages.
+                // If the freed page is reused by another machine it will still appear to be valid because
+                // its Tid will fall in the range of active transactions
+
+                // TODO check if it works to remove freed pages from the cache
                 Cache.UpdateTids(sourcetid, tid);
             }
             catch (Exception)

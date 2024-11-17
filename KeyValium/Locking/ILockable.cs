@@ -13,5 +13,13 @@ namespace KeyValium.Locking
         void Unlock();
 
         void ValidateLock(bool expected);
+
+        void LockForCreation();
+
+        void UnlockForCreation();
+
+        void ValidateCreationLock(bool expected);
+
+        void CreateLock(Guid guid);        
     }
 }

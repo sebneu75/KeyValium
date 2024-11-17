@@ -19,5 +19,11 @@
             get;
             internal set;
         }
+
+        public RangeKind RangeKind
+        {
+            get;
+            internal set;
+        }
     }
 }
