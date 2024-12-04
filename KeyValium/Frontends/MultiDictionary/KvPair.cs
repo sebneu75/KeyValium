@@ -1,12 +1,8 @@
-﻿using KeyValium.Frontends.Serializers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
-namespace KeyValium.Frontends
+namespace KeyValium.Frontends.MultiDictionary
 {
+    [StructLayout(LayoutKind.Auto)]
     internal struct KvPair<TKey, TValue>
     {
         internal KvPair(TKey key, TValue value)

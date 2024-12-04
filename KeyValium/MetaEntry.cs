@@ -1,5 +1,8 @@
-﻿namespace KeyValium
+﻿using System.Runtime.InteropServices;
+
+namespace KeyValium
 {
+    [StructLayout(LayoutKind.Auto)]
     internal struct MetaEntry
     {
         internal MetaEntry(KvPagenumber pageno, KvTid tid, KvPagenumber dataroot, KvPagenumber fsroot, KvPagenumber lastpage,

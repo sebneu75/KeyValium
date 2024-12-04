@@ -1,20 +1,9 @@
-﻿using KeyValium.Collections;
-using KeyValium.Cursors;
-using KeyValium.Frontends.Serializers;
+﻿using KeyValium.Frontends.Serializers;
 using KeyValium.Iterators;
-using KeyValium.Logging;
-using KeyValium.Pages.Entries;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace KeyValium.Frontends
+namespace KeyValium.Frontends.MultiDictionary
 {
     /// <summary>
     /// A persistent dictionary of TKey and TValue.

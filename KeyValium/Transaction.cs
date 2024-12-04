@@ -592,7 +592,7 @@ namespace KeyValium
                             if (cursor.SetPosition(key))
                             {
                                 // save subtree info
-                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno);
+                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno, out _);
                                 if (ovpageno != 0)
                                 {
                                     // mark overflow pages as free
@@ -740,7 +740,7 @@ namespace KeyValium
                             if (cursor.SetPosition(key))
                             {
                                 // save subtree info
-                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno);
+                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno, out _);
                                 if (ovpageno != 0)
                                 {
                                     // mark overflow pages as free
@@ -1009,7 +1009,7 @@ namespace KeyValium
                             if (cursor.SetPosition(key))
                             {
                                 // save subtree info
-                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno);
+                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno, out _);
                                 if (ovpageno != 0)
                                 {
                                     // mark overflow pages as free
@@ -1036,9 +1036,137 @@ namespace KeyValium
 
                                 SpillCheck();
                             }
+
+                            return ret;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Fail();
+
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(LogTopics.DataAccess, Tid, ex);
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Moves a key to another subtree and/or renames the key. Overflow values and Subtrees are saved.
+        /// </summary>
+        /// <param name="sourcekey"></param>
+        /// <param name="val"></param>
+        /// <returns>true, if the key has been inserted otherwise false</returns>
+        public void Move(TreeRef sourceref, ReadOnlySpan<byte> sourcekey, TreeRef targetref, ReadOnlySpan<byte> targetkey)
+        {
+            Perf.CallCount();
+
+            lock (TxLock)
+            {
+                try
+                {
+                    Validate(true);
+
+                    // Exists() validates the source treeref and the source key
+                    if (!Exists(sourceref, sourcekey))
+                    {
+                        throw new KeyValiumException(ErrorCodes.KeyNotFound, "The source key does not exist.");
+                    }
+
+                    // Exists() validates the target treeref and the target key
+                    if (Exists(targetref, targetkey))
+                    {
+                        throw new KeyValiumException(ErrorCodes.KeyAlreadyExists, "The target key already exists.");
+                    }
+
+                    try
+                    {
+                        EntryExtern newentry;
+                        KvPagenumber sourcepageno;
+                        int sourceindex = -1;
+
+                        // read source data
+                        using (var cursor = GetDataCursor(sourceref))
+                        {
+                            if (cursor.SetPosition(sourcekey))
+                            {
+                                // save subtree info
+                                cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno, out var ovlength);
+
+                                var valref = cursor.GetCurrentValue();
+
+                                ValInfo newval = new ValInfo();
+
+                                if (valref.IsInlineValue)
+                                {
+                                    newval = new ValInfo(valref.Value);
+                                }
+
+                                // create new entry
+                                newentry = new EntryExtern(targetkey, newval, subtree, tc, lc, ovpageno, ovlength);
+                            }
+                            else
+                            {
+                                throw new KeyValiumException(ErrorCodes.KeyNotFound, "The source key does not exist.");
+                            }
+
+                            // save pageinfo for cursor tracking
+                            cursor.CurrentPath.MoveLast();
+                            ref var current = ref cursor.CurrentPath.CurrentItem;
+
+                            sourcepageno = current.Page.PageNumber;
+                            sourceindex = current.KeyIndex;
                         }
 
-                        return ret;
+                        // write target data
+                        using (var cursor = GetDataCursor(targetref))
+                        {
+                            if (cursor.SetPosition(targetkey))
+                            {
+                                throw new KeyValiumException(ErrorCodes.KeyAlreadyExists, "The target key already exists.");
+                            }
+                            else
+                            {
+                                cursor.InsertKey(ref newentry);
+
+                                KvDebug.ValidateCursor2(this, cursor, targetref, targetkey);
+
+                                // TODO test, remove cast
+                                // update counts
+                                cursor.UpdateCount((long)newentry.TotalCount, 0);
+
+                                // cursor tracking
+                                ATOMoveKey(cursor, sourcepageno, sourceindex, targetref, cursor);
+                            }
+                        }
+
+                        // source data must be deleted last because of cursor tracking
+                        // delete source data
+                        using (var cursor = GetDataCursor(sourceref))
+                        {
+                            if (cursor.SetPosition(sourcekey))
+                            {
+                                cursor.DeleteKey();
+
+                                // TODO test, remove cast
+                                // update counts
+                                cursor.UpdateCount(-(long)newentry.TotalCount, 0);
+                            }
+                            else
+                            {
+                                throw new KeyValiumException(ErrorCodes.KeyNotFound, "The source key does not exist.");
+                            }
+
+                            KvDebug.ValidateCursor2(this, cursor, sourceref, sourcekey, cursor.DeleteHandling);
+                        }
+
+                        Version++;
+
+                        SpillCheck();
                     }
                     catch (Exception ex)
                     {
@@ -2533,7 +2661,7 @@ namespace KeyValium
 
         /// <summary>
         /// Returns a reference to a sub tree. 
-        /// Throws an execption if one of the keys does not exist or does not have the subtree-flag.
+        /// Throws an exception if one of the keys does not exist or does not have the subtree-flag.
         /// </summary>
         /// <param name="scope">The tracking scope.</param>
         /// <param name="keys">Path to the sub tree.</param>
@@ -2585,6 +2713,82 @@ namespace KeyValium
                     treeref.CopyKeys(keys);
 
                     return treeref;
+                }
+                catch (Exception ex)
+                {
+                    treeref?.Dispose();
+
+                    Logger.LogError(LogTopics.Cursor, Tid, ex);
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns a reference to a sub tree. 
+        /// Throws an exception if one of the keys does not exist or does not have the subtree-flag.
+        /// </summary>
+        /// <param name="scope">The tracking scope.</param>
+        /// <param name="keys">Path to the sub tree.</param>
+        /// <returns>Reference to the sub tree.</returns>
+        public bool TryGetTreeRef(TrackingScope scope, out TreeRef treeref, params ReadOnlyMemory<byte>[] keys)
+        {
+            Perf.CallCount();
+
+            if (keys == null || keys.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(keys));
+            }
+
+            lock (TxLock)
+            {
+                treeref = null;
+                var found = true;
+
+                try
+                {
+                    Validate(false);
+
+                    foreach (var key in keys)
+                    {
+                        var keyspan = key.Span;
+
+                        ValidateKey(ref keyspan);
+
+                        using (var cursor = GetDataCursor(treeref))
+                        {
+                            if (cursor.SetPosition(keyspan))
+                            {
+                                if (cursor.CurrentHasSubtreeFlag())
+                                {
+                                    treeref ??= new TreeRef(this, scope);
+                                    treeref.AddNodes(cursor.CurrentPath);
+                                }
+                                else
+                                {
+                                    found = false;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                found = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        treeref?.Dispose();
+                        treeref = TreeRef.Invalid;
+
+                        return found;
+                    }
+
+                    treeref.CopyKeys(keys);
+
+                    return found;
                 }
                 catch (Exception ex)
                 {
@@ -3432,6 +3636,17 @@ namespace KeyValium
             //Database.Tracker.AdjustCursors(this, excluded, x => x.AdjustInsertKey(pageno, keyindex));
 
             Database.Tracker.ATOInsertKey(this, excluded, pageno, keyindex);
+        }
+
+        internal void ATOMoveKey(Cursor excluded, KvPagenumber pageno, int keyindex, TreeRef newtreeref, Cursor newcursor)
+        {
+            Perf.CallCount();
+
+            Logger.LogDebug(LogTopics.Tracking, Tid, "ATOMoveKey pageno={0} keyindex={1}", pageno, keyindex);
+
+            //Database.Tracker.AdjustCursors(this, excluded, x => x.AdjustInsertKey(pageno, keyindex));
+
+            Database.Tracker.ATOMoveKey(this, excluded, pageno, keyindex, newtreeref, newcursor);
         }
 
         internal void ATOUpdateKey(Cursor excluded, KvPagenumber pageno, int keyindex)

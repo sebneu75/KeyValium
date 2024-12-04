@@ -12,6 +12,23 @@ namespace KeyValium
         private static ulong OidCounter = 0;
 
         /// <summary>
+        /// Invalid TreeRef
+        /// </summary>
+        public static readonly TreeRef Invalid = new TreeRef();
+
+        /// <summary>
+        /// Constructor for invalid TreeRef
+        /// </summary>
+        private TreeRef()
+        {
+            Scope = TrackingScope.TransactionChain;
+            Database = null;
+            Oid = 0;
+            Cursor = null;
+            _isdisposed = true;
+        }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="tx">the transaction.</param>
@@ -62,7 +79,7 @@ namespace KeyValium
                     return TreeRefState.Suspended;
                 }
 
-                if (Cursor.CurrentPath == null)
+                if (Cursor.CurrentPath == null || !Cursor.CurrentPath.IsValid)
                 {
                     return TreeRefState.Inactive;
                 }
@@ -97,19 +114,19 @@ namespace KeyValium
 
                     if (tx.Oid != Cursor.CurrentTransaction.Oid)
                     {
-                        throw new NotSupportedException("KeyRef does not belong to Transaction");
+                        throw new KeyValiumException(ErrorCodes.InvalidCursor, "TreeRef does not belong to Transaction");
                     }
 
                     break;
 
                 case TreeRefState.Inactive:
-                    throw new NotSupportedException("KeyRef is inactive.");
+                    throw new KeyValiumException(ErrorCodes.InvalidCursor, "TreeRef is inactive.");
 
                 case TreeRefState.Suspended:
-                    throw new NotSupportedException("KeyRef is suspended.");
+                    throw new KeyValiumException(ErrorCodes.InvalidCursor, "TreeRef is suspended.");
 
                 case TreeRefState.Disposed:
-                    throw new ObjectDisposedException("KeyRef is already disposed.");
+                    throw new ObjectDisposedException("TreeRef is already disposed.");
             }
         }
 
@@ -260,7 +277,7 @@ namespace KeyValium
                 {
                     Database.Tracker.Remove(this);
 
-                    Cursor?.Dispose();                    
+                    Cursor?.Dispose();
                 }
 
                 // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben

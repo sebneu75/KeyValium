@@ -5,11 +5,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace KeyValium
 {
+    [StructLayout(LayoutKind.Auto)]
     internal unsafe struct ByteSpan
     {
         internal ByteSpan(byte* pointer, int length)

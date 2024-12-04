@@ -1,9 +1,12 @@
 ﻿
+using System.Runtime.InteropServices;
+
 namespace KeyValium.Collections
 {
     /// <summary>
     /// represents an entry in the page cache
     /// </summary>
+    [StructLayout(LayoutKind.Auto)]
     internal struct PageRef
     {
         /// <summary>

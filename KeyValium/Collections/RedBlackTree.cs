@@ -10,6 +10,7 @@
 */
 
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace KeyValium.Collections
@@ -1130,6 +1131,7 @@ namespace KeyValium.Collections
 
         #region TreeNode
 
+        [StructLayout(LayoutKind.Auto)]
         internal struct TreeNode
         {
             public T Item;

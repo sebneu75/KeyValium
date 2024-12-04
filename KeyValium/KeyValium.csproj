@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net9.0;net8.0;net7.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -13,14 +13,16 @@
     <Configurations>Debug;Release;Performance;CallCounts</Configurations>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>KeyValium</Title>
-    <Version>0.6.0</Version>
+    <Version>0.6.1</Version>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>KeyValium is a very fast key value store for DotNet.</Description>
     <Authors>sebneu75</Authors>
     <PackageTags>database;nosql;embedded;persistence;key value store;</PackageTags>
-    <PackageReleaseNotes>- fixed an error in SharingModes.SharedLocal that could cause database corruption
-- SharingModes.SharedNetwork seems to work now
+    <PackageReleaseNotes>- new Frontend TreeArray that shall work like GT.M (MUMPS) Globals (not finished yet)
+- new method Transaction.Move() to rename and/or move keys to different subtrees while keeping 
+  subtrees and overflow pages intact
+- minor bugfixes
 </PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
@@ -60,6 +62,7 @@
 
   <ItemGroup>
     <Compile Remove="Cache\ExclusiveMMPageProvider.cs" />
+    <Compile Remove="Frontends\TreeArray\KvArray.cs" />
     <Compile Remove="Iterators\KeyIteratorOld.cs" />
   </ItemGroup>
 
@@ -76,6 +79,7 @@
       <PackagePath>\</PackagePath>
     </None>
     <None Include="Cache\ExclusiveMMPageProvider.cs" />
+    <None Include="Frontends\TreeArray\KvArray.cs" />
     <None Include="Iterators\KeyIteratorOld.cs" />
   </ItemGroup>
 

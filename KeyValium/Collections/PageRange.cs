@@ -1,6 +1,9 @@
 ﻿
+using System.Runtime.InteropServices;
+
 namespace KeyValium.Collections
 {
+    [StructLayout(LayoutKind.Auto)]
     internal struct PageRange : IComparable<PageRange>
     {
         internal static readonly PageRange Empty = new PageRange(KvPagenumber.MaxValue, 0);

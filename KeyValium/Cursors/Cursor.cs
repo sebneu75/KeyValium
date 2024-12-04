@@ -343,6 +343,32 @@ namespace KeyValium.Cursors
 
         #region Cursor Adjustments
 
+        internal bool AdjustMoveKey(KvPagenumber oldpageno, int keyindex, TreeRef newtreeref, Cursor newcursor)
+        {
+            Perf.CallCount();
+
+            var changed = false;
+
+            KvDebug.Assert(Monitor.IsEntered(CurrentTransaction.TxLock), "Write lock not held!");
+
+            for (int i = CurrentPath.First; i <= CurrentPath.Last; i++)
+            {
+                ref var node = ref CurrentPath.GetNode(i);
+
+                if (node.Page.PageNumber == oldpageno && node.KeyIndex == keyindex)
+                {
+                    // Invalidate current path if page and keyindex of moved key is found
+                    // cannot be tracked with the current design because the same TreeRef may be used to point to different keys
+                    // TreeRefs are currently public and references outside the library cannot be updated
+                    CurrentPath.Invalidate();
+                    changed = true;
+                    break;
+                }
+            }
+
+            return changed;
+        }
+
         internal bool AdjustDirty(AnyPage oldpage, AnyPage newpage)
         {
             Perf.CallCount();
@@ -883,6 +909,12 @@ namespace KeyValium.Cursors
                     }
                     else
                     {
+                        // optionally adjust for insert
+                        //if (!exact && index == cpage.Header.KeyCount)
+                        //{
+                        //    MoveToNextKey();
+                        //}
+
                         return exact;
                     }
                 }
@@ -1437,7 +1469,7 @@ namespace KeyValium.Cursors
             return entry.LocalCount;
         }
 
-        internal void GetCurrentEntryInfo(out KvPagenumber? pageno, out ulong totalcount, out ulong localcount, out KvPagenumber ovpageno)
+        internal void GetCurrentEntryInfo(out KvPagenumber? pageno, out ulong totalcount, out ulong localcount, out KvPagenumber ovpageno, out ulong ovlength)
         {
             Perf.CallCount();
 
@@ -1459,6 +1491,7 @@ namespace KeyValium.Cursors
             totalcount = entry.TotalCount;
             localcount = entry.LocalCount;
             ovpageno = entry.OverflowPageNumber;
+            ovlength = entry.OverflowLength;
         }
 
         internal KvPagenumber GetCurrentValueOverflow()
@@ -1503,7 +1536,7 @@ namespace KeyValium.Cursors
             return new ValueRef(CurrentTransaction, node.Page, node.KeyIndex);
         }
 
-        private void UpdateCount(long totaldelta, long localdelta)
+        internal void UpdateCount(long totaldelta, long localdelta)
         {
             Perf.CallCount();
 

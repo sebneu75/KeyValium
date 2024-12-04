@@ -1,8 +1,10 @@
 ﻿using KeyValium.Cursors;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace KeyValium.Iterators
 {
+    [StructLayout(LayoutKind.Auto)]
     public struct KeyIterator : IEnumerator<KvItem>, IEnumerable<KvItem>
     {
         internal KeyIterator(Transaction tx, TreeRef keyref, bool forward)

@@ -1,5 +1,8 @@
-﻿namespace KeyValium.Pages.Entries
+﻿using System.Runtime.InteropServices;
+
+namespace KeyValium.Pages.Entries
 {
+    [StructLayout(LayoutKind.Auto)]
     internal unsafe ref struct EntryInline
     {
         internal EntryInline(ByteSpan entry, ushort pagetype)

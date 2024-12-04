@@ -1,8 +1,10 @@
 ﻿using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace KeyValium.Locking
 {
+    [StructLayout(LayoutKind.Auto)]
     internal ref struct LockEntry
     {
         internal const int ENTRY_SIZE = 64;

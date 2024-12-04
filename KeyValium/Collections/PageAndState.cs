@@ -1,6 +1,9 @@
 ﻿
+using System.Runtime.InteropServices;
+
 namespace KeyValium.Collections
 {
+    [StructLayout(LayoutKind.Auto)]
     internal struct PageAndState
     {
         /// <summary>

@@ -1,4 +1,6 @@
 ﻿
+using System.Runtime.InteropServices;
+
 namespace KeyValium.Collections
 {
     internal sealed class KvList<T> where T : struct
@@ -316,6 +318,7 @@ namespace KeyValium.Collections
 
         #endregion
 
+        [StructLayout(LayoutKind.Auto)]
         internal struct KvListSlot
         {
             internal int Next;

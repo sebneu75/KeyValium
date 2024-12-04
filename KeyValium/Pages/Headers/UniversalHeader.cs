@@ -1,10 +1,12 @@
 ﻿using KeyValium.Options;
+using System.Runtime.InteropServices;
 
 namespace KeyValium.Pages.Headers
 {
     /// <summary>
     /// common base of headers
     /// </summary>
+    [StructLayout(LayoutKind.Auto)]
     internal unsafe struct UniversalHeader
     {
         internal const ushort HeaderSize = 32;

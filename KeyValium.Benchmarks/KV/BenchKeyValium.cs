@@ -19,15 +19,48 @@ namespace KeyValium.Benchmarks.KV
         private static string Token = DateTime.Now.ToString("(yyyy-MM-dd-HH-mm-ss-ffffff)");
 
 #if DEBUG
-        const int KeyCount =  1000;
-        const int CommitSize = 100;
+        //const int KeyCount =  1000;
+        //const int CommitSize = 100;
 #else
-        const int KeyCount = 100000;
-        const int CommitSize = 10000;
+        //const int KeyCount = 100000;
+        //const int CommitSize = 10000;
 #endif
 
         //[Params(KeyCount)]
         //public int Keys;
+
+        //[Params(10, 100, 1000, 10000, 100000, 1000000)]
+        [Params(100000)]
+        public int KeyCount;
+
+        //[Params(4, 8, 16, 32, 64, 128, 256)]
+        [Params(16)]
+        public int KeySize;
+
+        //[Params(16, 32, 64, 128, 256, 512, 1024)]
+        [Params(128)]
+        public int ValueSize;
+
+        //[Params(256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536)]
+        [Params(4096)]
+        public uint PageSize;
+
+        public int KeySizeClamped
+        {
+            get
+            {
+                var maxkeysize = Limits.GetMaxKeyLength(PageSize);
+                return Math.Min(KeySize, maxkeysize);
+            }
+        }
+
+        public int CommitSize
+        {
+            get
+            {
+                return KeyCount / 10;
+            }
+        }
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -90,14 +123,30 @@ namespace KeyValium.Benchmarks.KV
             //    yield return td;
             //}
 
+            //var td = new TestDescription(nameof(BenchKeyValium))
+            //{
+            //    MinKeySize = 16,
+            //    MaxKeySize = 16,
+            //    MinValueSize = 128,
+            //    MaxValueSize = 128,
+            //    KeyCount = KeyCount,
+            //    CommitSize = CommitSize,
+            //    GenStrategy = KeyGenStrategy.Sequential,
+            //    OrderDelete = KeyOrder.Descending,
+            //    OrderInsert = KeyOrder.Ascending,
+            //    OrderRead = KeyOrder.Ascending,
+            //    OrderUpdate = KeyOrder.Ascending,
+            //};
+
             var td = new TestDescription(nameof(BenchKeyValium))
             {
-                MinKeySize = 16,
-                MaxKeySize = 16,
-                MinValueSize = 128,
-                MaxValueSize = 128,
+                MinKeySize = KeySizeClamped,
+                MaxKeySize = KeySizeClamped,
+                MinValueSize = ValueSize,
+                MaxValueSize = ValueSize,
                 KeyCount = KeyCount,
                 CommitSize = CommitSize,
+                PageSize = PageSize,
                 GenStrategy = KeyGenStrategy.Sequential,
                 OrderDelete = KeyOrder.Descending,
                 OrderInsert = KeyOrder.Ascending,
@@ -293,7 +342,7 @@ namespace KeyValium.Benchmarks.KV
             Console.WriteLine("*** SetupInsert");
 
             _pdb.PrepareInsert();
-                        
+
             _pdb.Database.Allocator.ClearStats();
             Console.WriteLine(_pdb.Database.Allocator.GetStats());
         }
@@ -310,7 +359,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(Insert))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void Insert()
         {
             _pdb.Insert();
@@ -322,7 +371,7 @@ namespace KeyValium.Benchmarks.KV
 
         [IterationSetup(Target = nameof(Update))]
         public void SetupUpdate()
-        {            
+        {
             Console.WriteLine("*** SetupUpdate");
 
             _pdb.PrepareUpdate();
@@ -332,7 +381,7 @@ namespace KeyValium.Benchmarks.KV
                 _pdb.CurrentTransaction.Allocator.AllocatePages();
             }
 
-            _pdb.Database.Pager.ClearCacheStats();            
+            _pdb.Database.Pager.ClearCacheStats();
             _pdb.Database.Allocator.ClearStats();
             Console.WriteLine(_pdb.Database.Allocator.GetStats());
         }
@@ -349,7 +398,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(Update))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void Update()
         {
             _pdb.Update();
@@ -382,7 +431,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(Delete))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void Delete()
         {
             _pdb.Delete();
@@ -409,7 +458,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(Read))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void Read()
         {
             _pdb.Read();
@@ -436,7 +485,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(UpsertFull))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void UpsertFull()
         {
             _pdb.Upsert();
@@ -463,7 +512,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(UpsertEmpty))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void UpsertEmpty()
         {
             _pdb.Upsert();
@@ -490,7 +539,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(UpsertHalf))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void UpsertHalf()
         {
             _pdb.Upsert();
@@ -517,7 +566,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(Seek))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void Seek()
         {
             _pdb.Seek();
@@ -544,7 +593,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(ItForward))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void ItForward()
         {
             _pdb.ItForward();
@@ -571,7 +620,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(ItBackward))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void ItBackward()
         {
             _pdb.ItBackward();
@@ -598,7 +647,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(ForEachDelegate))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void ForEachDelegate()
         {
             _pdb.ForEachDelegate();
@@ -625,7 +674,7 @@ namespace KeyValium.Benchmarks.KV
         }
 
         [BenchmarkCategory(nameof(ForEachLambda))]
-        [Benchmark(OperationsPerInvoke = KeyCount)]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void ForEachLambda()
         {
             _pdb.ForEachLambda();

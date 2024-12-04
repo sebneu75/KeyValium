@@ -175,7 +175,7 @@ namespace KeyValium.Benchmarks.Performance
         [Benchmark()]
         public void GetCurrentEntryInfo()
         {
-            _cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno);
+            _cursor.GetCurrentEntryInfo(out var subtree, out var tc, out var lc, out var ovpageno, out var ovlength);
         }
 
         [IterationSetup(Target = nameof(DeleteOverflowPages))]

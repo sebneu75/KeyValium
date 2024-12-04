@@ -46,9 +46,9 @@ namespace KeyValium.Benchmarks
             //summary = BenchmarkRunner.Run<BenchPage>(config, args);
             //summary = BenchmarkRunner.Run<BenchInsert>(config, args);
 
-            //summary = BenchmarkRunner.Run<BenchLmdbVsKeyValium>(config, args);
+            summary = BenchmarkRunner.Run<BenchLmdbVsKeyValium>(config, args);
 
-            summary = BenchmarkRunner.Run<BenchKeyValium>(config, args);
+            //summary = BenchmarkRunner.Run<BenchKeyValium>(config, args);
 
             //summary = BenchmarkRunner.Run<BenchMemMove>(config, args);
             //summary = BenchmarkRunner.Run<BenchMemCopy>(config, args);

@@ -1,4 +1,4 @@
-﻿# KeyValium - A key-value-store for DotNet
+﻿# KeyValium - A key-value store for DotNet
 
 KeyValium is a very fast key-value store for DotNet (currently DotNet 7, 8 and 9 is supported). All data is stored in a recursive B+-tree as byte arrays.
 A frontend is included that implements the IDictionary interface and allows multiple dictionaries in a single database file.

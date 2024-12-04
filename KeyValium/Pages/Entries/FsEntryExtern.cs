@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 
 namespace KeyValium.Pages.Entries
 {
@@ -6,6 +7,7 @@ namespace KeyValium.Pages.Entries
     /// wrapper for a Leaf Entry that does not reside within a node
     /// (for insert)
     /// </summary>
+    [StructLayout(LayoutKind.Auto)]
     internal struct FsEntryExtern
     {
         internal FsEntryExtern(KvPagenumber first, KvPagenumber last, KvTid tid)

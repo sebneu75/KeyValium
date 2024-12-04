@@ -2,7 +2,7 @@
 
 namespace KeyValium
 {
-    public class Limits
+    public sealed class Limits
     {
         static Limits()
         {

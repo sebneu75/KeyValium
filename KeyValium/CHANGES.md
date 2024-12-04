@@ -1,5 +1,12 @@
 ﻿# KeyValium Change Log
 
+## v0.6.1 (2024-12-04)
+
+- new Frontend TreeArray that shall work like GT.M (MUMPS) Globals (not finished yet)
+- new method Transaction.Move() to rename and/or move keys to different subtrees while keeping 
+  subtrees and overflow pages intact
+- minor bugfixes
+
 ## v0.6.0 (2024-11-17)
 
 - the sharing modes SharedNetwork and SharedLocal seem to work now (only available on Windows)

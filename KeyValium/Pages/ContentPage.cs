@@ -4,10 +4,12 @@ using KeyValium.Inspector;
 using KeyValium.Memory;
 using KeyValium.Pages.Headers;
 using System.Buffers;
+using System.Runtime.InteropServices;
 using static KeyValium.Pages.Entries.EntryExtern;
 
 namespace KeyValium.Pages
 {
+    [StructLayout(LayoutKind.Auto)]
     internal unsafe struct ContentPage
     {
         #region Constructor

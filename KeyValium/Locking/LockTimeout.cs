@@ -1,5 +1,8 @@
-﻿namespace KeyValium.Locking
+﻿using System.Runtime.InteropServices;
+
+namespace KeyValium.Locking
 {
+    [StructLayout(LayoutKind.Auto)]
     internal struct LockTimeout
     {
         static readonly Random Random = new Random();

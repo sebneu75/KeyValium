@@ -1,6 +1,5 @@
 ﻿using KeyValium.Cursors;
 using KeyValium.Frontends.Serializers;
-using KeyValium.Frontends;
 using KeyValium.TestBench;
 using System;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using KeyValium.Frontends.MultiDictionary;
 
 namespace KeyValium.Tests.MultiDictionaryTests
 {

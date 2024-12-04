@@ -1,5 +1,8 @@
-﻿namespace KeyValium.Cursors
+﻿using System.Runtime.InteropServices;
+
+namespace KeyValium.Cursors
 {
+    [StructLayout(LayoutKind.Auto)]
     internal struct Node : IDisposable
     {
         public Node(AnyPage page, int keyindex)

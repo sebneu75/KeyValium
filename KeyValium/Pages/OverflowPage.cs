@@ -1,7 +1,9 @@
 ﻿using KeyValium.Pages.Headers;
+using System.Runtime.InteropServices;
 
 namespace KeyValium.Pages
 {
+    [StructLayout(LayoutKind.Auto)]
     internal unsafe struct OverflowPage
     {
         #region Constructor

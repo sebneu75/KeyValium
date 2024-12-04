@@ -1,4 +1,4 @@
-﻿using KeyValium.Frontends;
+﻿using KeyValium.Frontends.MultiDictionary;
 
 namespace KeyValium.Samples.MultiDictionary
 {

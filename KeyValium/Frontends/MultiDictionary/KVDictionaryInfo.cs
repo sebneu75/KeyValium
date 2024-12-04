@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
-namespace KeyValium.Frontends
+namespace KeyValium.Frontends.MultiDictionary
 {
     /// <summary>
     /// Represents the metadata for a KvDictionary.
@@ -16,7 +11,7 @@ namespace KeyValium.Frontends
         /// Constructor
         /// </summary>
         [JsonConstructor]
-        internal KvDictionaryInfo() 
+        internal KvDictionaryInfo()
         {
             Perf.CallCount();
         }
@@ -27,7 +22,7 @@ namespace KeyValium.Frontends
         [JsonIgnore]
         public string Name
         {
-            get; 
+            get;
             internal set;
         }
 
@@ -37,7 +32,7 @@ namespace KeyValium.Frontends
         [JsonInclude]
         public string KeyTypeName
         {
-            get;            
+            get;
             internal set;
         }
 

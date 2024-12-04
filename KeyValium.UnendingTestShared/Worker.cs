@@ -1,4 +1,4 @@
-﻿using KeyValium.Frontends;
+﻿using KeyValium.Frontends.MultiDictionary;
 using KeyValium.Frontends.Serializers;
 using KeyValium.Logging;
 using KeyValium.Options;

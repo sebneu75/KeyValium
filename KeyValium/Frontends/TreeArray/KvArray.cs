@@ -1,32 +1,22 @@
-﻿using KeyValium.Cursors;
+﻿
+using KeyValium.Frontends.MultiDictionary;
 using KeyValium.Frontends.Serializers;
 using KeyValium.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
-namespace KeyValium.Frontends
+namespace KeyValium.Frontends.TreeArray
 {
-    public class KvMultiDictionary : IDisposable
+    public class KvArray : IDisposable
     {
         #region Constructor
 
-        private KvMultiDictionary(string filename, DatabaseOptions options, bool prevsnapshot)
+        private KvArray(string filename, DatabaseOptions options)
         {
             Perf.CallCount();
 
-            options.InternalTypeCode = InternalTypes.MultiDictionary;
+            options.InternalTypeCode = InternalTypes.Globals;
             _db = Database.Open(filename, options);
-            _txmgr = new TransactionManager(_db, prevsnapshot);
-
-            DefaultSerializer = new KvJsonSerializer(new KvJsonSerializerOptions());
         }
 
         #endregion
@@ -35,66 +25,32 @@ namespace KeyValium.Frontends
 
         private readonly Database _db;
 
-        internal readonly IKvSerializer DefaultSerializer;
-
-        internal readonly TransactionManager _txmgr;
-
         #endregion
-
-        internal Transaction Tx
-        {
-            get
-            {
-                Perf.CallCount();
-
-                return _txmgr.Tx;
-            }
-        }
 
         #region Public API
 
-        /// <summary>
-        /// Opens a MultiDictionary with default options. If the file does not exist it will be created.
-        /// </summary>
-        /// <param name="filename">The database filename.</param>
-        /// <returns>An instance of KvMultiDictionary.</returns>
-        public static KvMultiDictionary Open(string filename)
+        public static KvArray Open(string filename)
         {
             Perf.CallCount();
 
-            return Open(filename, new DatabaseOptions(), false);
+            return Open(filename, new DatabaseOptions());
         }
 
-        /// <summary>
-        /// Opens a MultiDictionary with default options. If the file does not exist it will be created.
-        /// </summary>
-        /// <param name="filename">The database filename.</param>
-        /// <returns>An instance of KvMultiDictionary.</returns>
-        public static KvMultiDictionary Open(string filename, bool prevsnapshot)
+        public static KvArray Open(string filename, DatabaseOptions options)
         {
             Perf.CallCount();
 
-            return Open(filename, new DatabaseOptions(), prevsnapshot);
+            return Open(filename, options);
         }
 
-        /// <summary>
-        /// Opens a MultiDictionary with user defined options. If the file does not exist it will be created 
-        /// if options.CreateIfNotExists is true.
-        /// </summary>
-        /// <param name="filename">The database filename.</param>
-        /// <returns>An instance of KvMultiDictionary.</returns>
-        public static KvMultiDictionary Open(string filename, DatabaseOptions options)
+        public KvArrayTx BeginWriteTransaction()
         {
-            Perf.CallCount();
-
-            return Open(filename, options, false);
+            return new KvArrayTx(_db.BeginWriteTransaction());
         }
 
-        public static KvMultiDictionary Open(string filename, DatabaseOptions options, bool prevsnapshot)
+        public KvArrayTx BeginReadTransaction()
         {
-            Perf.CallCount();
-
-            return new KvMultiDictionary(filename, options, prevsnapshot);
+            return new KvArrayTx(_db.BeginReadTransaction());
         }
 
         /// <summary>

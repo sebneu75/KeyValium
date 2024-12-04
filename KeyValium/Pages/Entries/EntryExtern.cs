@@ -7,7 +7,7 @@ namespace KeyValium.Pages.Entries
     /// wrapper for a Leaf Entry that does not reside within a node
     /// (for insert)
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    [StructLayout(LayoutKind.Auto)]
     internal unsafe ref struct EntryExtern
     {
         static EntryExtern()
@@ -33,12 +33,12 @@ namespace KeyValium.Pages.Entries
 
             _key = key;
 
-            Value = default;
-            OverflowPageNumber = default;
-            OverflowLength = default;
-            SubTree = default;
-            LocalCount = default;
-            TotalCount = default;
+            //Value = default;
+            //OverflowPageNumber = default;
+            //OverflowLength = default;
+            //SubTree = default;
+            //LocalCount = default;
+            //TotalCount = default;
 
             //
             // Calculate Flags
@@ -79,38 +79,27 @@ namespace KeyValium.Pages.Entries
             OverflowLength = ovlength;
 
             //
-            // Calculate Flags
+            // Calculate flags and size
             //
             Flags = EntryFlags.None;
-            if (Value.Length > 0)
-            {
-                Flags |= EntryFlags.HasValue;
-            }
+            EntrySize = (ushort)(sizeof(ushort) + sizeof(ushort) + Key.Length);   // Flags + [KeyLength] + KeyLength            
+            
             if (OverflowPageNumber != 0)
             {
                 Flags |= EntryFlags.HasValue | EntryFlags.IsOverflow;
-            }
-            if (SubTree.HasValue)
-            {
-                Flags |= EntryFlags.HasSubtree;
-            }
-
-            //
-            // Calculate EntrySize
-            //
-            EntrySize = (ushort)(sizeof(ushort) + sizeof(ushort) + Key.Length);   // Flags + [KeyLength] + KeyLength
-            if ((Flags & EntryFlags.HasSubtree) != 0)
-            {
-                EntrySize += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, TotalCount, LocalCount
-            }
-            if ((Flags & EntryFlags.IsOverflow) != 0)
-            {
                 EntrySize += sizeof(KvPagenumber) + sizeof(ulong);   // OverflowPage + OverflowLength
             }
             else if (Value.Length > 0)
             {
+                Flags |= EntryFlags.HasValue;
                 EntrySize += sizeof(ushort);    // Valuelength
                 EntrySize += (ushort)Value.Length;
+            }
+
+            if (SubTree.HasValue)
+            {
+                Flags |= EntryFlags.HasSubtree;
+                EntrySize += sizeof(KvPagenumber) + sizeof(ulong) + sizeof(ulong); // Subtree, TotalCount, LocalCount
             }
         }
 
@@ -296,6 +285,7 @@ namespace KeyValium.Pages.Entries
 
             var key = Key;
 
+            // Flags
             target.WriteUShort(offset, Flags);
             offset += sizeof(ushort);
 
@@ -348,6 +338,7 @@ namespace KeyValium.Pages.Entries
         /// Writes the leaf entry to a page
         /// </summary>
         /// <param name="target">Pointer to start of Content</param>
+        [Conditional("DEBUG")]
         internal void WriteEntry2(Span<byte> target)
         {
             Perf.CallCount();

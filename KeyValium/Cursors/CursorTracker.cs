@@ -480,6 +480,26 @@ namespace KeyValium.Cursors
 
         #region Cursor Adjustment
 
+        internal void ATOMoveKey(Transaction tx, Cursor excluded, KvPagenumber oldpageno, int keyindex, TreeRef newtreeref, Cursor newcursor)
+        {
+            Perf.CallCount();
+
+            KvDebug.Assert(Monitor.IsEntered(tx.TxLock), "Write lock not held!");
+
+            var tcs = GetTrackedCursors(tx, excluded);
+            if (tcs != null)
+            {
+                foreach (var tc in tcs)
+                {
+                    Logger.LogDebug(LogTopics.Tracking, tx.Tid, "  Before: {0}", KvDebug.GetCursorInfo(tc.Cursor));
+
+                    var ret = tc.Cursor.AdjustMoveKey(oldpageno, keyindex, newtreeref, newcursor);
+
+                    Logger.LogDebug(LogTopics.Tracking, tx.Tid, "  After{0}: {1}", ret ? "*" : " ", KvDebug.GetCursorInfo(tc.Cursor));
+                }
+            }
+        }
+
         internal void ATODirty(Transaction tx, Cursor excluded, AnyPage oldpage, AnyPage newpage)
         {
             Perf.CallCount();

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace KeyValium
@@ -6,6 +7,7 @@ namespace KeyValium
     /// <summary>
     /// A "pointer" to a database entry.
     /// </summary>
+    [StructLayout(LayoutKind.Auto)]
     public ref struct ValueRef
     {
         internal ValueRef(Transaction tx, AnyPage page, int index)
@@ -81,7 +83,10 @@ namespace KeyValium
 
             Logger.LogInfo(LogTopics.Validation, "Validating ValueRef.");
 
-            Version.Validate();
+            if (!IsValid)
+            {
+                throw new KeyValiumException(ErrorCodes.InvalidVersion, "The ValueRef is invalid.");
+            }
         }
 
         /// <summary>

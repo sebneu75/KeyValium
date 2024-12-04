@@ -10,5 +10,6 @@ namespace KeyValium
     {
         internal const uint Raw = 0x0000;
         internal const uint MultiDictionary = 0x0001;
+        internal const uint Globals = 0x0002;
     }
 }
